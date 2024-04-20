@@ -1,6 +1,5 @@
-// SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.6.12;
-
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/math/Math.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";

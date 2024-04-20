@@ -1,11 +1,4 @@
-/**
- *Submitted for verification at Etherscan.io on 2020-09-16
-*/
-
-/**
- *Submitted for verification at Etherscan.io on 2020-09-14
-*/
-
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.5.16;
 
 // From https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/math/Math.sol

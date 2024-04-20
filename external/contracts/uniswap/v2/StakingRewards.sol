@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 contract StakingRewards is IStakingRewards, RewardsDistributionRecipient, ReentrancyGuard {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;

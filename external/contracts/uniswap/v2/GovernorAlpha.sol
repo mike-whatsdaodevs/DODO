@@ -1,13 +1,5 @@
-/**
- *Submitted for verification at Etherscan.io on 2020-09-16
-*/
-
-/**
- *Submitted for verification at Etherscan.io on 2020-09-15
-*/
-
-pragma solidity ^0.5.16;
-pragma experimental ABIEncoderV2;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
 
 contract GovernorAlpha {
     /// @notice The name of this contract
