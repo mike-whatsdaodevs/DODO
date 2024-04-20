@@ -2,13 +2,13 @@
 pragma solidity ^0.8.20;
 
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
+import { SafeMath } from "../../lib/SafeMath.sol";
 
 // Mock contract implementation of KyberNetworkProxy, where token can only be traded against WETH for simplicity.
 // Adapted from Argent mock Kyber implementation
 contract KyberNetworkProxyMock {
 
-    using Math for uint256;
+    using SafeMath for uint256;
 
     struct Token {
         bool exists;

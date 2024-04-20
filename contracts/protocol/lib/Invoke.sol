@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
+import { SafeMath } from "../../lib/SafeMath.sol";
 
 import { ISetToken } from "../../interfaces/ISetToken.sol";
 
@@ -14,7 +14,7 @@ import { ISetToken } from "../../interfaces/ISetToken.sol";
  * A collection of common utility functions for interacting with the SetToken's invoke function
  */
 library Invoke {
-    using Math for uint256;
+    using SafeMath for uint256;
 
     /* ============ Internal ============ */
 

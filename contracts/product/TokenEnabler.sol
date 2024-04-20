@@ -16,8 +16,7 @@ contract TokenEnabler is Ownable {
         IController _controller,
         address[] memory _tokensToEnable
     )
-        public
-        Ownable()
+        Ownable(msg.sender)
     {
         controller = _controller;
         tokensToEnable = _tokensToEnable;

@@ -5,6 +5,7 @@ import "../../../interfaces/external/IUniswapV2Router.sol";
 import "../../../interfaces/external/IUniswapV2Pair.sol";
 import "../../../interfaces/external/IUniswapV2Factory.sol";
 import "../../../interfaces/IAmmAdapter.sol";
+import { SafeMath } from "../../../lib/SafeMath.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 /**
  * @title UniswapV2AmmAdapter
@@ -13,7 +14,7 @@ import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
  * Adapter for Uniswap V2 Router that encodes adding and removing liquidty
  */
 contract UniswapV2AmmAdapter is IAmmAdapter {
-    using Math for uint256;
+    using SafeMath for uint256;
 
     /* ============ State Variables ============ */
 

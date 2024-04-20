@@ -2,7 +2,6 @@
 pragma solidity ^0.8.20;
 
 
-import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import "./TransferHelper.sol";
 
 /**
@@ -12,7 +11,6 @@ import "./TransferHelper.sol";
  * Utility functions for ERC20 transfers that require the explicit amount to be transferred.
  */
 library ExplicitERC20 {
-    using Math for uint256;
     using TransferHelper for address;
 
     /**
@@ -46,7 +44,7 @@ library ExplicitERC20 {
 
             // Verify transfer quantity is reflected in balance
             require(
-                newBalance == existingBalance.add(_quantity),
+                newBalance == existingBalance + _quantity,
                 "Invalid post transfer balance"
             );
         }

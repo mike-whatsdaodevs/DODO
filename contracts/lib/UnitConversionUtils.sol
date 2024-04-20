@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
-import { SignedMath } from "@openzeppelin/contracts/utils/math/SignedMath.sol";
+import { SafeMath } from "./SafeMath.sol";
+import { SignedSafeMath } from "./SignedSafeMath.sol";
 
 /**
  * @title UnitConversionUtils
@@ -11,8 +11,8 @@ import { SignedMath } from "@openzeppelin/contracts/utils/math/SignedMath.sol";
  * Utility functions to convert PRECISE_UNIT values to and from other decimal units
  */
 library UnitConversionUtils {
-    using Math for uint256;
-    using SignedMath for int256;
+    using SafeMath for uint256;
+    using SignedSafeMath for int256;
 
     /**
      * @dev Converts a uint256 PRECISE_UNIT quote quantity into an alternative decimal format.

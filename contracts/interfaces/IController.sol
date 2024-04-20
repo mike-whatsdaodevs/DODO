@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
+import { IPriceOracle } from "./IPriceOracle.sol";
+
 interface IController {
     function addSet(address _setToken) external;
     function feeRecipient() external view returns(address);
@@ -9,4 +11,5 @@ interface IController {
     function isSet(address _setToken) external view returns(bool);
     function isSystemContract(address _contractAddress) external view returns (bool);
     function resourceId(uint256 _id) external view returns(address);
+    function getPriceOracle() external view returns(IPriceOracle);
 }

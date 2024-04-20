@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
-import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
+import { SafeMath } from "../../../lib/SafeMath.sol";
 
 import { AddressArrayUtils } from "../../../lib/AddressArrayUtils.sol";
 import { IController } from "../../../interfaces/IController.sol";
@@ -14,7 +14,7 @@ import { PreciseUnitMath } from "../../../lib/PreciseUnitMath.sol";
 
 contract UniswapPairPriceAdapter is Ownable {
     using AddressArrayUtils for address[];
-    using Math for uint256;
+    using SafeMath for uint256;
     using PreciseUnitMath for uint256;
 
     /* ============ Structs ============ */
@@ -58,7 +58,7 @@ contract UniswapPairPriceAdapter is Ownable {
         address _uniswapFactory,
         IUniswapV2Pair[] memory _uniswapPools
     )
-        public
+        Ownable(msg.sender)
     {
         controller = _controller;
         uniswapFactory = _uniswapFactory;

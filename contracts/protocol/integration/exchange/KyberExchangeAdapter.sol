@@ -9,12 +9,12 @@ pragma solidity ^0.8.20;
  */
 
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
+import { SafeMath } from "../../../lib/SafeMath.sol";
 import { PreciseUnitMath } from "../../../lib/PreciseUnitMath.sol";
 import { IKyberNetworkProxy } from "../../../interfaces/external/IKyberNetworkProxy.sol";
 
 contract KyberExchangeAdapter {
-    using Math for uint256;
+    using SafeMath for uint256;
     using PreciseUnitMath for uint256;
 
     /* ============ Structs ============ */

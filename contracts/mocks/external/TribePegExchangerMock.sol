@@ -3,12 +3,14 @@ pragma solidity ^0.8.20;
 
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
+import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 /**
   * @title Contract to exchange RGT with TRIBE post-merger
   */
 contract TribePegExchangerMock {
     using Math for IERC20;
+    using SafeERC20 for IERC20;
 
     /// @notice the multiplier applied to RGT before converting to TRIBE scaled up by 1e9
     uint256 public constant exchangeRate = 26705673430; // 26.7 TRIBE / RGT

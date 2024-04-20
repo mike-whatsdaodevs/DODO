@@ -2,8 +2,8 @@
 pragma solidity ^0.8.20;
 
 import { SafeCast } from "@openzeppelin/contracts/utils/math/SafeCast.sol";
-import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
-import { SignedMath } from "@openzeppelin/contracts/utils/math/SignedMath.sol";
+import { SafeMath } from "./SafeMath.sol";
+import { SignedSafeMath } from "./SignedSafeMath.sol";
 
 
 /**
@@ -20,8 +20,8 @@ import { SignedMath } from "@openzeppelin/contracts/utils/math/SignedMath.sol";
  * - 12/13/21: Added abs function
  */
 library PreciseUnitMath {
-    using Math for uint256;
-    using SignedMath for int256;
+    using SafeMath for uint256;
+    using SignedSafeMath for int256;
     using SafeCast for int256;
 
     // The number One in precise units.

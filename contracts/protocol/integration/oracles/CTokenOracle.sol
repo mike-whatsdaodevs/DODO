@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
-
+import { SafeMath } from "../../../lib/SafeMath.sol";
 import { PreciseUnitMath } from "../../../lib/PreciseUnitMath.sol";
 import { ICErc20 } from "../../../interfaces/external/ICErc20.sol";
 import { IOracle } from "../../../interfaces/IOracle.sol";
@@ -15,7 +14,7 @@ import { IOracle } from "../../../interfaces/IOracle.sol";
  * Oracle built to return cToken price by multiplying the underlying asset price by Compound's stored exchange rate
  */
 contract CTokenOracle is IOracle {
-    using Math for uint256;
+    using SafeMath for uint256;
     using PreciseUnitMath for uint256;
 
     /* ============ State Variables ============ */
