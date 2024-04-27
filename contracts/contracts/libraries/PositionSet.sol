@@ -24,6 +24,7 @@ library PositionSet {
         uint256 amount;
         uint128 currentIndex;
         uint128 healthFactor;
+        uint256 expiration;
     }
 
     struct Set {

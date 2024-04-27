@@ -23,7 +23,7 @@ contract DODO is IDODO, PaymentGateway {
 
     mapping(uint256 => address) public indexMap;
 
-    address[] indexList;
+    address[] public indexList;
 
     constructor(address _weth, address _underlyingToken) PaymentGateway(_weth) {
         underlyingToken = _underlyingToken;
@@ -54,7 +54,8 @@ contract DODO is IDODO, PaymentGateway {
         uint256 indexId,
         uint256 amount,
         uint128 currentIndex, 
-        uint128 healthFactor
+        uint128 healthFactor,
+        uint256 expiration
     ) external returns (uint256 positionId) {
         address indexAddress = indexList[indexId];
         uint256 indexFeerate = IIndex(indexAddress).feeRate();
@@ -70,7 +71,8 @@ contract DODO is IDODO, PaymentGateway {
             msg.sender, 
             amountWithoutFee,
             currentIndex,
-            healthFactor
+            healthFactor,
+            expiration
         );
 
         emit CreatePosition(

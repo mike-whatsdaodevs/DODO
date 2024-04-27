@@ -25,8 +25,17 @@ interface IIndex {
         uint256 amount,
         uint128 currentIndex, 
         uint128 healthFactor,
+        uint256 expiration,
         uint256 timestamp
     );
+
+    event SetBenchMark(
+        address[] tokens, 
+        uint256[] prices,
+        uint256 timestamp
+    );
+
+    event ChangeFeeRate(address indexed indexAddress, uint256 old, uint256 newRate, uint256 timestamp);
 
     function feeRate() external view returns (uint256);
 
@@ -40,7 +49,8 @@ interface IIndex {
         address initialOwner, 
         uint256 amount,
         uint128 currentIndex,
-        uint128 healthFactor
+        uint128 healthFactor,
+        uint256 expiration
     ) external returns (uint256);
 
     function checkPositionOwner(

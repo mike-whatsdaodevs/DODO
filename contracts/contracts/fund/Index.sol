@@ -49,7 +49,7 @@ contract Index is IIndex, Ownable {
     mapping(uint256 => Enum.PositionStatus) public positionStatus;
 
     /// index id
-    uint256 public id;
+    uint256 public immutable id;
 
     //// position id
     uint256 public positionId;
@@ -200,19 +200,6 @@ contract Index is IIndex, Ownable {
         token.safeApprove(protocol, type(uint256).max);
     }
 
-    /**
-     * @dev get position token balance
-     * 
-     * @param positionId: position id
-     * @param token address
-     * 
-     * @return uint256
-     */
-    function getPositionBalance(uint256 positionId, address token) external view returns (uint256) {
-        return positionBalance[positionId][token];
-
-    }
-
     function getPositionById(uint256 positionId) public view returns (
         PositionSet.Position memory position,
         bool isExist
@@ -263,7 +250,8 @@ contract Index is IIndex, Ownable {
         address initialOwner, 
         uint256 amount,
         uint128 currentIndex,
-        uint128 healthFactor
+        uint128 healthFactor,
+        uint256 expiration
     ) external returns (uint256) {
         uint256 currentPositionId = positionId;
         PositionSet.Position memory position = PositionSet.Position(
@@ -271,7 +259,8 @@ contract Index is IIndex, Ownable {
             initialOwner,
             amount,
             currentIndex,
-            healthFactor
+            healthFactor,
+            expiration
         );
         positionSet.add(position);
 
@@ -294,6 +283,7 @@ contract Index is IIndex, Ownable {
             amount,
             currentIndex, 
             healthFactor,
+            expiration,
             block.timestamp
         );
 
@@ -386,6 +376,7 @@ contract Index is IIndex, Ownable {
 
         positionBalance[positionId][tokenIn] = tokenInBalance.sub(amountIn);
         positionBalance[positionId][tokenOut] = tokenOutBalance.add(amountOut);
+        return amountOut;
     }
 
     function uniswapV3ExactInputSingle(
@@ -563,6 +554,9 @@ contract Index is IIndex, Ownable {
      * @dev manage fee rate
      */
     function manageFeeRate(uint256 newFeeRate) external {
+        require(newFeeRate > 0, "E: error");
+
+        emit ChangeFeeRate(address(this), feeRate, newFeeRate, block.timestamp);
         feeRate = newFeeRate;
     }
 
@@ -571,6 +565,8 @@ contract Index is IIndex, Ownable {
         for(uint256 i; i < length; i++) {
             benchmark[tokens[i]] = prices[i];
         }
+
+        emit SetBenchMark(tokens, prices, block.timestamp);
     }
 
     /**
