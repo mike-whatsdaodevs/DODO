@@ -1,7 +1,0 @@
-let data = [
-// ["0x8894EA549363AA75bB20572D9E707a0b3b2994f6",1],
-// ["0xD4AcF947D511dF7D96fFC01429F49859A11C342D",1],
-];
-
-
-exports.data = data;

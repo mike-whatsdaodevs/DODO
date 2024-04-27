@@ -64,9 +64,9 @@ async function main() {
   // await harvestFeeTx.wait();
   // console.log(harvestFeeTx.hash);
 
-  let bridgeConfirmTx = await bridge.bridgeConfirm(bfuel_address, deployer.address, 0, 0);
-  await bridgeConfirmTx.wait();
-  console.log(bridgeConfirmTx.hash);
+  // let bridgeConfirmTx = await bridge.bridgeConfirm(bfuel_address, deployer.address, 0, 0);
+  // await bridgeConfirmTx.wait();
+  // console.log(bridgeConfirmTx.hash);
 
   // let amount = ethers.utils.parseEther("1");
   // let sendTx = await bridge.tokenSend(

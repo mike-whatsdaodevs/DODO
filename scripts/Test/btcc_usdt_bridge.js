@@ -37,8 +37,9 @@ async function main() {
   // let approveTx = await usdt.approve(bridge_address, ethers.constants.MaxUint256);
   // await approveTx.wait();
 
-  // let addManageTx = await bridge.addManage(deployer.address);
-  // await addManageTx.wait();
+  // let addManageTx = await usdt.manage(process.env.ERIC_BTCC_GAS_PRE);
+  // console.log(addManageTx);
+  // return;
 
   // let addTx = await bridge.addToken(usdt_address);
   // await addTx.wait();
@@ -49,9 +50,9 @@ async function main() {
   // await setGasFeeTx.wait();
   // return; 
 
-  let setGasFeeTx = await bridge.setGasFee(0);
-  await setGasFeeTx.wait();
-  console.log(setGasFeeTx.hash);
+  // let setGasFeeTx = await bridge.setGasFee(0);
+  // await setGasFeeTx.wait();
+  // console.log(setGasFeeTx.hash);
 
   //  let 30 = await bridge.setGasFee(20);
   // await setGasFeeTx.wait();
@@ -63,9 +64,9 @@ async function main() {
   // let bridgeTokenTx = await bridge.bridgeToken(usdt_address, amount, "TMeh8e4o6HELTRiWWpeeKmqZXVC3dNrtEM");
   // await bridgeTokenTx.wait();
   // console.log(bridgeTokenTx.hash);
-  
+ 
   // return;
-  // let queueData = await bridge.getQueneByIndex(deployer.address, 0);
+  // let queueData = await bridge.getQueneByIndex(addr, 1);
   // console.log(queueData);
 
   // let list = await bridge.getQueneList(deployer.address);

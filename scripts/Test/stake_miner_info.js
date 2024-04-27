@@ -55,7 +55,11 @@ async function main() {
   const bfuel = await ethers.getContractAt('BFuelToken', bfuel_address, signer)
 
 
-  my_address = "0xc6aFd23A13d420828d424E327A7de4d5bA36e27C";
+  my_address = "0x7f322012d76115A12d127baCD34c86E19D33FfC7";
+
+  const stakedMiner1 = [];
+  const stakedMiner2 = [];
+  const stakedMiner3 = [];
   // let rewardRate = await staking.rewardRate()
   // console.log('rewardRate: ' + rewardRate)
 
@@ -77,7 +81,8 @@ async function main() {
   for(let m1 = 0; m1 < miner1AmountOf; m1 ++) {
     let m1TokenId = await staking.minerOfOwnerByIndex(miner1_address, my_address, m1);
 
-    console.log(m1TokenId);
+    // console.log(m1TokenId);
+    stakedMiner1.push(m1TokenId);
   }
 
   let miner2AmountOf = await staking.minerAmountOf(miner2_address, my_address)
@@ -87,7 +92,8 @@ async function main() {
   for(let m2 = 0; m2 < miner2AmountOf; m2 ++) {
     let m2TokenId = await staking.minerOfOwnerByIndex(miner2_address, my_address, m2);
 
-    console.log(m2TokenId);
+   // console.log(m2TokenId);
+    stakedMiner2.push(m2TokenId);
   }
 
 
@@ -98,10 +104,16 @@ async function main() {
   for(let m3 = 0; m3 < miner3AmountOf; m3 ++) {
     let m3TokenId = await staking.minerOfOwnerByIndex(miner3_address, my_address, m3);
 
-    console.log(m3TokenId);
+    //console.log(m3TokenId);
+    stakedMiner3.push(m3TokenId);
   }
 
+  console.log(Object.keys(stakedMiner1)); 
 
+
+  console.log(Object.keys(stakedMiner2)); 
+
+  console.log(Object.keys(stakedMiner3)); 
   return;
 
   let totalHashRate = await staking.totalHashRate()

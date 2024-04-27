@@ -48,7 +48,7 @@ async function main() {
   );
 
   let property3 = Array(
-      100_0000,
+      100_000,
       1000, 
       3
   );

@@ -1,6 +1,6 @@
 const { ethers, run } = require('hardhat')
 require('dotenv').config({ path: '.env' })
-const {data} = require('../list/10-13-100X.js');
+const {data} = require('../list/4-20-100X.js');
 
 async function main() {
   await run('compile')
@@ -52,10 +52,9 @@ async function main() {
     property_address = process.env.LOCAL_PROPERTY;
     factory_address = process.env.LOCAL_FACTORY;
   }
-  let nftAddr = miner0_address;
+  let nftAddr = miner3_address;
   console.log(nftAddr);
   const factory = await ethers.getContractAt('NFTFactory', factory_address, signer)
-
 
   let len = data.length;
   console.log("len is", len);
@@ -94,10 +93,6 @@ async function main() {
   console.log(receivers);
   console.log(amounts);
   console.log("number", sum);
-  return;
-  /// ERIC
-  // let receiver = "0x17954f29c9Ae81921DBC725468b74a4B20b956Cf" 
-  // // let receiver = deployer.address;
 
   let buildMinerTx = await factory.batchBuildMinerByArray(nftAddrs, receivers, amounts, overrides);
   await buildMinerTx.wait();   

@@ -42,13 +42,12 @@ async function main() {
   let swapBalance = await bfuel.balanceOf(bfuelswap_address);
   console.log(ethers.utils.formatEther(swapBalance));
   return;
-
-  // let addManageTx1 = await swap.addManage(deployer.address);
-  // await addManageTx1.wait();
-   // let takeBackBfuelTx = await swap.takeBackBfuel(deployer.address);
-   //  await takeBackBfuelTx.wait();
-
-
+  let addManageTx1 = await swap.addManage(deployer.address);
+  await addManageTx1.wait();
+  let takeBackBfuelTx = await swap.takeBackBfuel(deployer.address);
+  await takeBackBfuelTx.wait();
+  console.log(takeBackBfuelTx.hash);
+  return;
   let allowance = await usdt.allowance(deployer.address, bfuelswap_address);
   let amount = ethers.utils.parseUnits("0.0125", 6);
 

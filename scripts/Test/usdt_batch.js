@@ -67,10 +67,10 @@ async function main() {
   // console.log(addManageTx1.hash);
   // return;
  // let address = "0x06aCe60b5D5cC887a79AC111dEeF88B5453dCAA0";//deployer.address;
-  let amount = ethers.utils.parseUnits("100000", 6);
+  let amount = ethers.utils.parseUnits("0", 6);
   console.log(amount);
   console.log(address);
-  let tx = await usdt.mint(address, amount);
+  return;
   await tx.wait();
   console.log(tx.hash);
 }

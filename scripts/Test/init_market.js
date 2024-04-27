@@ -34,10 +34,10 @@ async function main() {
     market_address = process.env.B_MARKET;
     break;
   case 963 :
-    miner1_address = process.env.B_MINER1;
-    miner2_address = process.env.B_MINER2;
-    miner3_address = process.env.B_MINER3;
-    market_address = process.env.B_MARKET;
+    miner1_address = process.env.M_MINER1;
+    miner2_address = process.env.M_MINER2;
+    miner3_address = process.env.M_MINER3;
+    market_address = process.env.M_MARKET;
     break;
   default: 
     miner1_address = process.env.LOCAL_MINER1;

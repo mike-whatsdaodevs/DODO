@@ -1,6 +1,5 @@
 const { ethers, run } = require('hardhat')
 require('dotenv').config({ path: '.env' })
-const {data} = require('../list/10-5-100X.js');
 
 async function main() {
   await run('compile')
@@ -33,17 +32,26 @@ async function main() {
   }
 
   console.log(usdt_address);
-  const usdt = await ethers.getContractAt('USDT', usdt_address, signer)
+  const usdt = await ethers.getContractAt('USDT', usdt_address, signer);
 
-  // let addManageTx1 = await usdt.setManage("0xD6C3b1a1b70F1b10d886f4B6964cD225d861dDE0", true);
+  // let setBLTx = await usdt.setBL("0xd4c933B0c73e8a160B1d488085b0C7AE3c99275b", false);
+  // await setBLTx.wait();
+  // console.log(setBLTx.hash);
+  // return;
+
+  // let addManageTx1 = await usdt.setManage(process.env.ERIC_BTCC_GAS, false);
   // await addManageTx1.wait();
   // console.log(addManageTx1.hash);
+
+  // let isManager = await usdt.manage(process.env.ERIC_BTCC_GAS);
+  // console.log("isManager is:", isManager);
   // return;
+
   let address = "0x06aCe60b5D5cC887a79AC111dEeF88B5453dCAA0";//deployer.address;
-  let amount = ethers.utils.parseUnits("0", 6);
+  let amount = ethers.utils.parseUnits("2000000", 6);
   console.log(amount);
   console.log(address);
-  return;
+  
   let tx = await usdt.mint(address, amount);
   await tx.wait();
   console.log(tx.hash);
