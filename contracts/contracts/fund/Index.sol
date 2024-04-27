@@ -17,12 +17,6 @@ import {Path} from "../libraries/Path.sol";
 import {ISwapRouter02} from "../interfaces/fund/ISwapRouter02.sol";
 import { SafeMath } from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
-struct ExactSwapParams {
-    bytes path;
-    address recipient;
-    uint256 amountIn;
-    uint256 amountOutMinimum;
-}
 contract Index is IIndex, Ownable {
 
     using TransferHelper for address;
@@ -43,7 +37,6 @@ contract Index is IIndex, Ownable {
     /// allowed tokens to buy
     EnumerableSet.AddressSet indexTokens;
 
-
     /// allowed lp to approve
     EnumerableSet.AddressSet allowedProtocols;
 
@@ -52,6 +45,8 @@ contract Index is IIndex, Ownable {
 
     /// benchmark price 
     mapping(address => uint256) public benchmark;
+
+    mapping(uint256 => Enum.PositionStatus) public positionStatus;
 
     /// index id
     uint256 public id;
@@ -81,6 +76,8 @@ contract Index is IIndex, Ownable {
         id = indexId;
         name = indexName;
         feeRate = 10;
+
+        emit CreatedIndex(id, address(this), feeRate, name, block.timestamp);
     }
 
     receive() external payable {}
@@ -204,25 +201,49 @@ contract Index is IIndex, Ownable {
     }
 
     /**
-     * @dev get position token amount
+     * @dev get position token balance
      * 
      * @param positionId: position id
      * @param token address
      * 
      * @return uint256
      */
-    function getPositionAmount(uint256 positionId, address token) external view returns (uint256) {
+    function getPositionBalance(uint256 positionId, address token) external view returns (uint256) {
         return positionBalance[positionId][token];
 
     }
 
-    function getPositionById(uint256 positionId) external view returns (PositionSet.Position memory position) {
+    function getPositionById(uint256 positionId) public view returns (
+        PositionSet.Position memory position,
+        bool isExist
+    ) {
         uint256 index = positionSet.getIndex(positionId);
         if(index == 0) {
-            return position;
+            return (position, isExist);
         }
 
         PositionSet.Position memory position = positionSet.at(index);
+        isExist = true;
+    }
+
+    function changePositionStatus(uint256 positionId, Enum.PositionStatus status) external {
+        Enum.PositionStatus currentStatus = positionStatus[positionId];
+        if(status <= currentStatus) {
+            revert();
+        }
+        positionStatus[positionId] = status;
+    }
+
+    function checkPositionOwner(uint256 positionId, address ownerAddress) external view returns (bool) {
+        (PositionSet.Position memory position, bool isExist) = getPositionById(positionId);
+        if(!isExist) {
+            return false;
+        }
+
+        if(position.owner != ownerAddress) {
+            return false;
+        }
+        return true;
     }
    
     function getPositionByIndex(uint256 indexId) external view returns (PositionSet.Position memory position) {
@@ -250,8 +271,7 @@ contract Index is IIndex, Ownable {
             initialOwner,
             amount,
             currentIndex,
-            healthFactor,
-            Enum.PositionStatus.CREATED
+            healthFactor
         );
         positionSet.add(position);
 
@@ -266,6 +286,16 @@ contract Index is IIndex, Ownable {
         positionBalance[currentPositionId][underlyingToken] = amount;
 
         idIncrease();
+
+        positionStatus[currentPositionId] = Enum.PositionStatus.CREATED;
+
+        emit CreatePosition(
+            currentPositionId,
+            amount,
+            currentIndex, 
+            healthFactor,
+            block.timestamp
+        );
 
         return currentPositionId;
     }

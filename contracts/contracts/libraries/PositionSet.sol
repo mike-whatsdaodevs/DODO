@@ -24,7 +24,6 @@ library PositionSet {
         uint256 amount;
         uint128 currentIndex;
         uint128 healthFactor;
-        Enum.PositionStatus status;
     }
 
     struct Set {

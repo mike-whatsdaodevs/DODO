@@ -4,14 +4,15 @@ pragma solidity >=0.8.14;
 import { IDODO } from "../interfaces/IDODO.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { PaymentGateway } from "./PaymentGateway.sol";
-import { IIndex } from "../interfaces/IIndex.sol";
+import { IIndex, Enum } from "../interfaces/IIndex.sol";
 import { Index } from "./Index.sol";
 import { TransferHelper } from "../libraries/TransferHelper.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { SafeMath } from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import {Enum} from "../libraries/Enum.sol";
+import {PositionSet} from "../libraries/PositionSet.sol";
 
-contract DODO is PaymentGateway {
+contract DODO is IDODO, PaymentGateway {
     using TransferHelper for address;
     using SafeMath for uint256;
 
@@ -45,6 +46,8 @@ contract DODO is PaymentGateway {
         index.addIndexTokens(allowedTokens);
 
         idIncrease();
+
+        emit CreateIndex(currentIndexId, address(index), block.timestamp);
     }
 
     function buy(
@@ -69,10 +72,37 @@ contract DODO is PaymentGateway {
             currentIndex,
             healthFactor
         );
+
+        emit CreatePosition(
+            indexId, 
+            msg.sender, 
+            positionId,
+            amount,
+            fee,
+            block.timestamp
+        );
     }
 
-    function sell(uint256 positionId) external {
+    function sell(uint256 indexId, uint256 positionId) external {
+        address indexAddress = indexList[indexId];
+        bool isPositionOwner = IIndex(indexAddress).checkPositionOwner(positionId, msg.sender);
 
+        if(! isPositionOwner) {
+            return;
+        }
+
+        IIndex(indexAddress).changePositionStatus(
+            positionId, 
+            Enum.PositionStatus.REQUEST_LIQUIDATION
+        );
+
+        emit RequestLiquidation( 
+            indexId, 
+            positionId, 
+            indexAddress,
+            msg.sender,
+            block.timestamp
+        );
     }
 
 

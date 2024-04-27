@@ -5,44 +5,23 @@ pragma solidity ^0.8.24;
 // import "hardhat/console.sol";
 
 interface IDODO {
-    
-    /**
-     * @dev fund amount on index
-     * 
-     * @param indexId: index id
-     * @param token: token address
-     * 
-     * @return amount
-     */
-    function indexAmount(uint256 indexId, address token) external view returns (uint256);
 
-    /**
-     * @dev get base owner
-     * 
-     * @return address
-     */
-    function owner() external view returns (address);
+    event CreateIndex(uint256 indexed indexId, address indexed indexAddress, uint256 timestamp);
 
-    /**
-     * @dev create index
-     * 
-     * @return uint256: index id
-     */
-    function createIndex(string memory name) external returns (uint256);
+    event CreatePosition(
+        uint256 indexed indexId, 
+        address indexed user, 
+        uint256 indexed positionId,
+        uint256 amount,
+        uint256 fee,
+        uint256 timestamp
+    );
 
-    /**
-     * @dev collect fee
-     * 
-     * @param indexId: index id
-     */
-    function collect(uint256 indexId) external;
-
-     /**
-     * @dev withdraw fund
-     * 
-     * @param indexId: index id
-     * @param positionId: position id
-     */
-    function whitdrawFund(uint256 indexId, uint256 positionId) external;
-
+    event RequestLiquidation(
+        uint256 indexed indexId, 
+        uint256 indexed positionId, 
+        address indexAddress,
+        address user,
+        uint256 timestamp
+    );
 }
