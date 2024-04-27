@@ -34,7 +34,6 @@ async function main() {
 
   let res = await swap.decodePath(path);
   console.log(res);
-  return;
 
   let tokenApproveTx = await swap.tokenApprove(usdt_address, uniswapRouter_address);
   await tokenApproveTx.wait();

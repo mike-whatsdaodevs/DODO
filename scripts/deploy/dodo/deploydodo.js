@@ -3,7 +3,7 @@
 //
 // When running the script with `npx hardhat run <script>` you'll find the Hardhat
 // Runtime Environment's members available in the global scope.
-const hre = require("hardhat");
+const hre = require('hardhat')
 
 async function main() {
   // Hardhat always runs the compile task when running scripts with its command
@@ -12,34 +12,31 @@ async function main() {
   // If this script is run directly using `node` you may want to call compile
   // manually to make sure everything is compiled
   // await hre.run('compile');
-
   // We get the contract to deploy
 
-  await hre.run('compile');
+  // 0x4BE6339E1480761e650D2F2Eb27a702dD458654A
+  let provider = ethers.provider
+  const [signer] = await ethers.getSigners()
+  let my_address = signer.address;
+  console.log('my_address is:', my_address)
 
-  let provider = ethers.provider;
-  let signer = provider.getSigner();
+  let weth9_address = process.env.WETH9;
+  let usdc_address = process.env.USDC;
 
-  let my_address = await signer.getAddress();
-  console.log(my_address);
-
-  let implement = "0x6e0fe39cF0B06831bD85988B9EE695e1cAf2cf8d"
+  const DODO = await hre.ethers.getContractFactory('DODO')
+  const dodo = await DODO.deploy(weth9_address, usdc_address);
+  await dodo.deployed()
+  console.log('dodo deployed to:', dodo.address)
   
-  let proxy_address = process.env.STAKING_NEW
-  // let proxy_address = process.env.STAKING_TEST
+  return;
 
-  console.log("proxy is", proxy_address);
-  
-  const proxy = await ethers.getContractAt('ZStakingV2', proxy_address, signer)
-  let proxy_upgrade_tx = await proxy.upgradeTo(implement);
-  await proxy_upgrade_tx.wait();
-
+  // 0xf67394B56827246644359D4A3fc0D817dF8E90c0
 
 }
 
 // We recommend this pattern to be able to use async/await everywhere
 // and properly handle errors.
 main().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
-});
+  console.error(error)
+  process.exitCode = 1
+})

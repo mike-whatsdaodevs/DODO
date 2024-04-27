@@ -31,7 +31,7 @@ async function main() {
 
 
   let override = {
-    value : ethers.utils.parseEther("1"),
+    value : ethers.utils.parseEther("3"),
   }
 
   let tx = await swap.swap(

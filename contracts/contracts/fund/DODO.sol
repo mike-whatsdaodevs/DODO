@@ -24,7 +24,9 @@ contract DODO is PaymentGateway {
 
     address[] indexList;
 
-    constructor(address _weth) PaymentGateway(_weth) {}
+    constructor(address _weth, address _underlyingToken) PaymentGateway(_weth) {
+        underlyingToken = _underlyingToken;
+    }
 
     function idIncrease() private {
         id += 1;
