@@ -68,9 +68,6 @@ contract Index is IIndex, Ownable {
 
     mapping(uint256 => mapping(address => uint256)) public positionBalance;
 
-    mapping(address => uint256) public vaultBalance;
-
-
     constructor(uint indexId, string memory indexName) {
         operators[msg.sender] = true;
         id = indexId;
@@ -266,12 +263,6 @@ contract Index is IIndex, Ownable {
 
         uint256 underlyingTokenAmount = IERC20(underlyingToken).balanceOf(address(this));
 
-        vaultBalance[underlyingToken] += amount;
-
-        if(vaultBalance[underlyingToken] != underlyingTokenAmount) {
-            revert();
-        }
-
         positionBalance[currentPositionId][underlyingToken] = amount;
 
         idIncrease();
@@ -347,6 +338,98 @@ contract Index is IIndex, Ownable {
         // }
     }
 
+    function getPositionsBalance(address token, uint256[] memory positionIds) public view returns (uint256 tokenInBalance) {
+        uint256 length = positionIds.length;
+        for(uint256 i = 1; i < length; ++i) {
+            uint256 balance = positionBalance[positionIds[i]][token];
+            tokenInBalance = tokenInBalance.add(balance);
+        }
+    }
+
+    function setPositionBalance(address token, uint256[] memory positionIds, uint256[] memory values) external {
+        uint256 length = positionIds.length;
+        for(uint256 i = 1; i < length; ++i) {
+            positionBalance[positionIds[i]][token] = values[i];
+        }
+    }
+
+    function swapPositionsV2(
+        uint256[] memory positionIds,
+        uint256 amountIn,
+        uint256 amountOutMin,
+        address[] calldata path
+    ) public payable returns (uint256) {
+        require(path.length >= 2, "PA6");
+        address tokenIn = path[0];
+        address tokenOut = path[path.length - 1];
+
+        require(allowedTokens[tokenIn], "E: token error");
+        require(allowedTokens[tokenOut], "E: token error");
+
+        uint256 tokenInBalance = getPositionsBalance(tokenIn, positionIds);
+        if(amountIn > tokenInBalance) {
+            revert();
+        }
+
+        uint256 amountOut = ISwapRouter02(uniswapRouter).swapExactTokensForTokens {value: msg.value} (
+            amountIn,
+            amountOutMin,
+            path,
+            address(this)
+        );
+
+        emit Swap(tokenIn, tokenOut, amountIn, amountOut, block.timestamp);
+
+        return amountOut;
+    }
+
+    function swapPositionsV3Single(
+        uint256[] memory positionIds,
+        ISwapRouter02.ExactInputSingleParams calldata params
+    ) external payable returns (uint256) {
+        require(allowedTokens[params.tokenIn], "E: token error");
+        require(allowedTokens[params.tokenOut], "E: token error");
+
+        uint256 tokenInBalance = getPositionsBalance(params.tokenIn, positionIds);
+        if(params.amountIn > tokenInBalance) {
+            revert();
+        }
+
+        require(params.recipient == address(this), "E: recipient error");
+
+        uint256 amountOut = ISwapRouter02(uniswapRouter).exactInputSingle {value: msg.value} (
+            params
+        );
+        emit Swap(params.tokenIn, params.tokenOut, params.amountIn, amountOut, block.timestamp);
+
+        return amountOut;
+    }
+
+    function swapPositionsV3ExactInput(
+        uint256[] memory positionIds,
+        ISwapRouter02.ExactInputParams calldata params
+    ) external payable returns (uint256) {
+        (address tokenIn, address tokenOut) = params.path.decode();
+
+        require(allowedTokens[tokenIn], "E: token error");
+        require(allowedTokens[tokenOut], "E: token error");
+        require(params.recipient == address(this), "E: recipient error");
+
+        uint256 tokenInBalance = getPositionsBalance(tokenIn, positionIds);
+        if(params.amountIn > tokenInBalance) {
+            revert();
+        }
+
+        uint256 amountOut = ISwapRouter02(uniswapRouter).exactInput {value: msg.value} (
+            params
+        );
+
+        emit Swap(tokenIn, tokenOut, params.amountIn, amountOut, block.timestamp);
+
+        return amountOut;
+    }
+
+
     function uniswapV2(
         uint256 positionId,
         uint256 amountIn,
@@ -376,6 +459,9 @@ contract Index is IIndex, Ownable {
 
         positionBalance[positionId][tokenIn] = tokenInBalance.sub(amountIn);
         positionBalance[positionId][tokenOut] = tokenOutBalance.add(amountOut);
+
+        emit Swap(tokenIn, tokenOut, amountIn, amountOut, block.timestamp);
+
         return amountOut;
     }
 
@@ -401,6 +487,9 @@ contract Index is IIndex, Ownable {
 
         positionBalance[positionId][params.tokenIn] = tokenInBalance.sub(params.amountIn);
         positionBalance[positionId][params.tokenOut] = tokenOutBalance.add(amountOut);
+
+        emit Swap(params.tokenIn, params.tokenOut, params.amountIn, amountOut, block.timestamp);
+        return amountOut;
     }
 
     function uniswapV3ExactInput(
@@ -426,6 +515,9 @@ contract Index is IIndex, Ownable {
 
         positionBalance[positionId][tokenIn] = tokenInBalance.sub(params.amountIn);
         positionBalance[positionId][tokenOut] = tokenOutBalance.add(amountOut);
+
+        emit Swap(tokenIn, tokenOut, params.amountIn, amountOut, block.timestamp);
+        return amountOut;
     }
 
     function decodePath(bytes calldata path) external view returns (address token0, address token1) {
@@ -567,6 +659,23 @@ contract Index is IIndex, Ownable {
         }
 
         emit SetBenchMark(tokens, prices, block.timestamp);
+    }
+
+    function withdraw(uint256 positionId, address recipient) external {
+        (PositionSet.Position memory position, bool isExist) = getPositionById(positionId);
+        if(! isExist) {
+            revert();
+        }
+
+        if(position.owner != tx.origin) {
+            revert();
+        }
+
+        uint256 amount = positionBalance[positionId][underlyingToken];
+        
+        underlyingToken.safeTransfer(recipient, amount);
+
+        emit Withdraw(positionId, tx.origin, amount, block.timestamp);
     }
 
     /**

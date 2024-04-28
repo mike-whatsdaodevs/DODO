@@ -35,6 +35,16 @@ interface IIndex {
         uint256 timestamp
     );
 
+    event Swap(
+        address indexed tokenIn, 
+        address indexed tokenOut, 
+        uint256 amountIn, 
+        uint256 amountOut, 
+        uint256 timestamp
+    );
+
+    event Withdraw(uint256 indexed positionId, address indexed owner, uint256 amount, uint256 timestamp);
+
     event ChangeFeeRate(address indexed indexAddress, uint256 old, uint256 newRate, uint256 timestamp);
 
     function feeRate() external view returns (uint256);
