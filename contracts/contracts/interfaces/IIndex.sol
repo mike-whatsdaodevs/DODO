@@ -43,17 +43,15 @@ interface IIndex {
         uint256 timestamp
     );
 
+    event PositionsSwap(uint256 positionCount);
+
     event Withdraw(uint256 indexed positionId, address indexed owner, uint256 amount, uint256 timestamp);
 
     event ChangeFeeRate(address indexed indexAddress, uint256 old, uint256 newRate, uint256 timestamp);
 
     function feeRate() external view returns (uint256);
 
-    function addIndexTokens(address[] memory addrs) external;
-
-    function manageAllowedToken(address token, bool status) external;
-
-    function removeIndexTokens(address[] memory addrs) external;
+    function positionBalance(uint256 positionId, address token) external view returns (uint256);
 
     function createPosition(
         address initialOwner, 

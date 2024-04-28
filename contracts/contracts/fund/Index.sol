@@ -4,44 +4,34 @@ pragma solidity >=0.8.14;
 import {IIndex} from "../interfaces/IIndex.sol";
 import {PositionSet} from "../libraries/PositionSet.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {Pausable} from "../../@openzeppelin/contracts/security/Pausable.sol";
 import {Enum} from "../libraries/Enum.sol";
 import {TransferHelper } from "../libraries/TransferHelper.sol";
 
-import {UniswapV2} from "./UniswapV2.sol";
-import {UniswapV3} from "./UniswapV3.sol";
+import {UniswapAdapter, ISwapRouter02} from "../libraries/UniswapAdapter.sol";
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import {Path} from "../libraries/Path.sol";
-import {ISwapRouter02} from "../interfaces/fund/ISwapRouter02.sol";
 import { SafeMath } from "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import {Filter} from "./Filter.sol";
 
-contract Index is IIndex, Ownable {
+contract Index is IIndex, Ownable, Filter {
 
     using TransferHelper for address;
     using Address for address;
     using Path for bytes; 
     using SafeMath for uint256;
+    using UniswapAdapter for address;
 
     address public constant weth9 = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
-    address public constant uniswapRouter = 0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45;
     address public constant underlyingToken = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
+        /// eth 
+    address public immutable uniswapRouter = 0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45;
 
     using PositionSet for PositionSet.Set;
-    using EnumerableSet for EnumerableSet.AddressSet;
 
     //// positons
     PositionSet.Set positionSet;
-
-    /// allowed tokens to buy
-    EnumerableSet.AddressSet indexTokens;
-
-    /// allowed lp to approve
-    EnumerableSet.AddressSet allowedProtocols;
-
-    /// allowed tokens to sell
-    mapping(address => bool) public allowedTokens;
 
     /// benchmark price 
     mapping(address => uint256) public benchmark;
@@ -66,9 +56,12 @@ contract Index is IIndex, Ownable {
     /// 
     mapping(address => bool) public operators;
 
-    mapping(uint256 => mapping(address => uint256)) public positionBalance;
+    mapping(uint256 => mapping(address => uint256)) public override positionBalance;
 
-    constructor(uint indexId, string memory indexName) {
+    constructor(
+        uint indexId, 
+        string memory indexName
+    ) {
         operators[msg.sender] = true;
         id = indexId;
         name = indexName;
@@ -79,56 +72,7 @@ contract Index is IIndex, Ownable {
 
     receive() external payable {}
 
-    function addIndexTokens(address[] memory addrs) external {
-        uint256 length = addrs.length;
-        for(uint256 i; i < length; i ++) {
-            address indexToken = addrs[i];
-            if(indexTokens.contains(indexToken)) {
-                continue;
-            }
-            indexTokens.add(indexToken);
-            /// allow to sell
-            allowedTokens[indexToken] = true;
-        }
-    }
-
-    function removeIndexTokens(address[] memory addrs) external {
-        uint256 length = addrs.length;
-        for(uint256 i; i < length; i ++) {
-            address indexToken = addrs[i];
-            if(!indexTokens.contains(indexToken)) {
-                continue;
-            }
-            indexTokens.remove(indexToken);
-        }
-    }
-
-    function addAllowedProtocols(address[] memory protocols) external {
-        uint256 length = protocols.length;
-        for(uint256 i; i < length; i++) {
-            address protocol = protocols[i];
-            if(allowedProtocols.contains(protocol)) {
-                continue;
-            }
-            allowedProtocols.add(protocol);
-        }
-    }
-
-    function removeAllowedProtocols(address[] memory protocols) external {
-        uint256 length = protocols.length;
-        for(uint256 i; i < length; i ++) {
-            address protocol = protocols[i];
-            if(!allowedProtocols.contains(protocol)) {
-                continue;
-            }
-            allowedProtocols.remove(protocol);
-        }
-    }
-
-    function manageAllowedToken(address token, bool status) external {
-        allowedTokens[token] = status;
-    }
-
+   
     modifier onlyOperator() {
         require(! operators[msg.sender], "E: only operator allowed");
         _;
@@ -148,50 +92,12 @@ contract Index is IIndex, Ownable {
         IERC20(token).balanceOf(address(this));
     }
 
-    /**
-     * @dev index supoorts tokens
-     * 
-     * @return tokens address
-     */
-    function getIndexTokens() external view returns (address[] memory) {
-        return indexTokens.values();
-    }
-
-    /**
-     * @dev index supoorts tokens
-     * 
-     * @return tokens address
-     */
-    function isAllowedToken(address token) external view returns (bool) {
-        return allowedTokens[token];
-    }
-
-    /**
-     * @dev list all allowed lps
-     * 
-     * @return lps
-     */
-    function getAllowedProtocols() external view returns (address[] memory) {
-        return allowedProtocols.values();
-    }
-
-    /**
-     * @dev check if index supports lp
-     * 
-     * @param lp address
-     * 
-     * @return bool
-     */
-    function isAllowedProtocols(address lp) public view returns (bool) {
-        return allowedProtocols.contains(lp);
-    }
-
     function safeApprove(address token, address protocol) external {
-        if(!allowedProtocols.contains(protocol)) {
+        if(!isAllowedProtocols(protocol)) {
             revert();
         }
 
-        if(! allowedTokens[token]) {
+        if(! isAllowedToken(token)) {
             revert();
         }
         token.safeApprove(protocol, type(uint256).max);
@@ -281,102 +187,50 @@ contract Index is IIndex, Ownable {
         return currentPositionId;
     }
 
-    /**
-     * @dev buy token 
-     * 
-     * @param positionId: position id
-     * @param token: token address
-     * @param data: calldata
-     */
-    function convertToIndexTokens(uint256 positionId, address token, bytes memory data) external {
-
-    }
-
-    /**
-     * @dev sell token 
-     * 
-     * @param positionId: position id
-     * @param token: token address
-     * @param data: calldata
-     */
-    function convertToUnderlyingToken(uint256 positionId, address token, bytes memory data) external {
-
-    }
-
-    function _convertAllAssetsToUnderlying(
-        uint256 positionId,
-        bytes[] calldata paths
-    ) private {
-        // address[] memory indexTokens = allowedTokensSell.values();
-        // address indexToken;
-
-        // for (uint256 i = 0; i < indexTokens.length; i++) {
-        //     indexToken = indexTokens[i];
-        //     if (indexToken == underlyingToken) continue;
-        //     if (indexToken == weth9) {
-        //         /// fundAccount.wrapWETH9();
-        //     }
-        //     uint256 balance = positionBalance[positionId][indexToken];
-        //     if (balance == 0) continue;
-
-        //     bytes memory matchPath;
-        //     for (uint256 j = 0; j < paths.length; j++) {
-        //         (address tokenIn, address tokenOut) = paths[j].decode();
-        //         if (tokenIn == allowedToken && tokenOut == underlyingToken) {
-        //             matchPath = paths[j];
-        //             break;
-        //         }
-        //     }
-        //     require(matchPath.length > 0, "E: path error");
-
-        //     /// fundAccount.approveToken(allowedToken, swapRouter, balance);
-            
-        // }
-
-        // if (underlyingToken == weth9) {
-        //     fundAccount.unwrapWETH9();
-        // }
-    }
-
-    function getPositionsBalance(address token, uint256[] memory positionIds) public view returns (uint256 tokenInBalance) {
-        uint256 length = positionIds.length;
+    function getPositionsBalance(address token, uint256[] memory positionIds) public view returns (
+        uint256 tokenInBalance, 
+        uint256 length
+    ) {
+        length = positionIds.length;
         for(uint256 i = 1; i < length; ++i) {
             uint256 balance = positionBalance[positionIds[i]][token];
             tokenInBalance = tokenInBalance.add(balance);
         }
     }
 
-    function setPositionBalance(address token, uint256[] memory positionIds, uint256[] memory values) external {
+    function setPositionsBalance(address token, uint256[] memory positionIds, uint256[] memory values) external {
         uint256 length = positionIds.length;
         for(uint256 i = 1; i < length; ++i) {
             positionBalance[positionIds[i]][token] = values[i];
         }
     }
 
-    function swapPositionsV2(
+    function swapPositionV2(
         uint256[] memory positionIds,
         uint256 amountIn,
         uint256 amountOutMin,
         address[] calldata path
     ) public payable returns (uint256) {
         require(path.length >= 2, "PA6");
-        address tokenIn = path[0];
-        address tokenOut = path[path.length - 1];
 
-        require(allowedTokens[tokenIn], "E: token error");
-        require(allowedTokens[tokenOut], "E: token error");
+        (address tokenIn, address tokenOut) = (path[0], path[path.length - 1]);
 
-        uint256 tokenInBalance = getPositionsBalance(tokenIn, positionIds);
+        require(isAllowedToken(tokenIn), "E: token error");
+        require(isAllowedToken(tokenOut), "E: token error");
+
+        (uint256 tokenInBalance, uint256 positionCount) = getPositionsBalance(tokenIn, positionIds);
         if(amountIn > tokenInBalance) {
             revert();
         }
 
-        uint256 amountOut = ISwapRouter02(uniswapRouter).swapExactTokensForTokens {value: msg.value} (
-            amountIn,
-            amountOutMin,
-            path,
-            address(this)
-        );
+        uint256 amountOut = uniswapRouter.uniswapV2(amountIn, amountOutMin, path, msg.value);
+
+        if(positionCount == 1) {
+            positionBalance[positionId][tokenIn] = tokenInBalance.sub(amountIn);
+            positionBalance[positionId][tokenOut] = positionBalance[positionId][tokenOut].add(amountOut);
+        } else {
+            emit PositionsSwap(positionCount);
+        }
 
         emit Swap(tokenIn, tokenOut, amountIn, amountOut, block.timestamp);
 
@@ -387,19 +241,26 @@ contract Index is IIndex, Ownable {
         uint256[] memory positionIds,
         ISwapRouter02.ExactInputSingleParams calldata params
     ) external payable returns (uint256) {
-        require(allowedTokens[params.tokenIn], "E: token error");
-        require(allowedTokens[params.tokenOut], "E: token error");
+        require(isAllowedToken(params.tokenIn), "E: token error");
+        require(isAllowedToken(params.tokenOut), "E: token error");
 
-        uint256 tokenInBalance = getPositionsBalance(params.tokenIn, positionIds);
+        (uint256 tokenInBalance, uint256 positionCount) = getPositionsBalance(params.tokenIn, positionIds);
         if(params.amountIn > tokenInBalance) {
             revert();
         }
-
         require(params.recipient == address(this), "E: recipient error");
 
-        uint256 amountOut = ISwapRouter02(uniswapRouter).exactInputSingle {value: msg.value} (
-            params
-        );
+        uint256 amountOut = uniswapRouter.uniswapV3Single(params, msg.value);
+
+        if(positionCount == 1) {
+            positionBalance[positionId][params.tokenIn] = tokenInBalance.sub(tokenInBalance);
+            
+            uint256 tokenOutBalance = positionBalance[positionId][params.tokenOut];
+            positionBalance[positionId][params.tokenOut] = tokenOutBalance.add(amountOut);
+        } else {
+            emit PositionsSwap(positionCount);
+        }
+
         emit Swap(params.tokenIn, params.tokenOut, params.amountIn, amountOut, block.timestamp);
 
         return amountOut;
@@ -411,112 +272,28 @@ contract Index is IIndex, Ownable {
     ) external payable returns (uint256) {
         (address tokenIn, address tokenOut) = params.path.decode();
 
-        require(allowedTokens[tokenIn], "E: token error");
-        require(allowedTokens[tokenOut], "E: token error");
+        require(isAllowedToken(tokenIn), "E: token error");
+        require(isAllowedToken(tokenOut), "E: token error");
         require(params.recipient == address(this), "E: recipient error");
 
-        uint256 tokenInBalance = getPositionsBalance(tokenIn, positionIds);
+        (uint256 tokenInBalance, uint256 positionCount) = getPositionsBalance(tokenIn, positionIds);
         if(params.amountIn > tokenInBalance) {
             revert();
         }
 
-        uint256 amountOut = ISwapRouter02(uniswapRouter).exactInput {value: msg.value} (
-            params
-        );
+        uint256 amountOut = uniswapRouter.uniswapV3(params, msg.value);
+        
+        if(positionCount == 1) {
+            positionBalance[positionId][tokenIn] = tokenInBalance.sub(tokenInBalance);
+            
+            uint256 tokenOutBalance = positionBalance[positionId][tokenOut];
+            positionBalance[positionId][tokenOut] = tokenOutBalance.add(amountOut);
+        } else {
+            emit PositionsSwap(positionCount);
+        }
 
         emit Swap(tokenIn, tokenOut, params.amountIn, amountOut, block.timestamp);
 
-        return amountOut;
-    }
-
-
-    function uniswapV2(
-        uint256 positionId,
-        uint256 amountIn,
-        uint256 amountOutMin,
-        address[] calldata path
-    ) public payable returns (uint256) {
-        require(path.length >= 2, "PA6");
-        address tokenIn = path[0];
-        address tokenOut = path[path.length - 1];
-
-        require(allowedTokens[tokenIn], "E: token error");
-        require(allowedTokens[tokenOut], "E: token error");
-
-        uint256 tokenInBalance = positionBalance[positionId][tokenIn];
-        uint256 tokenOutBalance = positionBalance[positionId][tokenOut];
-
-        if(amountIn > tokenInBalance) {
-            revert();
-        }
-
-        uint256 amountOut = ISwapRouter02(uniswapRouter).swapExactTokensForTokens {value: msg.value} (
-            amountIn,
-            amountOutMin,
-            path,
-            address(this)
-        );
-
-        positionBalance[positionId][tokenIn] = tokenInBalance.sub(amountIn);
-        positionBalance[positionId][tokenOut] = tokenOutBalance.add(amountOut);
-
-        emit Swap(tokenIn, tokenOut, amountIn, amountOut, block.timestamp);
-
-        return amountOut;
-    }
-
-    function uniswapV3ExactInputSingle(
-        uint256 positionId,
-        ISwapRouter02.ExactInputSingleParams calldata params
-    ) external payable returns (uint256) {
-        require(allowedTokens[params.tokenIn], "E: token error");
-        require(allowedTokens[params.tokenOut], "E: token error");
-
-        uint256 tokenInBalance = positionBalance[positionId][params.tokenIn];
-        uint256 tokenOutBalance = positionBalance[positionId][params.tokenIn];
-
-        if(params.amountIn > tokenInBalance) {
-            revert();
-        }
-
-        require(params.recipient == address(this), "E: recipient error");
-
-        uint256 amountOut = ISwapRouter02(uniswapRouter).exactInputSingle {value: msg.value} (
-            params
-        );
-
-        positionBalance[positionId][params.tokenIn] = tokenInBalance.sub(params.amountIn);
-        positionBalance[positionId][params.tokenOut] = tokenOutBalance.add(amountOut);
-
-        emit Swap(params.tokenIn, params.tokenOut, params.amountIn, amountOut, block.timestamp);
-        return amountOut;
-    }
-
-    function uniswapV3ExactInput(
-        uint256 positionId,
-        ISwapRouter02.ExactInputParams calldata params
-    ) external payable returns (uint256) {
-        (address tokenIn, address tokenOut) = params.path.decode();
-
-        require(allowedTokens[tokenIn], "E: token error");
-        require(allowedTokens[tokenOut], "E: token error");
-        require(params.recipient == address(this), "E: recipient error");
-
-        uint256 tokenInBalance = positionBalance[positionId][tokenIn];
-        uint256 tokenOutBalance = positionBalance[positionId][tokenOut];
-
-        if(params.amountIn > tokenInBalance) {
-            revert();
-        }
-
-        uint256 amountOut = ISwapRouter02(uniswapRouter).exactInput {value: msg.value} (
-            params
-        );
-
-        positionBalance[positionId][tokenIn] = tokenInBalance.sub(params.amountIn);
-        positionBalance[positionId][tokenOut] = tokenOutBalance.add(amountOut);
-
-        emit Swap(tokenIn, tokenOut, params.amountIn, amountOut, block.timestamp);
         return amountOut;
     }
 
@@ -531,7 +308,7 @@ contract Index is IIndex, Ownable {
 
     function swapTokens(address protocol, bytes calldata data) external payable {
         require(data.length > 3, "E: data error");
-        if(allowedProtocols.contains(protocol)) {
+        if(isAllowedProtocols(protocol)) {
             revert();
         }
         uint256 value = msg.value;
@@ -629,11 +406,11 @@ contract Index is IIndex, Ownable {
         }
 
         if(tokenIn != address(0)) {
-            require(allowedTokens[tokenIn], "E: token error");
+            require(isAllowedToken(tokenIn), "E: token error");
         }
 
         if(tokenOut != address(0)) {
-            require(allowedTokens[tokenOut], "E: token error");
+            require(isAllowedToken(tokenOut), "E: token error");
         }
         require(recipient == address(this), "E: recipient error");
     }
