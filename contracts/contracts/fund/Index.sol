@@ -8,7 +8,7 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {Pausable} from "../../@openzeppelin/contracts/security/Pausable.sol";
 import {Enum} from "../libraries/Enum.sol";
 import {TransferHelper } from "../libraries/TransferHelper.sol";
-
+import {BytesLib } from "../libraries/BytesLib.sol";
 import {UniswapAdapter, ISwapRouter02} from "../libraries/UniswapAdapter.sol";
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import {Path} from "../libraries/Path.sol";
@@ -22,6 +22,7 @@ contract Index is IIndex, Ownable, Filter {
     using Path for bytes; 
     using SafeMath for uint256;
     using UniswapAdapter for address;
+    using BytesLib for bytes;
 
     address public constant weth9 = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
     address public constant underlyingToken = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
@@ -284,6 +285,8 @@ contract Index is IIndex, Ownable, Filter {
             
             uint256 tokenOutBalance = positionBalance[positionId][tokenOut];
             positionBalance[positionId][tokenOut] = tokenOutBalance.add(amountOut);
+
+            positionStatus[positionId] = Enum.PositionStatus.CREATED;
         } else {
             emit PositionsSwap(positionCount);
         }
@@ -297,18 +300,29 @@ contract Index is IIndex, Ownable, Filter {
         (token0, token1) = Path.decode(path);
     }
 
-    function _decodeCalldata(bytes calldata data) private pure returns (bytes4 selector, bytes memory params) {
+    function _decodeCalldata(bytes calldata data) private pure returns (bytes4 selector, bytes calldata params) {
+        require(data.length > 3, "E: data error");        
         selector = bytes4(data[0: 4]);
         params = data[4:];
+    }
+
+    function swapMultiCall(bytes[] calldata data) external payable  {
+        uint256 length = data.length;
+
+        for(uint256 i; i < length; i ++) {
+            (bytes4 selector, bytes memory params) = _decodeCalldata(data[i]);
+            _checkSingleSwapCall(selector, params);
+        }
+        uniswapRouter.uniMulticall(data, msg.value);
     }
 
     function swapTokens(address protocol, bytes calldata data) external payable {
         require(data.length > 3, "E: data error");
         if(isAllowedProtocols(protocol)) {
-            revert();
+            revert("protocol not support");
         }
         uint256 value = msg.value;
-        (bytes4 selector, bytes memory params) = _decodeCalldata(data);
+        (bytes4 selector, bytes calldata params) = _decodeCalldata(data);
         // execute first to analyse result
         if (protocol == weth9) {
             // weth9 deposit/withdraw
@@ -327,7 +341,7 @@ contract Index is IIndex, Ownable, Filter {
         return selector == 0xac9650d8 || selector == 0x5ae401dc || selector == 0x1f0464d1;
     }
 
-    function _analyseSwapCalls(bytes4 selector, bytes memory params, uint256 value) private view {
+    function _analyseSwapCalls(bytes4 selector, bytes calldata params, uint256 value) private view {
         bool isTokenInETH;
         bool isTokenOutETH;
         if (_isMultiCall(selector)) {
@@ -346,68 +360,56 @@ contract Index is IIndex, Ownable, Filter {
             //     }
             // }
         } else {
-            (isTokenInETH, isTokenOutETH) = _checkSingleSwapCall(selector, params, value);
+            (isTokenInETH, isTokenOutETH) = _checkSingleSwapCall(selector, params);
             require(!isTokenInETH && !isTokenOutETH, "PA2");
         }
     }
 
-    // function _decodeMultiCall(bytes4 selector, bytes memory params) private pure returns (bytes4[] memory selectorArr, bytes[] memory paramsArr) {
-    //     bytes[] memory arr;
-    //     if (selector == 0xac9650d8) {
-    //         // multicall(bytes[])
-    //         (arr) = abi.decode(params, (bytes[]));
-    //     } else if (selector == 0x5ae401dc) {
-    //         // multicall(uint256,bytes[])
-    //         (, arr) = abi.decode(params, (uint256, bytes[]));
-    //     } else if (selector == 0x1f0464d1) {
-    //         // multicall(bytes32,bytes[])
-    //         (, arr) = abi.decode(params, (bytes32, bytes[]));
-    //     }
-    //     selectorArr = new bytes4[](arr.length);
-    //     paramsArr = new bytes[](arr.length);
-    //     for (uint256 i = 0; i < arr.length; i++) {
-    //         (selectorArr[i], paramsArr[i]) = _decodeCalldata(arr[i]);
-    //     }
-    // }
+    function _decodeMultiCall(bytes4 selector, bytes calldata params) private pure returns (bytes4[] memory selectorArr, bytes[] memory paramsArr) {
+        bytes[] memory arr;
+        if (selector == 0xac9650d8) {
+            // multicall(bytes[])
+            (arr) = abi.decode(params, (bytes[]));
+        } else if (selector == 0x5ae401dc) {
+            // multicall(uint256,bytes[])
+            (, arr) = abi.decode(params, (uint256, bytes[]));
+        } else if (selector == 0x1f0464d1) {
+            // multicall(bytes32,bytes[])
+            (, arr) = abi.decode(params, (bytes32, bytes[]));
+        }
+        selectorArr = new bytes4[](arr.length);
+        paramsArr = new bytes[](arr.length);
+        for (uint256 i = 0; i < arr.length; i++) {
+            //(selectorArr[i], paramsArr[i]) = _decodeMemory(arr[i]);
+        }
+    }
 
     function _checkSingleSwapCall(
         bytes4 selector,
-        bytes memory params,
-        uint256 value
+        bytes memory params
     ) private view returns (bool isTokenInETH, bool isTokenOutETH) {
         address tokenIn;
         address tokenOut;
         address recipient;
         if (selector == 0x04e45aaf || selector == 0x5023b4df) {
             // exactInputSingle/exactOutputSingle
-            (tokenIn,tokenOut, ,recipient, , , ) = abi.decode(params, (address,address,uint24,address,uint256,uint256,uint160));
+            (tokenIn, tokenOut, ,recipient, , , ) = abi.decode(params, (address,address,uint24,address,uint256,uint256,uint160));
         } else if (selector == 0xb858183f || selector == 0x09b81346) {
             // exactInput/exactOutput
             ExactSwapParams memory swap = abi.decode(params, (ExactSwapParams));
-            (tokenIn,tokenOut) = swap.path.decode();
+            (tokenIn, tokenOut) = swap.path.decode();
             recipient = swap.recipient;
         } else if (selector == 0x472b43f3 || selector == 0x42712a67) {
             // swapExactTokensForTokens/swapTokensForExactTokens
-            (,,address[] memory path,address recipient) = abi.decode(params, (uint256,uint256,address[],address));
+            (,,address[] memory path, address to) = abi.decode(params, (uint256,uint256,address[],address));
             require(path.length >= 2, "PA6");
-            tokenIn = path[0];
-            tokenOut = path[path.length - 1];
-        } else if (selector == 0x49404b7c) {
-            // unwrapWETH9
-            ( ,recipient) = abi.decode(params, (uint256,address));
-        } else if (selector == 0x12210e8a) {
-            // refundETH
+            (tokenIn, tokenOut, recipient) = (path[0], path[path.length - 1], to);
         } else {
             revert("PA2");
         }
 
-        if(tokenIn != address(0)) {
-            require(isAllowedToken(tokenIn), "E: token error");
-        }
-
-        if(tokenOut != address(0)) {
-            require(isAllowedToken(tokenOut), "E: token error");
-        }
+        require(isAllowedToken(tokenIn), "E: token error");
+        require(isAllowedToken(tokenOut), "E: token error");
         require(recipient == address(this), "E: recipient error");
     }
 

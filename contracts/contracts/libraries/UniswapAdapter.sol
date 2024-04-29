@@ -4,6 +4,7 @@ pragma solidity >=0.8.14;
 import {IV2SwapRouter} from "../interfaces/fund/IV2SwapRouter.sol";
 import {IV3SwapRouter} from "../interfaces/fund/IV3SwapRouter.sol";
 import {ISwapRouter02} from "../interfaces/fund/ISwapRouter02.sol";
+import {IMulticallExtended} from "../interfaces/fund/IMulticallExtended.sol";
 
 library UniswapAdapter {
 
@@ -63,5 +64,25 @@ library UniswapAdapter {
         require(success, 'V2 ERROR');
 
         return abi.decode(data, (uint256));
+    }
+
+    // function multicall(uint256 deadline, bytes[] calldata data) external payable returns (bytes[] memory results);
+
+    function uniMulticall(
+        address uniswapRouter,
+        bytes[] calldata params, 
+        uint256 value
+    ) internal returns (bytes[] memory results) {
+        (bool success, bytes memory data) = uniswapRouter.call {value: value} (
+            abi.encodeWithSelector(
+                IMulticallExtended.multicall.selector, 
+                block.timestamp,
+                params
+            )
+        );
+        
+        require(success, 'V2 ERROR');
+
+        results = abi.decode(data, (bytes[]));
     }
 }
