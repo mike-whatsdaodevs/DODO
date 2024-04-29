@@ -192,7 +192,7 @@ contract Index is IIndex, Ownable, Filter {
         uint256 length
     ) {
         length = positionIds.length;
-        for(uint256 i = 1; i < length; ++i) {
+        for(uint256 i; i < length; ++i) {
             uint256 balance = positionBalance[positionIds[i]][token];
             tokenInBalance = tokenInBalance.add(balance);
         }
@@ -200,7 +200,7 @@ contract Index is IIndex, Ownable, Filter {
 
     function setPositionsBalance(address token, uint256[] memory positionIds, uint256[] memory values) external {
         uint256 length = positionIds.length;
-        for(uint256 i = 1; i < length; ++i) {
+        for(uint256 i; i < length; ++i) {
             positionBalance[positionIds[i]][token] = values[i];
         }
     }
@@ -219,9 +219,7 @@ contract Index is IIndex, Ownable, Filter {
         require(isAllowedToken(tokenOut), "E: token error");
 
         (uint256 tokenInBalance, uint256 positionCount) = getPositionsBalance(tokenIn, positionIds);
-        if(amountIn > tokenInBalance) {
-            revert();
-        }
+        require(amountIn <= tokenInBalance, "E: amount in is too large");
 
         uint256 amountOut = uniswapRouter.uniswapV2(amountIn, amountOutMin, path, msg.value);
 
@@ -278,7 +276,7 @@ contract Index is IIndex, Ownable, Filter {
 
         (uint256 tokenInBalance, uint256 positionCount) = getPositionsBalance(tokenIn, positionIds);
         if(params.amountIn > tokenInBalance) {
-            revert();
+            revert("balance error");
         }
 
         uint256 amountOut = uniswapRouter.uniswapV3(params, msg.value);
@@ -441,6 +439,12 @@ contract Index is IIndex, Ownable, Filter {
     function withdraw(uint256 positionId, address recipient) external returns (uint256 amount) {
         (PositionSet.Position memory position, bool isExist) = getPositionById(positionId);
         if(! isExist) {
+            revert();
+        }
+
+        Enum.PositionStatus currentStatus = positionStatus[positionId];
+        /// must large REQUEST_LIQUIDATION
+        if(Enum.PositionStatus.REQUEST_LIQUIDATION <= currentStatus) {
             revert();
         }
 

@@ -20,7 +20,7 @@ async function main() {
   let weth_address = process.env.WETH;
   let usdt_address = process.env.USDC;
 
-  let swap_address = "0xf67394B56827246644359D4A3fc0D817dF8E90c0";
+  let swap_address = "0x0F1D1d61f0d8b3731bca2238B765F461144103A6";
 
   const swap = await ethers.getContractAt('SwapV2', swap_address, signer);
   const token = await ethers.getContractAt("@openzeppelin/contracts/token/ERC20/IERC20.sol:IERC20", usdt_address, signer);
@@ -35,7 +35,7 @@ async function main() {
   }
 
   let tx = await swap.swap(
-    ethers.utils.parseEther("1"),
+    ethers.utils.parseEther("3"),
     0,
     [weth_address, usdt_address],
     deployer.address,

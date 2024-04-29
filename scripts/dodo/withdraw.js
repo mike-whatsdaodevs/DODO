@@ -60,70 +60,38 @@ async function main() {
   console.log(ethers.utils.formatEther(index_weth_balance));
 
 
-  let positionIds = [3,4];
+  let positionIds = [0];
   let positionsBalance = await index.getPositionsBalance(usdc_address, positionIds);
 
-  // let tx = await index.swapPositionV2(
-  //   positionIds,
-  //   //ethers.utils.parseUnits("300", 6),
-  //   positionsBalance.tokenInBalance,
-  //   0,
-  //   [usdc_address, weth_address],
-  // );
-  // await tx.wait();
-  // console.log(tx.hash);
+  console.log(positionsBalance);
 
-  let params = {
-    tokenIn: usdc_address,
-    tokenOut: weth_address,
-    fee: 500,
-    recipient: index_address,
-    amountIn: positionsBalance.tokenInBalance,
-    amountOutMinimum: 0,
-    sqrtPriceLimitX96: 0
-  }
-
-  console.log("params id", params);
-
-  let tx1 = await index.swapPositionsV3Single(
+  let tx = await index.swapPositionV2(
     positionIds,
-    params
+    //ethers.utils.parseUnits("300", 6),
+    positionsBalance.tokenInBalance,
+    0,
+    [usdc_address, weth_address],
   );
-  await tx1.wait();
-  console.log(tx1.hash);
+  await tx.wait();
+  console.log(tx.hash);
 
-  // let path = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb480001f4c02aaa39b223fe8d0a0e5c4f27ead9083c756cc2";
-  // let amountIn = index_token_balance; //.add(index_token_balance1); //ethers.utils.parseUnits("1098.9", 6) * 2;
+  // let amountIn = ethers.utils.parseUnits("10", 6);
   // let params = {
-  //   path: path,
+  //   tokenIn: usdc_address,
+  //   tokenOut: weth_address,
+  //   fee: 500,
   //   recipient: index_address,
   //   amountIn: amountIn,
   //   amountOutMinimum: 0,
+  //   sqrtPriceLimitX96: 0
   // }
 
-
-  //// set balance;
-
-  let amountOut = ethers.utils.parseEther("0.68");
-  let avg = amountOut.div(2);
-  let positionIdsLength = positionIds.length;
-
-  let values = new Array(positionIdsLength);
-  for(let i = 0; i < positionIdsLength; ++i ) {
-      if(i < positionIdsLength - 1) {
-        values[i] = avg;
-      } else {
-        values[i] = amountOut.sub(avg.mul(positionIdsLength - 1));
-      }
-  }
-
-  let setBalanceTx = await index.setPositionsBalance(
-    usdc_address, 
-    positionIds, 
-    values
-  );
-  await setBalanceTx.wait();
-  console.log("set balance end,", setBalanceTx.hash);
+  // let tx1 = await index.uniswapV3ExactInputSingle(
+  //   0,
+  //   params
+  // );
+  // await tx1.wait();
+  // console.log(tx1.hash);
 
   // let path = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb480001f4c02aaa39b223fe8d0a0e5c4f27ead9083c756cc2";
   // let amountIn = index_token_balance; //.add(index_token_balance1); //ethers.utils.parseUnits("1098.9", 6) * 2;

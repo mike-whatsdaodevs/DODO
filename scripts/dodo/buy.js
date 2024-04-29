@@ -15,7 +15,7 @@ async function main() {
 
   let weth9_address = process.env.WETH9;
   let usdc_address = process.env.USDC;
-  let dodo_address = "0x0F1D1d61f0d8b3731bca2238B765F461144103A6";//process.env.DODO;
+  let dodo_address = "0xf67394B56827246644359D4A3fc0D817dF8E90c0";//process.env.DODO;
 
   const dodo = await ethers.getContractAt('DODO', dodo_address, deployer);
   const usdtToken = await ethers.getContractAt('@openzeppelin/contracts/token/ERC20/IERC20.sol:IERC20', usdc_address, deployer);
@@ -32,7 +32,8 @@ async function main() {
     0,
     ethers.utils.parseUnits("1100", 6),
     10000,
-    100
+    100,
+    10000
   );
 
   await buyTx.wait();

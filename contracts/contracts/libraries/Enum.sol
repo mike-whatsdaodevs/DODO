@@ -7,9 +7,9 @@ contract Enum {
         UN_CREATED,
         CREATED,
         SPOT,
-        FINISH,
         REQUEST_LIQUIDATION,
-        LIQUIDATION,
+        SOLD,
+        LIQUIDATED,
         WITHDRAWN
     }
 }
