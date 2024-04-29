@@ -282,7 +282,7 @@ contract Index is IIndex, Ownable, Filter {
         }
 
         uint256 amountOut = uniswapRouter.uniswapV3(params, msg.value);
-        
+
         if(positionCount == 1) {
             positionBalance[positionId][tokenIn] = tokenInBalance.sub(tokenInBalance);
             
@@ -438,7 +438,7 @@ contract Index is IIndex, Ownable, Filter {
         emit SetBenchMark(tokens, prices, block.timestamp);
     }
 
-    function withdraw(uint256 positionId, address recipient) external {
+    function withdraw(uint256 positionId, address recipient) external returns (uint256 amount) {
         (PositionSet.Position memory position, bool isExist) = getPositionById(positionId);
         if(! isExist) {
             revert();
@@ -448,7 +448,7 @@ contract Index is IIndex, Ownable, Filter {
             revert();
         }
 
-        uint256 amount = positionBalance[positionId][underlyingToken];
+        amount = positionBalance[positionId][underlyingToken];
         
         underlyingToken.safeTransfer(recipient, amount);
 

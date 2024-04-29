@@ -107,6 +107,18 @@ contract DODO is IDODO, PaymentGateway {
         );
     }
 
+    function withdrawPosition(uint256 indexId, uint256 positionId) external {
+        address indexAddress = indexList[indexId];
+        bool isPositionOwner = IIndex(indexAddress).checkPositionOwner(positionId, msg.sender);
+
+        if(! isPositionOwner) {
+            return;
+        }
+
+        uint256 amount = IIndex(indexAddress).withdraw(positionId, msg.sender);
+        emit Withdraw(indexId, indexAddress, msg.sender, amount, block.timestamp);
+    }
+
 
     function _refundETH() private {
         if (address(this).balance > 0) payable(msg.sender).transfer(address(this).balance);

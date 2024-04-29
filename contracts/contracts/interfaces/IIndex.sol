@@ -66,6 +66,8 @@ interface IIndex {
         address ownerAddress
     ) external view returns (bool);
 
+    function withdraw(uint256 positionId, address recipient) external returns (uint256 amount);
+
     function changePositionStatus(
         uint256 positionId, 
         Enum.PositionStatus status

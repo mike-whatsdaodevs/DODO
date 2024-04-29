@@ -24,4 +24,6 @@ interface IDODO {
         address user,
         uint256 timestamp
     );
+
+    event Withdraw(uint256 indexed indexId, address indexed indexAddress, address user, uint256 amount, uint256 timestamp);
 }
