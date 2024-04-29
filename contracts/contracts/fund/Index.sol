@@ -243,9 +243,9 @@ contract Index is IIndex, Ownable, Filter {
         require(isAllowedToken(params.tokenOut), "E: token error");
 
         (uint256 tokenInBalance, uint256 positionCount) = getPositionsBalance(params.tokenIn, positionIds);
-        if(params.amountIn > tokenInBalance) {
-            revert();
-        }
+        
+        require(params.amountIn <= tokenInBalance, "E: amount in is too large");
+
         require(params.recipient == address(this), "E: recipient error");
 
         uint256 amountOut = uniswapRouter.uniswapV3Single(params, msg.value);
@@ -275,9 +275,7 @@ contract Index is IIndex, Ownable, Filter {
         require(params.recipient == address(this), "E: recipient error");
 
         (uint256 tokenInBalance, uint256 positionCount) = getPositionsBalance(tokenIn, positionIds);
-        if(params.amountIn > tokenInBalance) {
-            revert("balance error");
-        }
+        require(params.amountIn <= tokenInBalance, "E: amount in is too large");
 
         uint256 amountOut = uniswapRouter.uniswapV3(params, msg.value);
 

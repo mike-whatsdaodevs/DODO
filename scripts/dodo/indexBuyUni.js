@@ -60,7 +60,7 @@ async function main() {
   console.log(ethers.utils.formatEther(index_weth_balance));
 
 
-  let positionIds = [3,4];
+  let positionIds = [0,1,2];
   let positionsBalance = await index.getPositionsBalance(usdc_address, positionIds);
 
   // let tx = await index.swapPositionV2(
@@ -73,24 +73,27 @@ async function main() {
   // await tx.wait();
   // console.log(tx.hash);
 
-  let params = {
-    tokenIn: usdc_address,
-    tokenOut: weth_address,
-    fee: 500,
-    recipient: index_address,
-    amountIn: positionsBalance.tokenInBalance,
-    amountOutMinimum: 0,
-    sqrtPriceLimitX96: 0
-  }
+  // let params = {
+  //   tokenIn: usdc_address,
+  //   tokenOut: weth_address,
+  //   fee: 500,
+  //   recipient: index_address,
+  //   amountIn: positionsBalance.tokenInBalance,
+  //   amountOutMinimum: 0,
+  //   sqrtPriceLimitX96: 0
+  // }
 
-  console.log("params id", params);
+  // console.log("params id", params);
 
-  let tx1 = await index.swapPositionsV3Single(
-    positionIds,
-    params
-  );
-  await tx1.wait();
-  console.log(tx1.hash);
+  // let tx1 = await index.swapPositionsV3Single(
+  //   positionIds,
+  //   params
+  // );
+  // await tx1.wait();
+  // console.log(tx1.hash);
+
+
+
 
   // let path = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb480001f4c02aaa39b223fe8d0a0e5c4f27ead9083c756cc2";
   // let amountIn = index_token_balance; //.add(index_token_balance1); //ethers.utils.parseUnits("1098.9", 6) * 2;
@@ -100,6 +103,23 @@ async function main() {
   //   amountIn: amountIn,
   //   amountOutMinimum: 0,
   // }
+
+  let path = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb480001f4c02aaa39b223fe8d0a0e5c4f27ead9083c756cc2";
+  let amountIn = index_token_balance; //.add(index_token_balance1); //ethers.utils.parseUnits("1098.9", 6) * 2;
+  let params = {
+    path: path,
+    recipient: index_address,
+    amountIn: positionsBalance.tokenInBalance,
+    amountOutMinimum: 0,
+  }
+
+  console.log(params);
+
+  let tx2 = await index.swapPositionsV3ExactInput(
+    positionIds,
+    params
+  );
+  await tx2.wait();
 
 
   //// set balance;
