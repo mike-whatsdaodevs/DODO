@@ -7,8 +7,8 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {Pausable} from "../../@openzeppelin/contracts/security/Pausable.sol";
 import {Enum} from "../libraries/Enum.sol";
+import {Constants} from "../libraries/Constants.sol";
 import {TransferHelper } from "../libraries/TransferHelper.sol";
-import {BytesLib } from "../libraries/BytesLib.sol";
 import {UniswapAdapter, ISwapRouter02} from "../libraries/UniswapAdapter.sol";
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import {Path} from "../libraries/Path.sol";
@@ -22,12 +22,9 @@ contract Index is IIndex, Ownable, Filter {
     using Path for bytes; 
     using SafeMath for uint256;
     using UniswapAdapter for address;
-    using BytesLib for bytes;
 
-    address public constant weth9 = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
-    address public constant underlyingToken = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
-        /// eth 
-    address public immutable uniswapRouter = 0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45;
+    address public constant underlyingToken = Constants.USDT;
+    address public immutable uniswapRouter = Constants.UNISWAP_ROUTER;
 
     using PositionSet for PositionSet.Set;
 
@@ -68,11 +65,19 @@ contract Index is IIndex, Ownable, Filter {
         name = indexName;
         feeRate = 10;
 
+        _checkName(indexName);
         emit CreatedIndex(id, address(this), feeRate, name, block.timestamp);
     }
 
-    receive() external payable {}
 
+    function _checkName(string memory name) private pure{
+        uint256 length = bytes(name).length;
+        if(length < Constants.NAME_MIN_SIZE || length > Constants.NAME_MAX_SIZE) {
+            revert("Name Error");
+        }
+    }
+
+    receive() external payable {}
    
     modifier onlyOperator() {
         require(! operators[msg.sender], "E: only operator allowed");
@@ -315,7 +320,7 @@ contract Index is IIndex, Ownable, Filter {
         }
         uniswapRouter.uniMulticall(data, msg.value);
     }
-
+  
     function swapTokens(address protocol, bytes calldata data) external payable {
         require(data.length > 3, "E: data error");
         if(isAllowedProtocols(protocol)) {
@@ -324,64 +329,17 @@ contract Index is IIndex, Ownable, Filter {
         uint256 value = msg.value;
         (bytes4 selector, bytes calldata params) = _decodeCalldata(data);
         // execute first to analyse result
-        if (protocol == weth9) {
+        if (protocol == Constants.WETH9) {
             // weth9 deposit/withdraw
             require(selector == 0xd0e30db0 || selector == 0x2e1a7d4d, "PA2");
         } else if (protocol == uniswapRouter) {
-            _analyseSwapCalls(selector, params, value);
+            _checkSingleSwapCall(selector, params);
         } else {
             revert();
         }
 
         protocol.functionCallWithValue(data, value);
 
-    }
-
-    function _isMultiCall(bytes4 selector) private pure returns (bool) {
-        return selector == 0xac9650d8 || selector == 0x5ae401dc || selector == 0x1f0464d1;
-    }
-
-    function _analyseSwapCalls(bytes4 selector, bytes calldata params, uint256 value) private view {
-        bool isTokenInETH;
-        bool isTokenOutETH;
-        if (_isMultiCall(selector)) {
-            revert();
-            // (bytes4[] memory selectorArr, bytes[] memory paramsArr) = _decodeMultiCall(selector, params);
-            // for (uint256 i = 0; i < selectorArr.length; i++) {
-            //     (isTokenInETH, isTokenOutETH) = _checkSingleSwapCall(selectorArr[i], paramsArr[i], value);
-            //     // if swap native ETH, must check multicall
-            //     if (isTokenInETH) {
-            //         // must call refundETH last
-            //         require(selectorArr[selectorArr.length - 1] == 0x12210e8a, "PA3");
-            //     }
-            //     if (isTokenOutETH) {
-            //         // must call unwrapWETH9 last
-            //         require(selectorArr[selectorArr.length - 1] == 0x49404b7c, "PA3");
-            //     }
-            // }
-        } else {
-            (isTokenInETH, isTokenOutETH) = _checkSingleSwapCall(selector, params);
-            require(!isTokenInETH && !isTokenOutETH, "PA2");
-        }
-    }
-
-    function _decodeMultiCall(bytes4 selector, bytes calldata params) private pure returns (bytes4[] memory selectorArr, bytes[] memory paramsArr) {
-        bytes[] memory arr;
-        if (selector == 0xac9650d8) {
-            // multicall(bytes[])
-            (arr) = abi.decode(params, (bytes[]));
-        } else if (selector == 0x5ae401dc) {
-            // multicall(uint256,bytes[])
-            (, arr) = abi.decode(params, (uint256, bytes[]));
-        } else if (selector == 0x1f0464d1) {
-            // multicall(bytes32,bytes[])
-            (, arr) = abi.decode(params, (bytes32, bytes[]));
-        }
-        selectorArr = new bytes4[](arr.length);
-        paramsArr = new bytes[](arr.length);
-        for (uint256 i = 0; i < arr.length; i++) {
-            //(selectorArr[i], paramsArr[i]) = _decodeMemory(arr[i]);
-        }
     }
 
     function _checkSingleSwapCall(

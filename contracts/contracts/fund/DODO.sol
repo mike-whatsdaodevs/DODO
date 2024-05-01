@@ -9,8 +9,8 @@ import { Index } from "./Index.sol";
 import { TransferHelper } from "../libraries/TransferHelper.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { SafeMath } from "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import {Enum} from "../libraries/Enum.sol";
-import {PositionSet} from "../libraries/PositionSet.sol";
+import { Enum } from "../libraries/Enum.sol";
+import { PositionSet } from "../libraries/PositionSet.sol";
 
 contract DODO is IDODO, PaymentGateway {
     using TransferHelper for address;
