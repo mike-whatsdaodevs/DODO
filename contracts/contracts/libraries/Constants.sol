@@ -18,5 +18,5 @@ library Constants {
     uint256 internal constant MAX_UINT256 = type(uint256).max;
     uint128 internal constant MAX_UINT128 = type(uint128).max;
 
-    uint256 internal constant BASE_RATIO = 1e4;
+    uint256 internal constant DENOMINATOR = 1e4;
 }

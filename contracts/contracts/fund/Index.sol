@@ -12,7 +12,7 @@ import {TransferHelper } from "../libraries/TransferHelper.sol";
 import {UniswapAdapter, ISwapRouter02} from "../libraries/UniswapAdapter.sol";
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import {Path} from "../libraries/Path.sol";
-import { SafeMath } from "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import {Filter} from "./Filter.sol";
 
 contract Index is IIndex, Ownable, Filter {
@@ -22,11 +22,10 @@ contract Index is IIndex, Ownable, Filter {
     using Path for bytes; 
     using SafeMath for uint256;
     using UniswapAdapter for address;
+    using PositionSet for PositionSet.Set;
 
     address public constant underlyingToken = Constants.USDT;
-    address public immutable uniswapRouter = Constants.UNISWAP_ROUTER;
-
-    using PositionSet for PositionSet.Set;
+    address public constant uniswapRouter = Constants.UNISWAP_ROUTER;
 
     //// positons
     PositionSet.Set positionSet;
@@ -34,6 +33,7 @@ contract Index is IIndex, Ownable, Filter {
     /// benchmark price 
     mapping(address => uint256) public benchmark;
 
+    /// position status
     mapping(uint256 => Enum.PositionStatus) public positionStatus;
 
     /// index id
@@ -51,9 +51,11 @@ contract Index is IIndex, Ownable, Filter {
     /// index fee amount
     uint256 public feeAmount;
 
-    /// 
+    /// operators
     mapping(address => bool) public operators;
 
+    /// position balances
+    /// positionId => token adress => balance
     mapping(uint256 => mapping(address => uint256)) public override positionBalance;
 
     constructor(
@@ -65,18 +67,9 @@ contract Index is IIndex, Ownable, Filter {
         name = indexName;
         feeRate = 10;
 
-        _checkName(indexName);
         emit CreatedIndex(id, address(this), feeRate, name, block.timestamp);
     }
-
-
-    function _checkName(string memory name) private pure{
-        uint256 length = bytes(name).length;
-        if(length < Constants.NAME_MIN_SIZE || length > Constants.NAME_MAX_SIZE) {
-            revert("Name Error");
-        }
-    }
-
+   
     receive() external payable {}
    
     modifier onlyOperator() {
@@ -84,6 +77,7 @@ contract Index is IIndex, Ownable, Filter {
         _;
     }
 
+    /// index id increate
     function idIncrease() private {
         positionId += 1;
     }
@@ -98,6 +92,15 @@ contract Index is IIndex, Ownable, Filter {
         IERC20(token).balanceOf(address(this));
     }
 
+    /**
+     * @dev approve token allowance to protocol
+     * @param token: token address
+     * @param protocol: protocol address
+     * 
+     * Requirements:
+     *  - token is allowed
+     *  - protocol is allowed
+     */
     function safeApprove(address token, address protocol) external {
         if(!isAllowedProtocols(protocol)) {
             revert();
@@ -109,6 +112,53 @@ contract Index is IIndex, Ownable, Filter {
         token.safeApprove(protocol, type(uint256).max);
     }
 
+    /**
+     * @dev change position status
+     * @param positionId: id
+     * @param status: new status
+     * 
+     * Requirements:
+     *  - status large than current status
+     */
+    function changePositionStatus(uint256 positionId, Enum.PositionStatus status) external {
+        Enum.PositionStatus currentStatus = positionStatus[positionId];
+        if(status <= currentStatus) {
+            revert();
+        }
+        positionStatus[positionId] = status;
+    }
+
+    /**
+     * @dev check position owner
+     * @param positionId: id
+     * @param ownerAddress: owner address
+     * 
+     * Requirements:
+     *  - positionId is exists
+     * @return bool
+     */
+    function checkPositionOwner(uint256 positionId, address ownerAddress) external view returns (bool) {
+        (PositionSet.Position memory position, bool isExist) = getPositionById(positionId);
+        if(!isExist) {
+            return false;
+        }
+
+        if(position.owner != ownerAddress) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * @dev get position info by position id
+     * @param positionId: id
+     * 
+     * Requirements:
+     *  - positionId is exist
+     * 
+     * @return position position info
+     * @return isExist
+     */
     function getPositionById(uint256 positionId) public view returns (
         PositionSet.Position memory position,
         bool isExist
@@ -121,37 +171,39 @@ contract Index is IIndex, Ownable, Filter {
         PositionSet.Position memory position = positionSet.at(index);
         isExist = true;
     }
-
-    function changePositionStatus(uint256 positionId, Enum.PositionStatus status) external {
-        Enum.PositionStatus currentStatus = positionStatus[positionId];
-        if(status <= currentStatus) {
-            revert();
-        }
-        positionStatus[positionId] = status;
-    }
-
-    function checkPositionOwner(uint256 positionId, address ownerAddress) external view returns (bool) {
-        (PositionSet.Position memory position, bool isExist) = getPositionById(positionId);
-        if(!isExist) {
-            return false;
-        }
-
-        if(position.owner != ownerAddress) {
-            return false;
-        }
-        return true;
-    }
-   
-    function getPositionByIndex(uint256 indexId) external view returns (PositionSet.Position memory position) {
+    
+     /**
+     * @dev check position owner
+     * @param orderId: order id of set
+     * 
+     * Requirements:
+     *  - orderId is exists
+     * @return position position info
+     * @return isExist
+     */
+    function getPositionByOrderId(uint256 orderId) external view returns (
+        PositionSet.Position memory position,
+        bool isExist
+    ) {
         uint256 length = positionSet.length();
-        if(length > indexId) {
-            return position;
+        if(length > orderId) {
+            return (position, isExist);
         }
-        position = positionSet.at(indexId);
+        position = positionSet.at(orderId);
+        isExist = true;
     }
 
     /**
      * @dev create position
+     * @param initialOwner: postion owner
+     * @param amount: postion amount
+     * @param currentIndex: postion current index value
+     * @param healthFactor: postion healthFactor
+     * @param expiration: postion expiration time
+     * 
+     * Requirements:
+     *  - caller must be dodo 
+     *  - amount not be 0
      * 
      * @return uint256: position id
      */
@@ -193,6 +245,14 @@ contract Index is IIndex, Ownable, Filter {
         return currentPositionId;
     }
 
+    /**
+     * @dev get position token balance
+     * @param token: token address
+     * @param positionIds: array of position id
+     * 
+     * @return tokenInBalance balance
+     * @return length count of ids
+     */
     function getPositionsBalance(address token, uint256[] memory positionIds) public view returns (
         uint256 tokenInBalance, 
         uint256 length
@@ -204,6 +264,12 @@ contract Index is IIndex, Ownable, Filter {
         }
     }
 
+    /**
+     * @dev set position token balance
+     * @param token: token address
+     * @param positionIds: array of position id
+     * @param values: array of position values
+     */
     function setPositionsBalance(address token, uint256[] memory positionIds, uint256[] memory values) external {
         uint256 length = positionIds.length;
         for(uint256 i; i < length; ++i) {
@@ -211,6 +277,19 @@ contract Index is IIndex, Ownable, Filter {
         }
     }
 
+    /**
+     * @dev swap tokens by uniswao v2
+     * @param positionIds: array of position id
+     * @param amountIn: amount to swap
+     * @param amountOutMin: minimum amount to receive;
+     * @param path: swap path
+     * 
+     * Requirements:
+     *  - token in is allowed
+     *  - token out is allowed
+     * 
+     * @return uint256
+     */
     function swapPositionV2(
         uint256[] memory positionIds,
         uint256 amountIn,
@@ -241,6 +320,17 @@ contract Index is IIndex, Ownable, Filter {
         return amountOut;
     }
 
+    /**
+     * @dev swap tokens by uniswao v3 single router
+     * @param positionIds: array of position id
+     * @param params: ISwapRouter02.ExactInputSingleParams
+     * 
+     * Requirements:
+     *  - token in is allowed
+     *  - token out is allowed
+     * 
+     * @return uint256
+     */
     function swapPositionsV3Single(
         uint256[] memory positionIds,
         ISwapRouter02.ExactInputSingleParams calldata params
@@ -270,6 +360,17 @@ contract Index is IIndex, Ownable, Filter {
         return amountOut;
     }
 
+    /**
+     * @dev swap tokens by uniswao v3 multi router
+     * @param positionIds: array of position id
+     * @param params: ISwapRouter02.ExactInputParams
+     * 
+     * Requirements:
+     *  - token in is allowed
+     *  - token out is allowed
+     * 
+     * @return uint256
+     */
     function swapPositionsV3ExactInput(
         uint256[] memory positionIds,
         ISwapRouter02.ExactInputParams calldata params
@@ -301,16 +402,23 @@ contract Index is IIndex, Ownable, Filter {
         return amountOut;
     }
 
+    /// decode V3 swap path
     function decodePath(bytes calldata path) external view returns (address token0, address token1) {
         (token0, token1) = Path.decode(path);
-    }
+    }   
 
+    /// decode calldata
     function _decodeCalldata(bytes calldata data) private pure returns (bytes4 selector, bytes calldata params) {
         require(data.length > 3, "E: data error");        
         selector = bytes4(data[0: 4]);
         params = data[4:];
     }
 
+    /**
+     * @dev multi swap
+     * @param data: array of swap calldata
+     * 
+     */
     function swapMultiCall(bytes[] calldata data) external payable  {
         uint256 length = data.length;
 
@@ -320,7 +428,14 @@ contract Index is IIndex, Ownable, Filter {
         }
         uniswapRouter.uniMulticall(data, msg.value);
     }
-  
+    
+    /**
+     * @dev swap tokens by protocol
+     * @param protocol : protocol address
+     * @param data: calldata for swap
+     * Requirements
+     * - protocol is allowned
+     */
     function swapTokens(address protocol, bytes calldata data) external payable {
         require(data.length > 3, "E: data error");
         if(isAllowedProtocols(protocol)) {
@@ -342,10 +457,19 @@ contract Index is IIndex, Ownable, Filter {
 
     }
 
+    /**
+     * @dev check every swap calldata
+     * @param selector : calldata selector
+     * @param params: calldata
+     * Requirements
+     * - token in is allowned
+     * - token out is allowned
+     * - recipient address is address(this)
+     */
     function _checkSingleSwapCall(
         bytes4 selector,
         bytes memory params
-    ) private view returns (bool isTokenInETH, bool isTokenOutETH) {
+    ) private view {
         address tokenIn;
         address tokenOut;
         address recipient;
@@ -375,9 +499,7 @@ contract Index is IIndex, Ownable, Filter {
         if (address(this).balance > 0) payable(msg.sender).transfer(address(this).balance);
     }
 
-    /**
-     * @dev manage fee rate
-     */
+    /// @dev manage fee rate
     function manageFeeRate(uint256 newFeeRate) external {
         require(newFeeRate > 0, "E: error");
 
@@ -385,6 +507,7 @@ contract Index is IIndex, Ownable, Filter {
         feeRate = newFeeRate;
     }
 
+    /// set benchmark
     function setBenchmark(address[] memory tokens, uint256[] memory prices) external {
         uint256 length = tokens.length;
         for(uint256 i; i < length; i++) {
@@ -394,6 +517,15 @@ contract Index is IIndex, Ownable, Filter {
         emit SetBenchMark(tokens, prices, block.timestamp);
     }
 
+    /**
+     * @dev withdraw position token
+     * @param positionId : position id
+     * @param recipient: address
+     * Requirements
+     * - position id is exist
+     * - currentStatus large than REQUEST_LIQUIDATION
+     * - position owner id transaction caller
+     */
     function withdraw(uint256 positionId, address recipient) external returns (uint256 amount) {
         (PositionSet.Position memory position, bool isExist) = getPositionById(positionId);
         if(! isExist) {
