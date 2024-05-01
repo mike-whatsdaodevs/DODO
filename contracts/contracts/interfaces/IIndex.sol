@@ -43,7 +43,7 @@ interface IIndex {
         uint256 timestamp
     );
 
-    event PositionsSwap(uint256 positionCount);
+    event PositionsSwap(uint256 indexed counter, uint256 positionCount, bytes32 positionHash, uint256 amountOut);
 
     event Withdraw(uint256 indexed positionId, address indexed owner, uint256 amount, uint256 timestamp);
 

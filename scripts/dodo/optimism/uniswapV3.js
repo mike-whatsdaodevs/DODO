@@ -19,8 +19,8 @@ async function main() {
 
   let weth_address = process.env.OP_WETH9;
   let usdt_address = process.env.OP_USDT;
-  
-  let swap_address = "0x40bde52e6B80Ae11F34C58c14E1E7fE1f9c834C4";
+
+  let swap_address = "0xE9061F92bA9A3D9ef3f4eb8456ac9E552B3Ff5C8";
 
   const swap = await ethers.getContractAt('SwapV3', swap_address, signer);
   const token = await ethers.getContractAt("@openzeppelin/contracts/token/ERC20/IERC20.sol:IERC20", usdt_address, signer);
@@ -30,11 +30,11 @@ async function main() {
   console.log(usdt_balance);
 
   let override = {
-    value : ethers.utils.parseEther("1"),
+    value : ethers.utils.parseEther("3"),
   }
 
   
-  let amountIn = ethers.utils.parseEther("1");
+  let amountIn = ethers.utils.parseEther("3");
 
   let params = {
     tokenIn: weth_address,

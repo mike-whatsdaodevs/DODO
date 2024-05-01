@@ -36,6 +36,8 @@ contract Index is IIndex, Ownable, Filter {
     /// position status
     mapping(uint256 => Enum.PositionStatus) public positionStatus;
 
+    mapping(bytes32 => uint256) public positionIdsHashList;
+
     /// index id
     uint256 public immutable id;
 
@@ -170,6 +172,11 @@ contract Index is IIndex, Ownable, Filter {
 
         PositionSet.Position memory position = positionSet.at(index);
         isExist = true;
+    }
+
+    /// hash positionIds
+    function hashPositionIds(uint256[] memory positionIds) public pure returns (bytes32) {
+        return keccak256(abi.encode(positionIds));
     }
     
      /**
@@ -312,7 +319,9 @@ contract Index is IIndex, Ownable, Filter {
             positionBalance[positionId][tokenIn] = tokenInBalance.sub(amountIn);
             positionBalance[positionId][tokenOut] = positionBalance[positionId][tokenOut].add(amountOut);
         } else {
-            emit PositionsSwap(positionCount);
+            bytes32 positionIdsHash = hashPositionIds(positionIds);
+            positionIdsHashList[positionIdsHash] = amountOut;
+            emit PositionsSwap(0, positionCount, positionIdsHash, amountOut);
         }
 
         emit Swap(tokenIn, tokenOut, amountIn, amountOut, block.timestamp);
@@ -352,7 +361,9 @@ contract Index is IIndex, Ownable, Filter {
             uint256 tokenOutBalance = positionBalance[positionId][params.tokenOut];
             positionBalance[positionId][params.tokenOut] = tokenOutBalance.add(amountOut);
         } else {
-            emit PositionsSwap(positionCount);
+            bytes32 positionIdsHash = hashPositionIds(positionIds);
+            positionIdsHashList[positionIdsHash] = amountOut;
+            emit PositionsSwap(0, positionCount, positionIdsHash, amountOut);
         }
 
         emit Swap(params.tokenIn, params.tokenOut, params.amountIn, amountOut, block.timestamp);
@@ -394,7 +405,9 @@ contract Index is IIndex, Ownable, Filter {
 
             positionStatus[positionId] = Enum.PositionStatus.CREATED;
         } else {
-            emit PositionsSwap(positionCount);
+            bytes32 positionIdsHash = hashPositionIds(positionIds);
+            positionIdsHashList[positionIdsHash] = amountOut;
+            emit PositionsSwap(0, positionCount, positionIdsHash, amountOut);
         }
 
         emit Swap(tokenIn, tokenOut, params.amountIn, amountOut, block.timestamp);
@@ -419,14 +432,20 @@ contract Index is IIndex, Ownable, Filter {
      * @param data: array of swap calldata
      * 
      */
-    function swapMultiCall(bytes[] calldata data) external payable  {
+    function swapMultiCall(uint256[][] memory positionIdsArray, bytes[] calldata data) external payable  {
         uint256 length = data.length;
 
         for(uint256 i; i < length; i ++) {
             (bytes4 selector, bytes memory params) = _decodeCalldata(data[i]);
             _checkSingleSwapCall(selector, params);
         }
-        uniswapRouter.uniMulticall(data, msg.value);
+        bytes[] memory results = uniswapRouter.uniMulticall(data, msg.value);
+        for(uint256 i; i < length; i++) {
+            bytes32 positionIdsHash = hashPositionIds(positionIdsArray[i]);
+            uint256 amountOut = abi.decode(results[i], (uint256));
+            positionIdsHashList[positionIdsHash] = amountOut;
+            emit PositionsSwap(i, positionIdsArray[i].length, positionIdsHash, amountOut);
+        }
     }
     
     /**
