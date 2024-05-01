@@ -19,16 +19,22 @@ async function main() {
   const [signer] = await ethers.getSigners()
   let my_address = signer.address;
   console.log('my_address is:', my_address)
- 
-  let swapRouterV2_address = process.env.SWAP_ROUTER_V2;
-  let weth9_address = process.env.OP_WETH9;
 
+  let facotry_address =  process.env.OP_FACTORY;
+  let weth9_address =  process.env.OP_WETH9;
 
-  const Swap = await hre.ethers.getContractFactory('SwapV3')
-  const swap = await Swap.deploy(weth9_address, swapRouterV2_address);
-  await swap.deployed()
-  console.log('swap deployed to:', swap.address)
   
+
+  const PriceOracle = await hre.ethers.getContractFactory('PriceOracle')
+  const priceOracle = await PriceOracle.deploy(facotry_address, weth9_address);
+  await priceOracle.deployed()
+  console.log('priceOracle deployed to:', priceOracle.address)
+
+  // let pool = process.env.POOL_ETH_USDC_500;
+  // let token = process.env.USDC;
+
+  // let tx = await priceOracle.setPool(token, pool);
+  // await tx.wait();
   return;
 
   // 0xf67394B56827246644359D4A3fc0D817dF8E90c0

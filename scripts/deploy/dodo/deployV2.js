@@ -20,8 +20,12 @@ async function main() {
   let my_address = signer.address;
   console.log('my_address is:', my_address)
 
+  // let swapRouterV2_address = process.env.SWAP_ROUTER_V2;
+  // let weth9_address = process.env.WETH9;
   let swapRouterV2_address = process.env.SWAP_ROUTER_V2;
-  let weth9_address = process.env.WETH9;
+  let weth9_address = process.env.OP_WETH9;
+
+  
 
   const Swap = await hre.ethers.getContractFactory('SwapV2')
   const swap = await Swap.deploy(weth9_address, swapRouterV2_address);

@@ -13,13 +13,14 @@ async function main() {
 
   console.log('deployer:' + deployer.address)
 
-  let weth9_address = process.env.WETH9;
-  let usdc_address = process.env.USDC;
+  let weth9_address = process.env.OP_WETH9;
+  let usdt_address = process.env.OP_USDT;
+  
   let dodo_address = "0xAbB12158488d9C9Bd52C14B9AE4C835eCE4A6e13";//process.env.DODO;
 
   const dodo = await ethers.getContractAt('DODO', dodo_address, deployer);
 
-  let createIndexTx = await dodo.createIndex("usdc_eth", [weth9_address, usdc_address]);
+  let createIndexTx = await dodo.createIndex("usdc_eth", [weth9_address, usdt_address]);
 
   await createIndexTx.wait();
 

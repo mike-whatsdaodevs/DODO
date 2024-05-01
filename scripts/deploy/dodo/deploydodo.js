@@ -20,11 +20,15 @@ async function main() {
   let my_address = signer.address;
   console.log('my_address is:', my_address)
 
-  let weth9_address = process.env.WETH9;
-  let usdc_address = process.env.USDC;
+  // let weth9_address = process.env.WETH9;
+  // let usdc_address = process.env.USDC;
+
+  let weth9_address = process.env.OP_WETH9;
+  let usdt_address = process.env.OP_USDT;
+
 
   const DODO = await hre.ethers.getContractFactory('DODO')
-  const dodo = await DODO.deploy(weth9_address, usdc_address);
+  const dodo = await DODO.deploy(weth9_address, usdt_address);
   await dodo.deployed()
   console.log('dodo deployed to:', dodo.address)
   

@@ -19,16 +19,13 @@ async function main() {
   const [signer] = await ethers.getSigners()
   let my_address = signer.address;
   console.log('my_address is:', my_address)
- 
-  let swapRouterV2_address = process.env.SWAP_ROUTER_V2;
-  let weth9_address = process.env.OP_WETH9;
 
+  let quoterv2_address = process.env.OP_QUOTER_V2;
 
-  const Swap = await hre.ethers.getContractFactory('SwapV3')
-  const swap = await Swap.deploy(weth9_address, swapRouterV2_address);
-  await swap.deployed()
-  console.log('swap deployed to:', swap.address)
-  
+  const PathFinder = await hre.ethers.getContractFactory('PathFinder')
+  const pathFinder = await PathFinder.deploy(quoterv2_address, []);
+  await pathFinder.deployed()
+  console.log('pathFinder deployed to:', pathFinder.address)
   return;
 
   // 0xf67394B56827246644359D4A3fc0D817dF8E90c0
