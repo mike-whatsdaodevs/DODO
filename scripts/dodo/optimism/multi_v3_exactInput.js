@@ -45,6 +45,7 @@ async function main() {
   const priceOracle = await ethers.getContractAt('PriceOracle', priceOracle_address, signer)
   const pathFinder = await ethers.getContractAt('PathFinder', pathFinder_address, signer);
 
+  /// approve
   let setAllowedProtocolTx = await index.addAllowedProtocols([swapRouter_address]);
   await setAllowedProtocolTx.wait();
   console.log(setAllowedProtocolTx.hash);
@@ -77,14 +78,20 @@ async function main() {
   // console.log(ethers.utils.formatEther(index_weth_balance));
 
 
+
+  /// batch deal positions
   let positionIds = [0,1];
   let positionsBalance = await index.getPositionsBalance(usdt_address, positionIds);
 
-
+  /// path finder 
+  /// get path
+  /// get amount Out
   let tx = await pathFinder.callStatic.exactInputPath(usdt_address, weth_address, positionsBalance.tokenInBalance);
  // let res = await tx.wait();
   console.log(tx);
 
+
+  /// construct params
   let params = {
     path: tx.path,
     recipient: index_address,
@@ -93,24 +100,25 @@ async function main() {
   }
   console.log(params);
 
+  /// construct calldata
   let txcalldata = await swap.populateTransaction.exactInput(
       params
   );
   console.log(txcalldata);
 
+  /// run swap
   let calldataArray = [txcalldata.data];
-  // let tx3 = await index.swapMultiCall(
-  //   [positionIds],
-  //   calldataArray
-  // );
-  // await tx3.wait();
+  let tx3 = await index.swapMultiCall(
+    [positionIds],
+    calldataArray
+  );
+  await tx3.wait();
 
+  ////set positionBalance
   let hash = await index.hashPositionIds(positionIds, usdt_address, weth_address);
   console.log(hash);
-
   let positionIdsHashData = await index.positionIdsHashList(hash);
   console.log(positionIdsHashData);
-
   let setPositionsBalanceTx = await index.setPositionsBalance(usdt_address, weth_address,positionIds, 0, positionIds.length);
   await setPositionsBalanceTx.wait();
   return;
