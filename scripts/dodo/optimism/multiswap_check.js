@@ -36,8 +36,8 @@ async function main() {
   let positionIdsHashData = await index.positionIdsHashList(hash);
   console.log(positionIdsHashData);
 
-  // let setPositionsBalanceTx = await index.setPositionsBalance(usdt_address, weth_address, positionIds);
-  // await setPositionsBalanceTx.wait();
+  let setPositionsBalanceTx = await index.setPositionsBalance(usdt_address, weth_address, positionIds);
+  await setPositionsBalanceTx.wait();
 
 
   let positionBalanceIn = await index.positionBalance(0, usdt_address);
