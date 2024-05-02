@@ -23,7 +23,6 @@ async function main() {
   let facotry_address =  process.env.OP_FACTORY;
   let weth9_address =  process.env.OP_WETH9;
 
-  
 
   const PriceOracle = await hre.ethers.getContractFactory('PriceOracle')
   const priceOracle = await PriceOracle.deploy(facotry_address, weth9_address);

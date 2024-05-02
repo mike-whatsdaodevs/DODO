@@ -68,8 +68,8 @@ async function main() {
 
 
   let params = {
-    tokenIn: usdt_address,
-    tokenOut: weth_address,
+    tokenIn: weth_address,
+    tokenOut: usdt_address,
     fee: 500,
     recipient: index_address,
     amountIn: positionsBalance.tokenInBalance,

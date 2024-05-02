@@ -17,7 +17,7 @@ async function main() {
   const network = (await ethers.provider.getNetwork()).chainId;
   console.log(network);
 
-  let pathFinder_address = process.env.OP_PATH_FINDER_MAIN;
+  let pathFinder_address =  "0xC92B72ecf468D2642992b195bea99F9B9BB4A838"///process.env.OP_PATH_FINDER_MAIN;
   let weth9_address = process.env.OP_WETH9;
   let usdt_address = process.env.OP_USDT;
 
