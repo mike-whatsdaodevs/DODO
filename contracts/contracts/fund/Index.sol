@@ -277,12 +277,15 @@ contract Index is IIndex, Ownable, Filter {
      * @param tokenOut: token address
      * @param positionIds: array of position id
      */
-    function setPositionsBalance(address tokenIn, address tokenOut, uint256[] memory positionIds) external {
+    function setPositionsBalance(address tokenIn, address tokenOut, uint256[] memory positionIds, uint256 offset, uint256 size) external {
         uint256 length = positionIds.length;
         bytes32 hash = hashPositionIds(positionIds, tokenIn, tokenOut);
         SwapAmountInAndOut memory inAndOut = positionIdsHashList[hash];
         uint256 amount;
         for(uint256 i; i < length; ++i) {
+            if(i < offset || i >= offset.add(size)) {
+                continue;
+            }
             uint256 pBalance = positionBalance[positionIds[i]][tokenIn];
             amount = inAndOut.amountOut.mul(pBalance).div(inAndOut.amountIn);
             positionBalance[positionIds[i]][tokenIn] = 0;
