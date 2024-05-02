@@ -9,7 +9,6 @@ contract Enum {
         SPOT,
         REQUEST_LIQUIDATION,
         SOLD,
-        LIQUIDATED,
         WITHDRAWN
     }
 }

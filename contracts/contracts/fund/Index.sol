@@ -286,10 +286,15 @@ contract Index is IIndex, Ownable, Filter {
             if(i < offset || i >= offset.add(size)) {
                 continue;
             }
+            uint256 positionId = positionIds[i];
             uint256 pBalance = positionBalance[positionIds[i]][tokenIn];
             amount = inAndOut.amountOut.mul(pBalance).div(inAndOut.amountIn);
-            positionBalance[positionIds[i]][tokenIn] = 0;
-            positionBalance[positionIds[i]][tokenOut] = amount;
+            positionBalance[positionId][tokenIn] = 0;
+            positionBalance[positionId][tokenOut] = amount;
+
+            positionStatus[positionId] = tokenOut == underlyingToken 
+                ? Enum.PositionStatus.SOLD 
+                : Enum.PositionStatus.SPOT;
         }
         delete positionIdsHashList[hash];
     }
@@ -433,7 +438,9 @@ contract Index is IIndex, Ownable, Filter {
             uint256 tokenOutBalance = positionBalance[positionId][tokenOut];
             positionBalance[positionId][tokenOut] = tokenOutBalance.add(amountOut);
 
-            positionStatus[positionId] = Enum.PositionStatus.CREATED;
+            positionStatus[positionId] = tokenOut == underlyingToken 
+                ? Enum.PositionStatus.SOLD 
+                : Enum.PositionStatus.SPOT;
         } else {
             bytes32 positionIdsHash = setPositionIdsHash(
                 positionIds, 
@@ -597,7 +604,7 @@ contract Index is IIndex, Ownable, Filter {
 
         Enum.PositionStatus currentStatus = positionStatus[positionId];
         /// must large REQUEST_LIQUIDATION
-        if(Enum.PositionStatus.REQUEST_LIQUIDATION <= currentStatus) {
+        if(Enum.PositionStatus.SOLD != currentStatus) {
             revert();
         }
 
