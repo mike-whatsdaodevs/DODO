@@ -30,12 +30,27 @@ async function main() {
   const swap = await ethers.getContractAt('ISwapRouter02', swapRouter_address, signer);
     
   let positionIds = [0,1]; 
-  let hash = await index.hashPositionIds(positionIds);
+  let hash = await index.hashPositionIds(positionIds, usdt_address, weth_address);
   console.log(hash);
 
   let positionIdsHashData = await index.positionIdsHashList(hash);
   console.log(positionIdsHashData);
-  return;
+
+  // let setPositionsBalanceTx = await index.setPositionsBalance(usdt_address, weth_address, positionIds);
+  // await setPositionsBalanceTx.wait();
+
+
+  let positionBalanceIn = await index.positionBalance(0, usdt_address);
+  console.log('position 0, usdt is:', positionBalanceIn);
+
+  let positionBalanceOut = await index.positionBalance(0, weth_address);
+  console.log('position 0, weth is:', positionBalanceOut);
+
+  let positionBalanceIn1 = await index.positionBalance(1, usdt_address);
+  console.log('position 1, usdt is:', positionBalanceIn1);
+
+  let positionBalanceOut1 = await index.positionBalance(1, weth_address);
+  console.log('position 1, weth is:', positionBalanceOut1);
 
 }
 

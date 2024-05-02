@@ -5,6 +5,11 @@ import {Enum} from "../libraries/Enum.sol";
 
 interface IIndex {
 
+    struct SwapAmountInAndOut {
+        uint256 amountIn;
+        uint256 amountOut;
+    }
+
     struct ExactSwapParams {
         bytes path;
         address recipient;

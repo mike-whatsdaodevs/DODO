@@ -30,11 +30,11 @@ async function main() {
   console.log(usdt_balance);
 
   let override = {
-    value : ethers.utils.parseEther("3"),
+    value : ethers.utils.parseEther("5"),
   }
 
   
-  let amountIn = ethers.utils.parseEther("3");
+  let amountIn = ethers.utils.parseEther("5");
 
   let params = {
     tokenIn: weth_address,

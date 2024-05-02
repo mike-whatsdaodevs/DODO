@@ -36,7 +36,7 @@ contract Index is IIndex, Ownable, Filter {
     /// position status
     mapping(uint256 => Enum.PositionStatus) public positionStatus;
 
-    mapping(bytes32 => uint256) public positionIdsHashList;
+    mapping(bytes32 => SwapAmountInAndOut) public positionIdsHashList;
 
     /// index id
     uint256 public immutable id;
@@ -175,8 +175,8 @@ contract Index is IIndex, Ownable, Filter {
     }
 
     /// hash positionIds
-    function hashPositionIds(uint256[] memory positionIds) public pure returns (bytes32) {
-        return keccak256(abi.encode(positionIds));
+    function hashPositionIds(uint256[] memory positionIds, address tokenIn, address tokenOut) public pure returns (bytes32) {
+        return keccak256(abi.encode(positionIds, tokenIn, tokenOut));
     }
     
      /**
@@ -273,15 +273,22 @@ contract Index is IIndex, Ownable, Filter {
 
     /**
      * @dev set position token balance
-     * @param token: token address
+     * @param tokenIn: token address
+     * @param tokenOut: token address
      * @param positionIds: array of position id
-     * @param values: array of position values
      */
-    function setPositionsBalance(address token, uint256[] memory positionIds, uint256[] memory values) external {
+    function setPositionsBalance(address tokenIn, address tokenOut, uint256[] memory positionIds) external {
         uint256 length = positionIds.length;
+        bytes32 hash = hashPositionIds(positionIds, tokenIn, tokenOut);
+        SwapAmountInAndOut memory inAndOut = positionIdsHashList[hash];
+        uint256 amount;
         for(uint256 i; i < length; ++i) {
-            positionBalance[positionIds[i]][token] = values[i];
+            uint256 pBalance = positionBalance[positionIds[i]][tokenIn];
+            amount = inAndOut.amountOut.mul(pBalance).div(inAndOut.amountIn);
+            positionBalance[positionIds[i]][tokenIn] = 0;
+            positionBalance[positionIds[i]][tokenOut] = amount;
         }
+        delete positionIdsHashList[hash];
     }
 
     /**
@@ -319,14 +326,28 @@ contract Index is IIndex, Ownable, Filter {
             positionBalance[positionId][tokenIn] = tokenInBalance.sub(amountIn);
             positionBalance[positionId][tokenOut] = positionBalance[positionId][tokenOut].add(amountOut);
         } else {
-            bytes32 positionIdsHash = hashPositionIds(positionIds);
-            positionIdsHashList[positionIdsHash] = amountOut;
+
+            bytes32 positionIdsHash = setPositionIdsHash(positionIds, tokenIn, tokenOut, amountIn, amountOut);
             emit PositionsSwap(0, positionCount, positionIdsHash, amountOut);
         }
 
         emit Swap(tokenIn, tokenOut, amountIn, amountOut, block.timestamp);
 
         return amountOut;
+    }
+
+    function setPositionIdsHash(
+        uint256[] memory positionIds, 
+        address tokenIn,
+        address tokenOut,
+        uint256 amountIn, 
+        uint256 amountOut
+    ) private returns (bytes32 positionIdsHash) {
+        positionIdsHash = hashPositionIds(positionIds, tokenIn, tokenOut);
+        SwapAmountInAndOut memory inAndout = positionIdsHashList[positionIdsHash];
+        
+        require(inAndout.amountIn == 0 && inAndout.amountOut == 0, "E: hash has set");
+        positionIdsHashList[positionIdsHash] = SwapAmountInAndOut(amountIn, amountOut);
     }
 
     /**
@@ -356,13 +377,19 @@ contract Index is IIndex, Ownable, Filter {
         uint256 amountOut = uniswapRouter.uniswapV3Single(params, msg.value);
 
         if(positionCount == 1) {
-            positionBalance[positionId][params.tokenIn] = tokenInBalance.sub(tokenInBalance);
+            positionBalance[positionId][params.tokenIn] = tokenInBalance.sub(params.amountIn);
             
             uint256 tokenOutBalance = positionBalance[positionId][params.tokenOut];
             positionBalance[positionId][params.tokenOut] = tokenOutBalance.add(amountOut);
         } else {
-            bytes32 positionIdsHash = hashPositionIds(positionIds);
-            positionIdsHashList[positionIdsHash] = amountOut;
+            bytes32 positionIdsHash = setPositionIdsHash(
+                positionIds, 
+                params.tokenIn, 
+                params.tokenOut, 
+                params.amountIn, 
+                amountOut
+            );
+
             emit PositionsSwap(0, positionCount, positionIdsHash, amountOut);
         }
 
@@ -398,15 +425,20 @@ contract Index is IIndex, Ownable, Filter {
         uint256 amountOut = uniswapRouter.uniswapV3(params, msg.value);
 
         if(positionCount == 1) {
-            positionBalance[positionId][tokenIn] = tokenInBalance.sub(tokenInBalance);
+            positionBalance[positionId][tokenIn] = tokenInBalance.sub(params.amountIn);
             
             uint256 tokenOutBalance = positionBalance[positionId][tokenOut];
             positionBalance[positionId][tokenOut] = tokenOutBalance.add(amountOut);
 
             positionStatus[positionId] = Enum.PositionStatus.CREATED;
         } else {
-            bytes32 positionIdsHash = hashPositionIds(positionIds);
-            positionIdsHashList[positionIdsHash] = amountOut;
+            bytes32 positionIdsHash = setPositionIdsHash(
+                positionIds, 
+                tokenIn, 
+                tokenOut, 
+                params.amountIn, 
+                amountOut
+            );
             emit PositionsSwap(0, positionCount, positionIdsHash, amountOut);
         }
 
@@ -434,16 +466,25 @@ contract Index is IIndex, Ownable, Filter {
      */
     function swapMultiCall(uint256[][] memory positionIdsArray, bytes[] calldata data) external payable  {
         uint256 length = data.length;
+        uint256[] memory amountInArr = new uint256[](length);
+        address[] memory tokenInArr = new address[](length);
+        address[] memory tokenOutArr = new address[](length);
 
         for(uint256 i; i < length; i ++) {
             (bytes4 selector, bytes memory params) = _decodeCalldata(data[i]);
-            _checkSingleSwapCall(selector, params);
+            (tokenInArr[i], tokenOutArr[i], amountInArr[i]) = _checkSingleSwapCall(selector, params);
         }
         bytes[] memory results = uniswapRouter.uniMulticall(data, msg.value);
         for(uint256 i; i < length; i++) {
-            bytes32 positionIdsHash = hashPositionIds(positionIdsArray[i]);
             uint256 amountOut = abi.decode(results[i], (uint256));
-            positionIdsHashList[positionIdsHash] = amountOut;
+
+            bytes32 positionIdsHash = setPositionIdsHash(
+                positionIdsArray[i], 
+                tokenInArr[i], 
+                tokenOutArr[i], 
+                amountInArr[i], 
+                amountOut
+            );
             emit PositionsSwap(i, positionIdsArray[i].length, positionIdsHash, amountOut);
         }
     }
@@ -488,23 +529,23 @@ contract Index is IIndex, Ownable, Filter {
     function _checkSingleSwapCall(
         bytes4 selector,
         bytes memory params
-    ) private view {
-        address tokenIn;
-        address tokenOut;
+    ) private view returns (address tokenIn, address tokenOut, uint256 amountIn) {
         address recipient;
         if (selector == 0x04e45aaf || selector == 0x5023b4df) {
             // exactInputSingle/exactOutputSingle
-            (tokenIn, tokenOut, ,recipient, , , ) = abi.decode(params, (address,address,uint24,address,uint256,uint256,uint160));
+            (tokenIn, tokenOut, , recipient, amountIn, , ) = abi.decode(params, (address,address,uint24,address,uint256,uint256,uint160));
         } else if (selector == 0xb858183f || selector == 0x09b81346) {
             // exactInput/exactOutput
             ExactSwapParams memory swap = abi.decode(params, (ExactSwapParams));
             (tokenIn, tokenOut) = swap.path.decode();
             recipient = swap.recipient;
+            amountIn = swap.amountIn;
         } else if (selector == 0x472b43f3 || selector == 0x42712a67) {
             // swapExactTokensForTokens/swapTokensForExactTokens
-            (,,address[] memory path, address to) = abi.decode(params, (uint256,uint256,address[],address));
+            address [] memory path;
+            (amountIn,,path, recipient) = abi.decode(params, (uint256,uint256,address[],address));
             require(path.length >= 2, "PA6");
-            (tokenIn, tokenOut, recipient) = (path[0], path[path.length - 1], to);
+            (tokenIn, tokenOut) = (path[0], path[path.length - 1]);
         } else {
             revert("PA2");
         }
