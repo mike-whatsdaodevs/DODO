@@ -58,6 +58,8 @@ interface IIndex {
 
     function positionBalance(uint256 positionId, address token) external view returns (uint256);
 
+    function positionStatus(uint256 positionId) external view returns(Enum.PositionStatus); 
+
     function createPosition(
         address initialOwner, 
         uint256 amount,

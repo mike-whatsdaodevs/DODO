@@ -34,7 +34,7 @@ contract Index is IIndex, Ownable, Filter {
     mapping(address => uint256) public benchmark;
 
     /// position status
-    mapping(uint256 => Enum.PositionStatus) public positionStatus;
+    mapping(uint256 => Enum.PositionStatus) public override positionStatus;
 
     mapping(bytes32 => SwapAmountInAndOut) public positionIdsHashList;
 
