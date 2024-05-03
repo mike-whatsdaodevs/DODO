@@ -170,7 +170,7 @@ contract Index is IIndex, Ownable, Filter {
             return (position, isExist);
         }
 
-        PositionSet.Position memory position = positionSet.at(index);
+        position = positionSet.at(index - 1);
         isExist = true;
     }
 
@@ -193,7 +193,7 @@ contract Index is IIndex, Ownable, Filter {
         bool isExist
     ) {
         uint256 length = positionSet.length();
-        if(length > orderId) {
+        if(orderId > length) {
             return (position, isExist);
         }
         position = positionSet.at(orderId);
