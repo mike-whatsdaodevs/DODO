@@ -75,7 +75,7 @@ contract Index is IIndex, Ownable, Filter {
     receive() external payable {}
    
     modifier onlyOperator() {
-        require(! operators[msg.sender], "E: only operator allowed");
+        require(! operators[msg.sender], "E: only operator be allowed");
         _;
     }
 
@@ -479,6 +479,24 @@ contract Index is IIndex, Ownable, Filter {
         }
     }
 
+    function validateSwapParams(
+        address tokenIn, 
+        address tokenOut, 
+        address recipient
+    ) private returns (uint256) {
+        if(! isAllowedToken(tokenIn)) {
+            revert TokenNotAllow(tokenIn);
+        }
+
+        if(! isAllowedToken(tokenOut)) {
+            revert TokenNotAllow(tokenOut);
+        }
+
+        if(recipient != address(this)) {
+            revert RecipientNotAllow(recipient);
+        }
+    }
+
     /// decode V3 swap path
     function decodePath(bytes calldata path) external view returns (address token0, address token1) {
         (token0, token1) = Path.decode(path);
@@ -530,10 +548,10 @@ contract Index is IIndex, Ownable, Filter {
      */
     function swapTokens(address protocol, bytes calldata data) external payable {
         require(data.length > 3, "E: data error");
-        if(isAllowedProtocols(protocol)) {
-            revert("protocol not support");
+        if(!isAllowedProtocols(protocol)) {
+            revert ProtocolNotAllowed(protocol);
         }
-        uint256 value = msg.value;
+
         (bytes4 selector, bytes calldata params) = _decodeCalldata(data);
         // execute first to analyse result
         if (protocol == Constants.WETH9) {
@@ -542,10 +560,10 @@ contract Index is IIndex, Ownable, Filter {
         } else if (protocol == uniswapRouter) {
             _checkSingleSwapCall(selector, params);
         } else {
-            revert();
+            revert("SELECTOR");
         }
 
-        protocol.functionCallWithValue(data, value);
+        protocol.functionCallWithValue(data, msg.value);
 
     }
 
@@ -561,7 +579,7 @@ contract Index is IIndex, Ownable, Filter {
     function _checkSingleSwapCall(
         bytes4 selector,
         bytes memory params
-    ) private view returns (address tokenIn, address tokenOut, uint256 amountIn) {
+    ) private returns (address tokenIn, address tokenOut, uint256 amountIn) {
         address recipient;
         if (selector == 0x04e45aaf || selector == 0x5023b4df) {
             // exactInputSingle/exactOutputSingle
@@ -579,12 +597,10 @@ contract Index is IIndex, Ownable, Filter {
             require(path.length >= 2, "PA6");
             (tokenIn, tokenOut) = (path[0], path[path.length - 1]);
         } else {
-            revert("PA2");
+            revert("SELECTOR");
         }
 
-        require(isAllowedToken(tokenIn), "E: token error");
-        require(isAllowedToken(tokenOut), "E: token error");
-        require(recipient == address(this), "E: recipient error");
+        validateSwapParams(tokenIn, tokenOut, recipient);
     }
 
     function _refundETH() private {
@@ -593,7 +609,7 @@ contract Index is IIndex, Ownable, Filter {
 
     /// @dev manage fee rate
     function manageFeeRate(uint256 newFeeRate) external {
-        require(newFeeRate > 0, "E: error");
+        require(newFeeRate > 0 && newFeeRate < Constants.DENOMINATOR, "E: Fee rate error");
 
         emit ChangeFeeRate(address(this), feeRate, newFeeRate, block.timestamp);
         feeRate = newFeeRate;
@@ -639,6 +655,13 @@ contract Index is IIndex, Ownable, Filter {
         underlyingToken.safeTransfer(recipient, amount);
 
         emit Withdraw(positionId, tx.origin, amount, block.timestamp);
+    }
+
+    /// force withdraw token balance
+    function recovery(address token, address recipient) external {
+        uint256 balance = IERC20(token).balanceOf(address(this));
+        token.safeTransfer(recipient, balance);
+        emit Withdraw(0, recipient, balance, block.timestamp);
     }
 
     /**

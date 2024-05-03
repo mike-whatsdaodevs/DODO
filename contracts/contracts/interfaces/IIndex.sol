@@ -60,6 +60,8 @@ interface IIndex {
 
     error AmountInError(uint256 amountIn);
 
+    error ProtocolNotAllowed(address protocol);
+
 
     function feeRate() external view returns (uint256);
 
