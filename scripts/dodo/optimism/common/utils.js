@@ -1,5 +1,3 @@
-const { ethers, run } = require('hardhat')
-
 async function getPositionsBalance(index, tokenAddress, positionIds) {
   let positionsBalance = await index.getPositionsBalance(usdt_address, positionIds);
   return positionsBalance.tokenInBalance;
@@ -22,14 +20,13 @@ async function uniswapV3Calldata(swap, pathinfo, recipient, amountIn) {
   let txcalldata = await swap.populateTransaction.exactInput(
       params
   );
-  return txcalldata;
+  return txcalldata.data;
 }
 
-async function swapMultiCall(index, calldataArray, positionIds) {
+async function swapMultiCall(index, calldataArray, positionIdsArray) {
   /// run swap
-  let calldataArray = [txcalldata.data];
   let tx3 = await index.swapMultiCall(
-    [positionIds],
+    positionIdsArray,
     calldataArray
   );
   await tx3.wait();
