@@ -54,6 +54,13 @@ interface IIndex {
 
     event ChangeFeeRate(address indexed indexAddress, uint256 old, uint256 newRate, uint256 timestamp);
 
+    error TokenNotAllow(address token);
+
+    error RecipientNotAllow(address recipient);
+
+    error AmountInError(uint256 amountIn);
+
+
     function feeRate() external view returns (uint256);
 
     function positionBalance(uint256 positionId, address token) external view returns (uint256);

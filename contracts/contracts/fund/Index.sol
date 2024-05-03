@@ -61,7 +61,7 @@ contract Index is IIndex, Ownable, Filter {
     mapping(uint256 => mapping(address => uint256)) public override positionBalance;
 
     constructor(
-        uint indexId, 
+        uint256 indexId, 
         string memory indexName
     ) {
         operators[msg.sender] = true;
@@ -321,12 +321,14 @@ contract Index is IIndex, Ownable, Filter {
         require(path.length >= 2, "PA6");
 
         (address tokenIn, address tokenOut) = (path[0], path[path.length - 1]);
-
-        require(isAllowedToken(tokenIn), "E: token error");
-        require(isAllowedToken(tokenOut), "E: token error");
-
         (uint256 tokenInBalance, uint256 positionCount) = getPositionsBalance(tokenIn, positionIds);
-        require(amountIn <= tokenInBalance, "E: amount in is too large");
+        validateSwapParams(
+            tokenIn, 
+            tokenOut, 
+            address(this), 
+            amountIn, 
+            tokenInBalance
+        );
 
         uint256 amountOut = uniswapRouter.uniswapV2(amountIn, amountOutMin, path, msg.value);
 
@@ -373,14 +375,14 @@ contract Index is IIndex, Ownable, Filter {
         uint256[] memory positionIds,
         ISwapRouter02.ExactInputSingleParams calldata params
     ) external payable returns (uint256) {
-        require(isAllowedToken(params.tokenIn), "E: token error");
-        require(isAllowedToken(params.tokenOut), "E: token error");
-
         (uint256 tokenInBalance, uint256 positionCount) = getPositionsBalance(params.tokenIn, positionIds);
-        
-        require(params.amountIn <= tokenInBalance, "E: amount in is too large");
-
-        require(params.recipient == address(this), "E: recipient error");
+        validateSwapParams(
+            params.tokenIn, 
+            params.tokenOut, 
+            params.recipient, 
+            params.amountIn, 
+            tokenInBalance
+        );
 
         uint256 amountOut = uniswapRouter.uniswapV3Single(params, msg.value);
 
@@ -423,12 +425,8 @@ contract Index is IIndex, Ownable, Filter {
     ) external payable returns (uint256) {
         (address tokenIn, address tokenOut) = params.path.decode();
 
-        require(isAllowedToken(tokenIn), "E: token error");
-        require(isAllowedToken(tokenOut), "E: token error");
-        require(params.recipient == address(this), "E: recipient error");
-
         (uint256 tokenInBalance, uint256 positionCount) = getPositionsBalance(tokenIn, positionIds);
-        require(params.amountIn <= tokenInBalance, "E: amount in is too large");
+        validateSwapParams(tokenIn, tokenOut, params.recipient, params.amountIn, tokenInBalance);
 
         uint256 amountOut = uniswapRouter.uniswapV3(params, msg.value);
 
@@ -455,6 +453,30 @@ contract Index is IIndex, Ownable, Filter {
         emit Swap(tokenIn, tokenOut, params.amountIn, amountOut, block.timestamp);
 
         return amountOut;
+    }
+
+    function validateSwapParams(
+        address tokenIn, 
+        address tokenOut, 
+        address recipient, 
+        uint256 amountIn,
+        uint256 tokenInBalance
+    ) private returns (uint256) {
+        if(! isAllowedToken(tokenIn)) {
+            revert TokenNotAllow(tokenIn);
+        }
+
+        if(! isAllowedToken(tokenOut)) {
+            revert TokenNotAllow(tokenOut);
+        }
+
+        if(recipient != address(this)) {
+            revert RecipientNotAllow(recipient);
+        }
+
+        if(amountIn > tokenInBalance) {
+            revert AmountInError(amountIn);
+        }
     }
 
     /// decode V3 swap path
@@ -626,5 +648,9 @@ contract Index is IIndex, Ownable, Filter {
      */
     function manageOperator(address operator, bool status) external {
         operators[operator] = status;
+    }
+
+    function acculateFee(uint256 platformFee) external {
+        feeAmount = feeAmount.add(platformFee);
     }
 }
