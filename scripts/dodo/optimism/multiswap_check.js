@@ -22,7 +22,7 @@ async function main() {
 
   let swapRouter_address = process.env.OP_SWAP_ROUTER_V2;
 
-  let index_address = "0x0B5f69c70c175331481343e542664d4F1A20Be01";
+  let index_address = "0xD707a2c00cbD8F8fE6ed8E5096AF0055cB8473b7";
 
   const index = await ethers.getContractAt('Index', index_address, signer);
   const token = await ethers.getContractAt("@openzeppelin/contracts/token/ERC20/IERC20.sol:IERC20", usdt_address, signer);
@@ -36,8 +36,8 @@ async function main() {
   let positionIdsHashData = await index.positionIdsHashList(hash);
   console.log(positionIdsHashData);
 
-  let setPositionsBalanceTx = await index.setPositionsBalance(usdt_address, weth_address, positionIds);
-  await setPositionsBalanceTx.wait();
+  // let setPositionsBalanceTx = await index.setPositionsBalance(usdt_address, weth_address, positionIds);
+  // await setPositionsBalanceTx.wait();
 
 
   let positionBalanceIn = await index.positionBalance(0, usdt_address);
@@ -46,11 +46,17 @@ async function main() {
   let positionBalanceOut = await index.positionBalance(0, weth_address);
   console.log('position 0, weth is:', positionBalanceOut);
 
+  let positionStatus = await index.positionStatus(0);
+  console.log('positionStatus 0, weth is:', positionStatus);
+
   let positionBalanceIn1 = await index.positionBalance(1, usdt_address);
   console.log('position 1, usdt is:', positionBalanceIn1);
 
   let positionBalanceOut1 = await index.positionBalance(1, weth_address);
   console.log('position 1, weth is:', positionBalanceOut1);
+
+  let positionStatus1 = await index.positionStatus(1);
+  console.log('positionStatus 1, weth is:', positionStatus1);
 
 }
 

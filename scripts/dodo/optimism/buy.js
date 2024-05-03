@@ -12,11 +12,23 @@ async function main() {
   const [deployer] = await ethers.getSigners()
 
   console.log('deployer:' + deployer.address)
+  const network = (await ethers.provider.getNetwork()).chainId;
+  console.log(network);
 
-  let weth9_address = process.env.OP_WETH9;
-  let usdt_address = process.env.OP_USDT;
-  
-  let dodo_address = "0x40bde52e6B80Ae11F34C58c14E1E7fE1f9c834C4";//process.env.DODO;
+  let weth_address;
+  let usdt_address;
+  let dodo_address;
+  if(network == 10) {
+    weth_address = process.env.OP_WETH9;
+    usdt_address = process.env.OP_USDT;
+    dodo_address = process.env.OP_DODO_MAIN;
+  } else if(network == 31337) {
+    weth_address = process.env.OP_WETH9;
+    usdt_address = process.env.OP_USDT;
+    dodo_address = process.env.OP_DODO_LOCAL;
+  } else {
+
+  }
 
   const dodo = await ethers.getContractAt('DODO', dodo_address, deployer);
   const usdtToken = await ethers.getContractAt('@openzeppelin/contracts/token/ERC20/IERC20.sol:IERC20', usdt_address, deployer);
@@ -31,7 +43,7 @@ async function main() {
 
   let buyTx = await dodo.buy(
     0,
-    ethers.utils.parseUnits("1100", 6),
+    ethers.utils.parseUnits("2", 6),
     10000,
     100,
     10000

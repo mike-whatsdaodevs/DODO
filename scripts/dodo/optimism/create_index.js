@@ -13,14 +13,27 @@ async function main() {
 
   console.log('deployer:' + deployer.address)
 
-  let weth9_address = process.env.OP_WETH9;
-  let usdt_address = process.env.OP_USDT;
-  
-  let dodo_address = "0x40bde52e6B80Ae11F34C58c14E1E7fE1f9c834C4";//process.env.DODO;
+  const network = (await ethers.provider.getNetwork()).chainId;
+  console.log(network);
+
+  let weth_address;
+  let usdt_address;
+  let dodo_address;
+  if(network == 10) {
+    weth_address = process.env.OP_WETH9;
+    usdt_address = process.env.OP_USDT;
+    dodo_address = process.env.OP_DODO_MAIN;
+  } else if(network == 31337) {
+    weth_address = process.env.OP_WETH9;
+    usdt_address = process.env.OP_USDT;
+    dodo_address = process.env.OP_DODO_LOCAL;
+  } else {
+
+  }
 
   const dodo = await ethers.getContractAt('DODO', dodo_address, deployer);
 
-  let createIndexTx = await dodo.createIndex("usdc_eth", [weth9_address, usdt_address]);
+  let createIndexTx = await dodo.createIndex("usdt_eth", [weth_address, usdt_address]);
 
   await createIndexTx.wait();
 

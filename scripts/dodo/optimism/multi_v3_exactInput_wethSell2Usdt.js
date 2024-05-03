@@ -36,7 +36,7 @@ async function main() {
 
   }
 
-  let index_address = "0x0B5f69c70c175331481343e542664d4F1A20Be01";
+  let index_address = "0xD707a2c00cbD8F8fE6ed8E5096AF0055cB8473b7";
 
   const index = await ethers.getContractAt('Index', index_address, signer);
   const token = await ethers.getContractAt("@openzeppelin/contracts/token/ERC20/IERC20.sol:IERC20", usdt_address, signer);
@@ -46,15 +46,15 @@ async function main() {
   const pathFinder = await ethers.getContractAt('PathFinder', pathFinder_address, signer);
 
   /// approve
-  let setAllowedProtocolTx = await index.addAllowedProtocols([swapRouter_address]);
-  await setAllowedProtocolTx.wait();
-  console.log(setAllowedProtocolTx.hash);
+  // let setAllowedProtocolTx = await index.addAllowedProtocols([swapRouter_address]);
+  // await setAllowedProtocolTx.wait();
+  // console.log(setAllowedProtocolTx.hash);
 
-  let tokenApproveTx = await index.safeApprove(usdt_address, swapRouter_address);
-  await tokenApproveTx.wait();
+  // let tokenApproveTx = await index.safeApprove(usdt_address, swapRouter_address);
+  // await tokenApproveTx.wait();
 
-  let tokenApproveTx1 = await index.safeApprove(weth_address, swapRouter_address);
-  await tokenApproveTx1.wait();
+  // let tokenApproveTx1 = await index.safeApprove(weth_address, swapRouter_address);
+  // await tokenApproveTx1.wait();
 
   // let allowance = await token.allowance(index_address, swapRouter_address);
   // console.log("allowance is", allowance);
@@ -81,12 +81,12 @@ async function main() {
 
   /// batch deal positions
   let positionIds = [0,1];
-  let positionsBalance = await index.getPositionsBalance(usdt_address, positionIds);
+  let positionsBalance = await index.getPositionsBalance(weth_address, positionIds);
 
   /// path finder 
   /// get path
   /// get amount Out
-  let tx = await pathFinder.callStatic.exactInputPath(usdt_address, weth_address, positionsBalance.tokenInBalance);
+  let tx = await pathFinder.callStatic.exactInputPath(weth_address, usdt_address, positionsBalance.tokenInBalance);
  // let res = await tx.wait();
   console.log(tx);
 
@@ -115,11 +115,11 @@ async function main() {
   await tx3.wait();
 
   ////set positionBalance
-  let hash = await index.hashPositionIds(positionIds, usdt_address, weth_address);
+  let hash = await index.hashPositionIds(positionIds, weth_address, usdt_address);
   console.log(hash);
   let positionIdsHashData = await index.positionIdsHashList(hash);
   console.log(positionIdsHashData);
-  let setPositionsBalanceTx = await index.setPositionsBalance(usdt_address, weth_address,positionIds, 0, positionIds.length);
+  let setPositionsBalanceTx = await index.setPositionsBalance(weth_address, usdt_address ,positionIds, 0, positionIds.length);
   await setPositionsBalanceTx.wait();
   return;
 
