@@ -23,6 +23,11 @@ async function main() {
 
   const pathFinder = await ethers.getContractAt('PathFinder', pathFinder_address, signer)
 
+
+  // let updateTokensTx = await pathFinder.updateTokens([weth9_address, usdt_address]);
+  // await updateTokensTx.wait();
+  // console.log(updateTokensTx.hash);return;
+
   let amount = ethers.utils.parseEther("1");
 
   let tx = await pathFinder.callStatic.exactInputPath(weth9_address, usdt_address, amount);

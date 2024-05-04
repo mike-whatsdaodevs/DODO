@@ -19,6 +19,20 @@ contract PathFinder is IPathFinder, Ownable {
         sharedTokens = _tokens;
     }
 
+    function buildSinglePath(address token0, address token1, uint24 fee) public view returns (bytes memory path) {
+        path = abi.encodePacked(token0, fee, token1);
+    }
+
+    function buildMultiPath(address[] memory tokens, uint24[] memory fees) public view returns (bytes memory path) {
+        uint256 length = tokens.length;
+        require(length >= 2, "E: length error");
+        path = abi.encodePacked(tokens[0], fees[0], tokens[1]);
+
+        for(uint256 i = 2; i < length; ++i) {
+            path = abi.encodePacked(path, fees[i - 1], tokens[i]);
+        }
+    }
+
     function exactInputPath(
         address tokenIn,
         address tokenOut,
@@ -168,4 +182,53 @@ contract PathFinder is IPathFinder, Ownable {
             (tradeType == Constants.EXACT_INPUT && expectedAmount > bestAmount) ||
             (tradeType == Constants.EXACT_OUTPUT && expectedAmount < bestAmount);
     }
+
+    function getExactInAmountOut(
+        bytes memory path,
+        uint256 amount
+    )
+        public
+        returns (
+            uint256 expectedAmount,
+            uint160[] memory sqrtPriceX96AfterList,
+            uint32[] memory initializedTicksCrossedList,
+            uint256 gasEstimate
+        )
+    {
+        try quoter.quoteExactInput(path, amount) returns (
+            uint256 amountOut,
+            uint160[] memory afterList,
+            uint32[] memory crossedList,
+            uint256 gas
+        ) {
+            expectedAmount = amountOut;
+            sqrtPriceX96AfterList = afterList;
+            initializedTicksCrossedList = crossedList;
+            gasEstimate = gas;
+        } catch {}
+     
+    }
+
+
+    function getExactInputSingleAmountOut(
+        IQuoterV2.QuoteExactInputSingleParams memory params
+    ) public returns (
+        uint256 eAmount,
+        uint160 eSqrtPriceX96After,
+        uint32 eInitializedTicksCrossed,
+        uint256 eGasEstimate
+    ) {
+        try quoter.quoteExactInputSingle(params) returns (
+            uint256 amountOut,
+            uint160 sqrtPriceX96After,
+            uint32 initializedTicksCrossed,
+            uint256 gasEstimate
+        ) {
+            eAmount = amountOut;
+            eSqrtPriceX96After = sqrtPriceX96After;
+            eInitializedTicksCrossed = initializedTicksCrossed;
+            eGasEstimate = gasEstimate;
+        } catch {}
+    }
+
 }
