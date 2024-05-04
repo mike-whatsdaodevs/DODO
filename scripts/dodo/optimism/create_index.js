@@ -19,6 +19,19 @@ async function main() {
   let weth_address;
   let usdt_address;
   let dodo_address;
+  let indexTokens = [
+    process.env.OP_USDT,
+    process.env.OP_USDC,
+    process.env.OP_WETH9,
+    process.env.OP_WBTC,
+    process.env.OP_LINK,
+    process.env.OP_OP,
+    process.env.OP_LDO,
+    process.env.OP_WLD,
+    process.env.OP_W,
+    process.env.OP_PYTH,
+    process.env.OP_SNX
+  ];
   if(network == 10) {
     weth_address = process.env.OP_WETH9;
     usdt_address = process.env.OP_USDT;
@@ -33,7 +46,7 @@ async function main() {
 
   const dodo = await ethers.getContractAt('DODO', dodo_address, deployer);
 
-  let createIndexTx = await dodo.createIndex("usdt_eth", [weth_address, usdt_address]);
+  let createIndexTx = await dodo.createIndex("usdt_eth", indexTokens);
 
   await createIndexTx.wait();
 
