@@ -5,7 +5,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import {Path} from "../libraries/Path.sol";
 
-contract Filter {
+abstract contract Filter {
 
     using EnumerableSet for EnumerableSet.AddressSet;
     /// allowed tokens to buy
@@ -17,9 +17,7 @@ contract Filter {
     /// allowed tokens to sell
     mapping(address => bool) allowedTokens;
 
-    constructor() {}
-
-    function addIndexTokens(address[] memory addrs) external {
+    function addIndexTokens(address[] memory addrs) public {
         uint256 length = addrs.length;
         for(uint256 i; i < length; i ++) {
             address indexToken = addrs[i];
