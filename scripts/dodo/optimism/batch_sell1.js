@@ -62,9 +62,6 @@ async function main() {
 
 
 
-  // let tokenApproveTx = await index.safeApprove(usdt_address, swapRouter_address);
-  // await tokenApproveTx.wait();
-  // return;
 
   // for(let i=0; i< indexTokens.length; i++) {
   //     tokenApproveTx = await index.safeApprove(indexTokens[i], swapRouter_address);
@@ -73,12 +70,6 @@ async function main() {
   // }
   // return;
 
-  // for(let i=0; i< indexTokens.length; i++) {
-  //     tokenApproveTx = await index.safeApprove(indexTokens[i], swapRouter_address);
-  //     await tokenApproveTx.wait();
-  //     console.log("i is ", i, indexTokens[i]);
-  // }
-  // return;
 
 
   // let index_token_balance = await index.positionBalance(0, usdt_address);
@@ -106,16 +97,15 @@ async function main() {
   let calldataArray = new Array();
   let positionIdsArray = new Array();
 
-
-  let positionsBalance = await index.getPositionsBalance(usdt_address, positionIds);
-  console.log("positionsBalance is", positionsBalance);
-  let amount = Math.floor(positionsBalance.tokenInBalance.div(indexTokens.length));
-  console.log("amount is", amount);
   //indexTokens.length
   
   for(let i=0; i < indexTokens.length ; i++) {
+      let positionsBalance = await index.getPositionsBalance(indexTokens[i], positionIds);
+      console.log("positionsBalance is", positionsBalance);
+      let amount = positionsBalance.tokenInBalance;
+
       let token_address = indexTokens[i];
-      let tx = await pathFinder.callStatic.exactInputPath(usdt_address, token_address, amount);
+      let tx = await pathFinder.callStatic.exactInputPath(token_address, usdt_address, amount);
       // let res = await tx.wait();
       console.log(tx);
 

@@ -80,8 +80,7 @@ async function main() {
     const obj = await ethers.getContractAt("@openzeppelin/contracts/token/ERC20/IERC20.sol:IERC20", indexTokens[i], signer);
     console.log("token balance is ", await obj.balanceOf(index_address));
 
-
-    let hash = await index.hashPositionIds(positionIds, usdt_address, indexTokens[i]);
+    let hash = await index.hashPositionIds(positionIds, indexTokens[i], usdt_address);
     let positionIdsHashData = await index.positionIdsHashList(hash);
     console.log("position data is", positionIdsHashData);
 
@@ -89,14 +88,14 @@ async function main() {
     ////set positionBalance
 
     let params = {
-      tokenIn: usdt_address,
-      tokenOut: indexTokens[i],
+      tokenIn: indexTokens[i],
+      tokenOut: usdt_address,
       positionIds: positionIds,
       offset: 0,
       size: positionIds.length
     }
-    // let setPositionsBalanceTx = await index.setPositionsBalance(params);
-    // await setPositionsBalanceTx.wait();
+    let setPositionsBalanceTx = await index.setPositionsBalance(params);
+    await setPositionsBalanceTx.wait();
     
     console.log("set after:",await index.positionBalance(positionId, indexTokens[i]));
   }

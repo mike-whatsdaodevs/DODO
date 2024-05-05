@@ -280,6 +280,10 @@ contract Index is IIndex, Ownable, Filter {
         return counter[positionId];
     }
 
+    function resetPositionBalanceCounter() private {
+        delete counter[positionId];
+    }
+
     /**
      * @dev set position token balance
      */
@@ -299,17 +303,16 @@ contract Index is IIndex, Ownable, Filter {
             positionBalance[pid][params.tokenOut] = amountOut.
                 mul(positionBalance[pid][params.tokenIn]).
                 div(positionsBalance);
-                
+
             {
                 uint256 count = setPositionBalanceCounter(pid);
-                if(count == indexTokensLength) {
+                if(count >= indexTokensLength) {
                     positionStatus[pid] = params.tokenOut == underlyingToken 
                         ? Enum.PositionStatus.SOLD 
                         : Enum.PositionStatus.SPOT;
                     positionBalance[pid][params.tokenIn] = 0;
-                } else if (count > indexTokensLength) {
-                    revert();
-                } else {}
+                    resetPositionBalanceCounter();
+                } 
             }
   
         }
