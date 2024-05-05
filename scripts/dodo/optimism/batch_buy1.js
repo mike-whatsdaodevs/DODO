@@ -64,6 +64,7 @@ async function main() {
 
   // let tokenApproveTx = await index.safeApprove(usdt_address, swapRouter_address);
   // await tokenApproveTx.wait();
+  // return;
 
   // for(let i=0; i< indexTokens.length; i++) {
   //     tokenApproveTx = await index.safeApprove(indexTokens[i], swapRouter_address);
@@ -106,26 +107,13 @@ async function main() {
   let positionIdsArray = new Array();
 
 
-  // calldataArray = [
-  //   '0xb858183f0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000008000000000000000000000000056ec47fc419d1f1e765a0584abb967aca04023e1000000000000000000000000000000000000000000000000000000000006886e0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002b94b008aa00579c1307b0ef2c499ad98a8ce58e580000640b2c639c533813f4aa9d7837caf62653d097ff85000000000000000000000000000000000000000000',
-  //   '0xb858183f0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000008000000000000000000000000056ec47fc419d1f1e765a0584abb967aca04023e1000000000000000000000000000000000000000000000000000000000006886e0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002b94b008aa00579c1307b0ef2c499ad98a8ce58e580001f44200000000000000000000000000000000000006000000000000000000000000000000000000000000'
-  // ];
-  // positionIdsArray = [ [ 0, 1 ], [ 0, 1 ] ];
-  // let tx = await index.swapMultiCall(
-  //   positionIdsArray,
-  //   calldataArray
-  // );
-  // await tx.wait();
-  // console.log(tx.hash);
-  // return;
-
   let positionsBalance = await index.getPositionsBalance(usdt_address, positionIds);
   console.log("positionsBalance is", positionsBalance);
   let amount = Math.floor(positionsBalance.tokenInBalance.div(indexTokens.length));
   console.log("amount is", amount);
   //indexTokens.length
   
-  for(let i=2; i < indexTokens.length ; i++) {
+  for(let i=0; i < indexTokens.length ; i++) {
       let token_address = indexTokens[i];
       let tx = await pathFinder.callStatic.exactInputPath(usdt_address, token_address, amount);
       // let res = await tx.wait();
@@ -139,7 +127,7 @@ async function main() {
         path: tx.path,
         recipient: index_address,
         amountIn: amount,
-        amountOutMinimum: 0
+        amountOutMinimum: tx.expectedAmount
       }
       console.log(params);
 

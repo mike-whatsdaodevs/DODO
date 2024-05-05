@@ -38,12 +38,11 @@ async function main() {
 
   let approveTx = await usdtToken.approve(dodo_address, ethers.constants.MaxUint256);
   await approveTx.wait();
-
   console.log(approveTx.hash);
 
   let buyTx = await dodo.buy(
     0,
-    ethers.utils.parseUnits("2", 6),
+    ethers.utils.parseUnits("1", 6),
     10000,
     100,
     10000

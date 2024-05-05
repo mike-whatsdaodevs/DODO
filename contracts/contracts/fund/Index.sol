@@ -35,7 +35,7 @@ contract Index is IIndex, Ownable, Filter {
 
     /// position status
     mapping(uint256 => Enum.PositionStatus) public override positionStatus;
-    mapping(bytes32 => SwapAmountInAndOut) public positionIdsHashList;
+    mapping(bytes32 => uint256) public positionIdsHashList;
 
     /// position set counter
     mapping(uint256 => uint256) public counter;
@@ -282,30 +282,31 @@ contract Index is IIndex, Ownable, Filter {
 
     /**
      * @dev set position token balance
-     * @param tokenIn: token address
-     * @param tokenOut: token address
-     * @param positionIds: array of position id
      */
-    function setPositionsBalance(address tokenIn, address tokenOut, uint256[] calldata positionIds, uint256 offset, uint256 size) external {
-        uint256 length = positionIds.length;
-        bytes32 hash = hashPositionIds(positionIds, tokenIn, tokenOut);
+    function setPositionsBalance(SetBalnaceParams calldata params) external {
+        bytes32 hash = hashPositionIds(params.positionIds, params.tokenIn, params.tokenOut);
+        uint256 amountOut = positionIdsHashList[hash];
+        
         uint256 indexTokensLength = indexTokensLenth();
-        SwapAmountInAndOut memory inAndOut = positionIdsHashList[hash];
+        (uint256 positionsBalance, uint256 length) = getPositionsBalance(params.tokenIn, params.positionIds);
+
         for(uint256 i; i < length; ++i) {
-            if(i < offset || i >= offset.add(size)) {
+            if(i < params.offset || i >= params.offset.add(params.size)) {
                 continue;
             }
-            uint256 pBalance = positionBalance[positionIds[i]][tokenIn];
-            positionBalance[positionId][tokenOut] = inAndOut.amountOut.
-                mul(inAndOut.amountIn).
-                div(pBalance);
+            uint256 pid = params.positionIds[i];
+
+            positionBalance[pid][params.tokenOut] = amountOut.
+                mul(positionBalance[pid][params.tokenIn]).
+                div(positionsBalance);
+                
             {
-                uint256 count = setPositionBalanceCounter(positionIds[i]);
+                uint256 count = setPositionBalanceCounter(pid);
                 if(count == indexTokensLength) {
-                    positionStatus[positionIds[i]] = tokenOut == underlyingToken 
+                    positionStatus[pid] = params.tokenOut == underlyingToken 
                         ? Enum.PositionStatus.SOLD 
                         : Enum.PositionStatus.SPOT;
-                    positionBalance[positionIds[i]][tokenIn] = 0;
+                    positionBalance[pid][params.tokenIn] = 0;
                 } else if (count > indexTokensLength) {
                     revert();
                 } else {}
@@ -353,7 +354,7 @@ contract Index is IIndex, Ownable, Filter {
             positionBalance[positionId][tokenOut] = positionBalance[positionId][tokenOut].add(amountOut);
         } else {
 
-            bytes32 positionIdsHash = setPositionIdsHash(positionIds, tokenIn, tokenOut, amountIn, amountOut);
+            bytes32 positionIdsHash = setPositionIdsHash(positionIds, tokenIn, tokenOut, amountOut);
             emit PositionsSwap(0, positionCount, positionIdsHash, amountOut);
         }
 
@@ -366,14 +367,13 @@ contract Index is IIndex, Ownable, Filter {
         uint256[] memory positionIds, 
         address tokenIn,
         address tokenOut,
-        uint256 amountIn, 
         uint256 amountOut
     ) private returns (bytes32 positionIdsHash) {
         positionIdsHash = hashPositionIds(positionIds, tokenIn, tokenOut);
-        SwapAmountInAndOut memory inAndout = positionIdsHashList[positionIdsHash];
+        uint256 oldAmountOut = positionIdsHashList[positionIdsHash];
         
-        require(inAndout.amountIn == 0 && inAndout.amountOut == 0, "E: hash has set");
-        positionIdsHashList[positionIdsHash] = SwapAmountInAndOut(amountIn, amountOut);
+        require(oldAmountOut == 0, "E: hash has set");
+        positionIdsHashList[positionIdsHash] = amountOut;
     }
 
     /**
@@ -412,7 +412,6 @@ contract Index is IIndex, Ownable, Filter {
                 positionIds, 
                 params.tokenIn, 
                 params.tokenOut, 
-                params.amountIn, 
                 amountOut
             );
 
@@ -460,7 +459,6 @@ contract Index is IIndex, Ownable, Filter {
                 positionIds, 
                 tokenIn, 
                 tokenOut, 
-                params.amountIn, 
                 amountOut
             );
             emit PositionsSwap(0, positionCount, positionIdsHash, amountOut);
@@ -548,7 +546,6 @@ contract Index is IIndex, Ownable, Filter {
                 positionIdsArray[i], 
                 tokenInArr[i], 
                 tokenOutArr[i], 
-                amountInArr[i], 
                 amountOut
             );
             emit PositionsSwap(i, positionIdsArray[i].length, positionIdsHash, amountOut);

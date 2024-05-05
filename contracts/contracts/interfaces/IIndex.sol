@@ -17,6 +17,14 @@ interface IIndex {
         uint256 amountOutMinimum;
     }
 
+    struct SetBalnaceParams {
+        address tokenIn;
+        address tokenOut;
+        uint256[] positionIds;
+        uint256 offset; 
+        uint256 size;
+    }
+
     event CreatedIndex(
         uint256 indexed id, 
         address indexed indexAddress,

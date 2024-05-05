@@ -42,6 +42,7 @@ async function main() {
   } else {
 
   }
+  console.log(dodo_address);
 
   const dodo = await ethers.getContractAt('DODO', dodo_address, deployer);
 
