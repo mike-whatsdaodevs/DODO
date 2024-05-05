@@ -19,6 +19,7 @@ async function main() {
   let usdt_address;
   let pathFinder_address;
   let swapRouter_address;
+  let dodo_address;
   let indexTokens = [
     process.env.OP_USDC,
     process.env.OP_WETH9,
@@ -36,16 +37,22 @@ async function main() {
     usdt_address = process.env.OP_USDT;
     pathFinder_address =  process.env.OP_PATH_FINDER_MAIN;
     swapRouter_address = process.env.OP_SWAP_ROUTER_V2;
+    dodo_address = process.env.OP_DODO_MAIN;
   } else if(network == 31337) {
     weth_address = process.env.OP_WETH9;
     usdt_address = process.env.OP_USDT;
     pathFinder_address =  process.env.OP_PATH_FINDER_MAIN;
     swapRouter_address = process.env.OP_SWAP_ROUTER_V2;
+    dodo_address = process.env.OP_DODO_LOCAL;
   } else {
 
   }
 
-  let index_address = "0x0B5f69c70c175331481343e542664d4F1A20Be01";
+  const dodo = await ethers.getContractAt('DODO', dodo_address, signer);
+
+
+  let index_address = await dodo.indexMap(0);
+  console.log(index_address);
 
   const index = await ethers.getContractAt('Index', index_address, signer);
   const token = await ethers.getContractAt("@openzeppelin/contracts/token/ERC20/IERC20.sol:IERC20", usdt_address, signer);
@@ -53,18 +60,25 @@ async function main() {
   const swap = await ethers.getContractAt('ISwapRouter02', swapRouter_address, signer);
   const pathFinder = await ethers.getContractAt('PathFinder', pathFinder_address, signer);
 
+
+
   // let tokenApproveTx = await index.safeApprove(usdt_address, swapRouter_address);
   // await tokenApproveTx.wait();
 
-  // for(let i=0; i< 10; i++) {
+  // for(let i=0; i< indexTokens.length; i++) {
   //     tokenApproveTx = await index.safeApprove(indexTokens[i], swapRouter_address);
   //     await tokenApproveTx.wait();
   //     console.log("i is ", i, indexTokens[i]);
   // }
+  // return;
 
+  // for(let i=0; i< indexTokens.length; i++) {
+  //     tokenApproveTx = await index.safeApprove(indexTokens[i], swapRouter_address);
+  //     await tokenApproveTx.wait();
+  //     console.log("i is ", i, indexTokens[i]);
+  // }
+  // return;
 
-  // let allowance = await token.allowance(index_address, swapRouter_address);
-  // console.log("allowance is", allowance);
 
   // let index_token_balance = await index.positionBalance(0, usdt_address);
   // console.log("position balance 0",index_token_balance);
@@ -91,12 +105,27 @@ async function main() {
   let calldataArray = new Array();
   let positionIdsArray = new Array();
 
+
+  // calldataArray = [
+  //   '0xb858183f0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000008000000000000000000000000056ec47fc419d1f1e765a0584abb967aca04023e1000000000000000000000000000000000000000000000000000000000006886e0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002b94b008aa00579c1307b0ef2c499ad98a8ce58e580000640b2c639c533813f4aa9d7837caf62653d097ff85000000000000000000000000000000000000000000',
+  //   '0xb858183f0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000008000000000000000000000000056ec47fc419d1f1e765a0584abb967aca04023e1000000000000000000000000000000000000000000000000000000000006886e0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002b94b008aa00579c1307b0ef2c499ad98a8ce58e580001f44200000000000000000000000000000000000006000000000000000000000000000000000000000000'
+  // ];
+  // positionIdsArray = [ [ 0, 1 ], [ 0, 1 ] ];
+  // let tx = await index.swapMultiCall(
+  //   positionIdsArray,
+  //   calldataArray
+  // );
+  // await tx.wait();
+  // console.log(tx.hash);
+  // return;
+
   let positionsBalance = await index.getPositionsBalance(usdt_address, positionIds);
   console.log("positionsBalance is", positionsBalance);
-  let amount = Math.floor(positionsBalance.tokenInBalance.div(10));
+  let amount = Math.floor(positionsBalance.tokenInBalance.div(indexTokens.length));
   console.log("amount is", amount);
-
-  for(let i=0; i < indexTokens.length; i++) {
+  //indexTokens.length
+  
+  for(let i=2; i < indexTokens.length ; i++) {
       let token_address = indexTokens[i];
       let tx = await pathFinder.callStatic.exactInputPath(usdt_address, token_address, amount);
       // let res = await tx.wait();
@@ -110,7 +139,7 @@ async function main() {
         path: tx.path,
         recipient: index_address,
         amountIn: amount,
-        amountOutMinimum:  tx.expectedAmount
+        amountOutMinimum: 0
       }
       console.log(params);
 

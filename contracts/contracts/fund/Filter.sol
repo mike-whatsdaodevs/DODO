@@ -33,6 +33,10 @@ contract Filter {
         }
     }
 
+    function indexTokensLenth() public view returns (uint256) {
+        return indexTokens.length();
+    }
+
     function removeIndexTokens(address[] memory addrs) external {
         uint256 length = addrs.length;
         for(uint256 i; i < length; i ++) {

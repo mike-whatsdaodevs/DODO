@@ -35,8 +35,10 @@ contract Index is IIndex, Ownable, Filter {
 
     /// position status
     mapping(uint256 => Enum.PositionStatus) public override positionStatus;
-
     mapping(bytes32 => SwapAmountInAndOut) public positionIdsHashList;
+
+    /// position set counter
+    mapping(uint256 => uint256) public counter;
 
     /// index id
     uint256 public immutable id;
@@ -273,30 +275,42 @@ contract Index is IIndex, Ownable, Filter {
         }
     }
 
+    function setPositionBalanceCounter(uint256 positionId) private returns (uint256) {
+        counter[positionId] += 1;
+        return counter[positionId];
+    }
+
     /**
      * @dev set position token balance
      * @param tokenIn: token address
      * @param tokenOut: token address
      * @param positionIds: array of position id
      */
-    function setPositionsBalance(address tokenIn, address tokenOut, uint256[] memory positionIds, uint256 offset, uint256 size) external {
+    function setPositionsBalance(address tokenIn, address tokenOut, uint256[] calldata positionIds, uint256 offset, uint256 size) external {
         uint256 length = positionIds.length;
         bytes32 hash = hashPositionIds(positionIds, tokenIn, tokenOut);
+        uint256 indexTokensLength = indexTokensLenth();
         SwapAmountInAndOut memory inAndOut = positionIdsHashList[hash];
-        uint256 amount;
         for(uint256 i; i < length; ++i) {
             if(i < offset || i >= offset.add(size)) {
                 continue;
             }
-            uint256 positionId = positionIds[i];
             uint256 pBalance = positionBalance[positionIds[i]][tokenIn];
-            amount = inAndOut.amountOut.mul(pBalance).div(inAndOut.amountIn);
-            positionBalance[positionId][tokenIn] = 0;
-            positionBalance[positionId][tokenOut] = amount;
-
-            positionStatus[positionId] = tokenOut == underlyingToken 
-                ? Enum.PositionStatus.SOLD 
-                : Enum.PositionStatus.SPOT;
+            positionBalance[positionId][tokenOut] = inAndOut.amountOut.
+                mul(inAndOut.amountIn).
+                div(pBalance);
+            {
+                uint256 count = setPositionBalanceCounter(positionIds[i]);
+                if(count == indexTokensLength) {
+                    positionStatus[positionIds[i]] = tokenOut == underlyingToken 
+                        ? Enum.PositionStatus.SOLD 
+                        : Enum.PositionStatus.SPOT;
+                    positionBalance[positionIds[i]][tokenIn] = 0;
+                } else if (count > indexTokensLength) {
+                    revert();
+                } else {}
+            }
+  
         }
         delete positionIdsHashList[hash];
     }
