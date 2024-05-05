@@ -20,16 +20,15 @@ async function main() {
   let usdt_address;
   let dodo_address;
   let indexTokens = [
-    process.env.OP_USDT,
     process.env.OP_USDC,
     process.env.OP_WETH9,
     process.env.OP_WBTC,
     process.env.OP_LINK,
     process.env.OP_OP,
-    process.env.OP_LDO,
+   // process.env.OP_LDO,
     process.env.OP_WLD,
-    process.env.OP_W,
-    process.env.OP_PYTH,
+    // process.env.OP_W,
+    //process.env.OP_PYTH,
     process.env.OP_SNX
   ];
   if(network == 10) {

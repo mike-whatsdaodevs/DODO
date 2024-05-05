@@ -63,27 +63,6 @@ async function main() {
   // }
 
 
-  // let allowance = await token.allowance(index_address, swapRouter_address);
-  // console.log("allowance is", allowance);
-
-  // let index_token_balance = await index.positionBalance(0, usdt_address);
-  // console.log("position balance 0",index_token_balance);
-
-  // let index_token_balance1 = await index.positionBalance(1, usdt_address);
-  // console.log("position balance 1", index_token_balance1);
-  // return;
-
-  // let tokenBalance = await token.balanceOf(index_address);
-  // console.log(ethers.utils.formatUnits(tokenBalance, "6"));
-
-  // let transferTx = await token.transfer(swap_address, ethers.utils.parseUnits("1100", 6));
-  // await transferTx.wait();
-
-  // let weth_balance1 = await weth.balanceOf(index_address);
-  // console.log(ethers.utils.formatEther(weth_balance1));
-
-  // let index_weth_balance = await index.positionBalance(0, weth_address);
-  // console.log(ethers.utils.formatEther(index_weth_balance));
 
 
   /// batch deal positions
@@ -133,14 +112,14 @@ async function main() {
   console.log(tx3.hash);
   return;
 
-  ////set positionBalance
-  let hash = await index.hashPositionIds(positionIds, usdt_address, weth_address);
-  console.log(hash);
-  let positionIdsHashData = await index.positionIdsHashList(hash);
-  console.log(positionIdsHashData);
-  let setPositionsBalanceTx = await index.setPositionsBalance(usdt_address, weth_address,positionIds, 0, positionIds.length);
-  await setPositionsBalanceTx.wait();
-  return;
+  // ////set positionBalance
+  // let hash = await index.hashPositionIds(positionIds, usdt_address, weth_address);
+  // console.log(hash);
+  // let positionIdsHashData = await index.positionIdsHashList(hash);
+  // console.log(positionIdsHashData);
+  // let setPositionsBalanceTx = await index.setPositionsBalance(usdt_address, weth_address,positionIds, 0, positionIds.length);
+  // await setPositionsBalanceTx.wait();
+  // return;
 
 
   // let amountOut = ethers.utils.parseEther("0.68");

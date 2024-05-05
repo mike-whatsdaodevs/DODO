@@ -13,25 +13,18 @@ async function main() {
 
   console.log('deployer:' + deployer.address)
 
-  
   const network = (await ethers.provider.getNetwork()).chainId;
   console.log(network);
 
-  let pathFinder_address = process.env.OP_PATH_FINDER_MAIN;;
+  let pathFinder_address = "0xC92B72ecf468D2642992b195bea99F9B9BB4A838"//process.env.OP_PATH_FINDER_MAIN;
   let weth9_address = process.env.OP_WETH9;
   let usdt_address = process.env.OP_USDT;
-  let ldo_address = process.env.OP_LDO;
 
   const pathFinder = await ethers.getContractAt('PathFinder', pathFinder_address, signer)
 
+  let amount = ethers.utils.parseUnits("100", 6);
 
-  // let updateTokensTx = await pathFinder.updateTokens([weth9_address, usdt_address]);
-  // await updateTokensTx.wait();
-  // console.log(updateTokensTx.hash);return;
-
-  let amount =199800; // ethers.utils.parseUints("1");
-
-  let tx = await pathFinder.callStatic.exactInputPath(usdt_address, ldo_address, amount);
+  let tx = await pathFinder.callStatic.exactInputPath(usdt_address, weth9_address, amount);
  // let res = await tx.wait();
 
   decodePath(tx.path);

@@ -68,6 +68,8 @@ contract Index is IIndex, Ownable, Filter {
         id = indexId;
         name = indexName;
         feeRate = 10;
+        allowedTokens[underlyingToken] = true;
+        addProtocol(uniswapRouter);
 
         emit CreatedIndex(id, address(this), feeRate, name, block.timestamp);
     }

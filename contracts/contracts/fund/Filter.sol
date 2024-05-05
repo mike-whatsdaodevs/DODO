@@ -51,7 +51,7 @@ contract Filter {
             if(allowedProtocols.contains(protocol)) {
                 continue;
             }
-            allowedProtocols.add(protocol);
+            addProtocol(protocol);
         }
     }
 
@@ -64,6 +64,10 @@ contract Filter {
             }
             allowedProtocols.remove(protocol);
         }
+    }
+
+    function addProtocol(address protocol) internal {
+        allowedProtocols.add(protocol);
     }
 
     function manageAllowedToken(address token, bool status) external {
