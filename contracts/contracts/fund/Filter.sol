@@ -3,7 +3,6 @@ pragma solidity >=0.8.14;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-
 import {Path} from "../libraries/Path.sol";
 
 contract Filter {

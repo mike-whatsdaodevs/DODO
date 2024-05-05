@@ -3,16 +3,14 @@ pragma solidity >=0.8.14;
 
 import { IDODO } from "../interfaces/IDODO.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { PaymentGateway } from "./PaymentGateway.sol";
 import { IIndex, Enum } from "../interfaces/IIndex.sol";
 import { Index, Constants } from "./Index.sol";
 import { TransferHelper } from "../libraries/TransferHelper.sol";
-import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { SafeMath } from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import { Enum } from "../libraries/Enum.sol";
 import { PositionSet } from "../libraries/PositionSet.sol";
 
-contract DODO is IDODO, PaymentGateway {
+contract DODO is IDODO {
     using TransferHelper for address;
     using SafeMath for uint256;
 
@@ -23,7 +21,7 @@ contract DODO is IDODO, PaymentGateway {
 
     address[] public indexList;
 
-    constructor(address _weth, address _underlyingToken) PaymentGateway(_weth) {
+    constructor(address _weth, address _underlyingToken) {
         underlyingToken = _underlyingToken;
     }
 
