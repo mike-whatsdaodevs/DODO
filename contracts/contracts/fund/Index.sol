@@ -317,6 +317,19 @@ contract Index is IIndex, Filter {
         delete positionIdsHashList[hash];
     }
 
+    function setPositionIdsHash(
+        uint256[] memory positionIds, 
+        address tokenIn,
+        address tokenOut,
+        uint256 amountOut
+    ) private returns (bytes32 positionIdsHash) {
+        positionIdsHash = hashPositionIds(positionIds, tokenIn, tokenOut);
+        uint256 oldAmountOut = positionIdsHashList[positionIdsHash];
+        
+        require(oldAmountOut == 0, "E: hash has set");
+        positionIdsHashList[positionIdsHash] = amountOut;
+    }
+
     /**
      * @dev swap tokens by uniswao v2
      * @param positionIds: array of position id
@@ -362,19 +375,6 @@ contract Index is IIndex, Filter {
         emit Swap(tokenIn, tokenOut, amountIn, amountOut, block.timestamp);
 
         return amountOut;
-    }
-
-    function setPositionIdsHash(
-        uint256[] memory positionIds, 
-        address tokenIn,
-        address tokenOut,
-        uint256 amountOut
-    ) private returns (bytes32 positionIdsHash) {
-        positionIdsHash = hashPositionIds(positionIds, tokenIn, tokenOut);
-        uint256 oldAmountOut = positionIdsHashList[positionIdsHash];
-        
-        require(oldAmountOut == 0, "E: hash has set");
-        positionIdsHashList[positionIdsHash] = amountOut;
     }
 
     /**
