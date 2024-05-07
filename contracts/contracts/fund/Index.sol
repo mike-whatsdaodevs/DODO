@@ -665,8 +665,8 @@ contract Index is IIndex, Filter {
         }
 
         amount = positionBalance[positionId][underlyingToken];
-        
         underlyingToken.safeTransfer(recipient, amount);
+        positionBalance[positionId][underlyingToken] = 0;
 
         emit Withdraw(positionId, tx.origin, amount, block.timestamp);
     }
