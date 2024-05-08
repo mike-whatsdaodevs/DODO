@@ -20,17 +20,9 @@ async function main() {
   let pathFinder_address;
   let swapRouter_address;
   let dodo_address;
+  let DAI_ADDRESS = "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1";
   let indexTokens = [
-    process.env.OP_USDC,
-    process.env.OP_WETH9,
-    process.env.OP_WBTC,
-    process.env.OP_LINK,
-    process.env.OP_OP,
-    process.env.OP_WLD,
-    // process.env.OP_LDO,
-    // process.env.OP_W,
-    // process.env.OP_PYTH,
-    process.env.OP_SNX
+    DAI_ADDRESS
   ];
   if(network == 10) {
     weth_address = process.env.OP_WETH9;

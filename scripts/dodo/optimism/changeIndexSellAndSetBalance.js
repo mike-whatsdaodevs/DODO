@@ -21,15 +21,6 @@ async function main() {
   let swapRouter_address;
   let dodo_address;
   let indexTokens = [
-    process.env.OP_USDC,
-    process.env.OP_WETH9,
-    process.env.OP_WBTC,
-    process.env.OP_LINK,
-    process.env.OP_OP,
-    process.env.OP_WLD,
-    // process.env.OP_LDO,
-    // process.env.OP_W,
-    // process.env.OP_PYTH,
     process.env.OP_SNX
   ];
   if(network == 10) {
@@ -68,10 +59,11 @@ async function main() {
   console.log("status is", await index.positionStatus(2));
   console.log("status is", await index.positionStatus(3));
 
-  console.log(await index.positionBalance(positionIds[0], weth_address));
-  console.log(await index.positionBalance(positionIds[1], weth_address));
+  console.log(await index.positionBalance(positionIds[0], usdt_address));
+  console.log(await index.positionBalance(positionIds[1], usdt_address));
 
   console.log(await token.balanceOf(index_address));
+
 
   let positionId = 2;//await index.positionId();
 
@@ -80,8 +72,7 @@ async function main() {
     const obj = await ethers.getContractAt("@openzeppelin/contracts/token/ERC20/IERC20.sol:IERC20", indexTokens[i], signer);
     console.log("token balance is ", await obj.balanceOf(index_address));
 
-
-    let hash = await index.hashPositionIds(positionIds, usdt_address, indexTokens[i]);
+    let hash = await index.hashPositionIds(positionIds, indexTokens[i], usdt_address);
     let positionIdsHashData = await index.positionIdsHashList(hash);
     console.log("position data is", positionIdsHashData);
 
@@ -89,8 +80,8 @@ async function main() {
     ////set positionBalance
 
     let params = {
-      tokenIn: usdt_address,
-      tokenOut: indexTokens[i],
+      tokenIn: indexTokens[i],
+      tokenOut: usdt_address,
       positionIds: positionIds,
       offset: 0,
       size: positionIds.length

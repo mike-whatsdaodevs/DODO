@@ -20,17 +20,9 @@ async function main() {
   let pathFinder_address;
   let swapRouter_address;
   let dodo_address;
+  let DAI_ADDRESS = "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1";
   let indexTokens = [
-    process.env.OP_USDC,
-    process.env.OP_WETH9,
-    process.env.OP_WBTC,
-    process.env.OP_LINK,
-    process.env.OP_OP,
-    process.env.OP_WLD,
-    // process.env.OP_LDO,
-    // process.env.OP_W,
-    // process.env.OP_PYTH,
-    process.env.OP_SNX
+    DAI_ADDRESS
   ];
   if(network == 10) {
     weth_address = process.env.OP_WETH9;
@@ -61,46 +53,13 @@ async function main() {
   const swap = await ethers.getContractAt('ISwapRouter02', swapRouter_address, signer);
   const pathFinder = await ethers.getContractAt('PathFinder', pathFinder_address, signer);
 
-
-
-  // let tokenApproveTx = await index.safeApprove(usdt_address, swapRouter_address);
+  // let tokenApproveTx = await index.safeApprove(DAI_ADDRESS, swapRouter_address);
   // await tokenApproveTx.wait();
   // return;
 
-  // for(let i=0; i< indexTokens.length; i++) {
-  //     tokenApproveTx = await index.safeApprove(indexTokens[i], swapRouter_address);
-  //     await tokenApproveTx.wait();
-  //     console.log("i is ", i, indexTokens[i]);
-  // }
+  // let removeIndexTokensTx = await index.removeIndexTokens([process.env.OP_SNX]);
+  // await removeIndexTokensTx.wait();
   // return;
-
-  // for(let i=0; i< indexTokens.length; i++) {
-  //     tokenApproveTx = await index.safeApprove(indexTokens[i], swapRouter_address);
-  //     await tokenApproveTx.wait();
-  //     console.log("i is ", i, indexTokens[i]);
-  // }
-  // return;
-
-
-  // let index_token_balance = await index.positionBalance(0, usdt_address);
-  // console.log("position balance 0",index_token_balance);
-
-  // let index_token_balance1 = await index.positionBalance(1, usdt_address);
-  // console.log("position balance 1", index_token_balance1);
-  // return;
-
-  // let tokenBalance = await token.balanceOf(index_address);
-  // console.log(ethers.utils.formatUnits(tokenBalance, "6"));
-
-  // let transferTx = await token.transfer(swap_address, ethers.utils.parseUnits("1100", 6));
-  // await transferTx.wait();
-
-  // let weth_balance1 = await weth.balanceOf(index_address);
-  // console.log(ethers.utils.formatEther(weth_balance1));
-
-  // let index_weth_balance = await index.positionBalance(0, weth_address);
-  // console.log(ethers.utils.formatEther(index_weth_balance));
-
 
   /// batch deal positions
   let positionIds = [2,3];
