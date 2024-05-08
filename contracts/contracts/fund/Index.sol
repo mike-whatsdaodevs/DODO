@@ -292,24 +292,27 @@ contract Index is IIndex, Filter {
         uint256 indexTokensLength = indexTokensLenth();
         (uint256 positionsBalance, uint256 length) = getPositionsBalance(params.tokenIn, params.positionIds);
 
+        bool isBuy = params.tokenIn == underlyingToken;
+
         for(uint256 i; i < length; ++i) {
             if(i < params.offset || i >= params.offset.add(params.size)) {
                 continue;
             }
             uint256 pid = params.positionIds[i];
 
-            positionBalance[pid][params.tokenOut] = amountOut.
+            positionBalance[pid][params.tokenOut] += amountOut.
                 mul(positionBalance[pid][params.tokenIn]).
                 div(positionsBalance);
 
             {
                 uint256 count = setPositionBalanceCounter(pid);
                 if(count >= indexTokensLength) {
-                    positionStatus[pid] = params.tokenOut == underlyingToken 
-                        ? Enum.PositionStatus.SOLD 
-                        : Enum.PositionStatus.SPOT;
+                    positionStatus[pid] = isBuy ? Enum.PositionStatus.SPOT : Enum.PositionStatus.SOLD;
                     positionBalance[pid][params.tokenIn] = 0;
                     resetPositionBalanceCounter();
+                } 
+                if(!isBuy) {
+                    positionBalance[pid][params.tokenIn] = 0;
                 } 
             }
   

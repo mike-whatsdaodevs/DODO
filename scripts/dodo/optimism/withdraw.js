@@ -51,7 +51,7 @@ async function main() {
   const dodo = await ethers.getContractAt('DODO', dodo_address, signer);
 
 
-  let index_address = await dodo.indexMap(1);
+  let index_address = await dodo.indexMap(0);
   console.log(index_address);
 
   const index = await ethers.getContractAt('Index', index_address, signer);
@@ -61,7 +61,7 @@ async function main() {
   const pathFinder = await ethers.getContractAt('PathFinder', pathFinder_address, signer);
 
 
-  let withdrawPositionTx = await dodo.withdrawPosition(1, 0);
+  let withdrawPositionTx = await dodo.withdrawPosition(0, 0);
   await withdrawPositionTx.wait();
   // function withdrawPosition(uint256 indexId, uint256 positionId) external {
   console.log(withdrawPositionTx.hash);

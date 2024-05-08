@@ -51,7 +51,7 @@ async function main() {
   const dodo = await ethers.getContractAt('DODO', dodo_address, signer);
 
 
-  let index_address = await dodo.indexMap(1);
+  let index_address = await dodo.indexMap(0);
   console.log(index_address);
 
   const index = await ethers.getContractAt('Index', index_address, signer);
@@ -70,10 +70,10 @@ async function main() {
 
   console.log(await index.positionBalance(positionIds[0], usdt_address));
   console.log(await index.positionBalance(positionIds[1], usdt_address));
+  return;
 
   console.log(await token.balanceOf(index_address));
-  return;
-  
+
 
   let positionId = 0;//await index.positionId();
 
