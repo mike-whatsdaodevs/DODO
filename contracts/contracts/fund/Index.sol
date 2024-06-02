@@ -62,6 +62,15 @@ contract Index is IIndex, Filter {
 
     mapping(address => mapping(address => uint256)) public tokenSwithAmount;
 
+    uint256 public closedPositionCount;
+    uint256 public gasUsed; 
+    uint256 public staticIndexGasUsed;
+
+    bool public isDynamicIndex;
+    uint256 public exchangeRate;
+    address public gasFeeRecipient;
+
+
     constructor(
         uint256 indexId, 
         string memory indexName
@@ -317,7 +326,9 @@ contract Index is IIndex, Filter {
                     positionBalance[pid][params.tokenIn] = 0;
                 } 
             }
-  
+            if(positionStatus[pid] == Enum.PositionStatus.SOLD) {
+                closedPositionCount ++;
+            }  
         }
         delete positionIdsHashList[hash];
     }
@@ -535,6 +546,7 @@ contract Index is IIndex, Filter {
      * 
      */
     function swapMultiCall(uint256[][] memory positionIdsArray, bytes[] calldata data) external payable  {
+        uint256 internalGas = gasleft();
         uint256 length = data.length;
         uint256[] memory amountInArr = new uint256[](length);
         address[] memory tokenInArr = new address[](length);
@@ -561,8 +573,13 @@ contract Index is IIndex, Filter {
                 emit PositionsSwap(i, positionIdsArray[i].length, positionIdsHash, amountOut);
 
             }
-            
         }
+        gasUsed = gasleft() - internalGas;
+    }
+
+    function distributeGas(uint256 positionId) internal view returns (uint256) {
+        uint256 activePosition = positionId.sub(closedPositionCount);
+        return gasUsed.div(activePosition);
     }
 
     function setPositionsSwithBalance(address tokenBefore, address tokenAfter, uint256[] calldata positionIds, bool clear) external {
@@ -690,8 +707,16 @@ contract Index is IIndex, Filter {
             revert();
         }
 
+        uint256 gasfee = staticIndexGasUsed;
+        if(isDynamicIndex) {
+            uint256 distributedGas = distributeGas(positionId);
+            gasfee = distributedGas.mul(exchangeRate).div(1E18);
+        } 
         amount = positionBalance[positionId][underlyingToken];
-        underlyingToken.safeTransfer(recipient, amount);
+
+        underlyingToken.safeTransfer(gasFeeRecipient, gasfee);
+        underlyingToken.safeTransfer(recipient, amount.sub(gasfee));
+
         positionBalance[positionId][underlyingToken] = 0;
 
         emit Withdraw(positionId, tx.origin, amount, block.timestamp);
