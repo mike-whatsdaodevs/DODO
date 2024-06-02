@@ -17,17 +17,22 @@ contract DODO is IDODO {
     uint256 public id;
     address public underlyingToken;
 
+    uint256 public feeAmount;
+    address public feeTo;
+
     mapping(uint256 => address) public indexMap;
 
     address[] public indexList;
 
-    constructor(address _weth, address _underlyingToken) {
+    constructor(address _feeTo, address _underlyingToken) {
         underlyingToken = _underlyingToken;
+        feeTo = _feeTo;
     }
 
     function idIncrease() private {
         id += 1;
     }
+
 
     /**
      * @dev create index 
@@ -37,12 +42,13 @@ contract DODO is IDODO {
      */
     function createIndex(
         string memory name, 
+        bool isDynamicIndex,
         address[] calldata allowedTokens
     ) external returns (uint256) {
         uint256 currentIndexId = id;
         _checkName(name);
 
-        Index index = new Index(currentIndexId, name);
+        Index index = new Index(currentIndexId, isDynamicIndex, name);
 
         indexList.push(address(index));
         indexMap[currentIndexId] = address(index);
@@ -90,8 +96,9 @@ contract DODO is IDODO {
         uint256 indexFeerate = IIndex(indexAddress).feeRate();
 
         uint256 fee = amount.mul(indexFeerate).div(Constants.DENOMINATOR);
+        feeAmount += fee;
 
-        underlyingToken.safeTransferFrom(msg.sender, address(this), fee);
+        underlyingToken.safeTransferFrom(msg.sender, feeTo, fee);
 
         uint256 amountWithoutFee = amount.sub(fee);
         underlyingToken.safeTransferFrom(msg.sender, indexAddress, amountWithoutFee);

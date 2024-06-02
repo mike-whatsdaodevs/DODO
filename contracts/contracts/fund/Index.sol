@@ -41,6 +41,8 @@ contract Index is IIndex, Filter {
     /// index id
     uint256 public immutable id;
 
+    bool public isDynamic;
+
     //// position id
     uint256 public positionId;
 
@@ -62,21 +64,22 @@ contract Index is IIndex, Filter {
 
     mapping(address => mapping(address => uint256)) public tokenSwithAmount;
 
+    /// gas
     uint256 public closedPositionCount;
     uint256 public gasUsed; 
     uint256 public staticIndexGasUsed;
-
-    bool public isDynamicIndex;
     uint256 public exchangeRate;
     address public gasFeeRecipient;
 
 
     constructor(
         uint256 indexId, 
+        bool isDynamicIndex,
         string memory indexName
     ) {
         operators[msg.sender] = true;
         id = indexId;
+        isDynamic = isDynamicIndex;
         name = indexName;
         feeRate = 10;
         allowedTokens[underlyingToken] = true;
@@ -88,7 +91,7 @@ contract Index is IIndex, Filter {
     receive() external payable {}
    
     modifier onlyOperator() {
-        require(! operators[msg.sender], "E: only operator be allowed");
+        require(! operators[msg.sender], "E: caller is not allowed");
         _;
     }
 
@@ -621,7 +624,6 @@ contract Index is IIndex, Filter {
         }
 
         protocol.functionCallWithValue(data, msg.value);
-
     }
 
     /**
@@ -658,10 +660,6 @@ contract Index is IIndex, Filter {
         }
 
         validateSwapParams(tokenIn, tokenOut, recipient);
-    }
-
-    function _refundETH() private {
-        if (address(this).balance > 0) payable(msg.sender).transfer(address(this).balance);
     }
 
     /// @dev manage fee rate
@@ -708,7 +706,7 @@ contract Index is IIndex, Filter {
         }
 
         uint256 gasfee = staticIndexGasUsed;
-        if(isDynamicIndex) {
+        if(isDynamic) {
             uint256 distributedGas = distributeGas(positionId);
             gasfee = distributedGas.mul(exchangeRate).div(1E18);
         } 
