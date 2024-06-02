@@ -2,15 +2,18 @@
 pragma solidity >=0.8.14;
 
 import { IDODO } from "../interfaces/IDODO.sol";
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { IIndex, Enum } from "../interfaces/IIndex.sol";
-import { Index, Constants } from "./Index.sol";
-import { TransferHelper } from "../libraries/TransferHelper.sol";
-import { SafeMath } from "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import { Enum } from "../libraries/Enum.sol";
-import { PositionSet } from "../libraries/PositionSet.sol";
+import {IIndex, Index, Enum, IERC20, TransferHelper, SafeMath, Constants} from "./Index.sol";
 
-contract DODO is IDODO {
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import {PausableUpgradeable} from "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
+
+contract DODO is 
+    IDODO,
+    OwnableUpgradeable, 
+    PausableUpgradeable, 
+    UUPSUpgradeable 
+{
     using TransferHelper for address;
     using SafeMath for uint256;
 
@@ -18,13 +21,21 @@ contract DODO is IDODO {
     address public underlyingToken;
 
     uint256 public feeAmount;
-    address public feeTo;
+    address public feeTo; 
 
     mapping(uint256 => address) public indexMap;
 
     address[] public indexList;
 
-    constructor(address _feeTo, address _underlyingToken) {
+    constructor() {
+        _disableInitializers();
+    }
+
+    receive() external payable {}
+
+    function initialize(
+        address _feeTo, address _underlyingToken
+    ) external initializer {
         underlyingToken = _underlyingToken;
         feeTo = _feeTo;
     }
@@ -48,7 +59,8 @@ contract DODO is IDODO {
         uint256 currentIndexId = id;
         _checkName(name);
 
-        Index index = new Index(currentIndexId, isDynamicIndex, name);
+        bytes32 salt = keccak256(abi.encodePacked(currentIndexId));
+        Index index = new Index{salt: salt}(currentIndexId, isDynamicIndex, name);
 
         indexList.push(address(index));
         indexMap[currentIndexId] = address(index);
@@ -173,5 +185,14 @@ contract DODO is IDODO {
         uint256 amount = IIndex(indexAddress).withdraw(positionId, msg.sender);
         emit Withdraw(indexId, indexAddress, msg.sender, amount, block.timestamp);
     }
+
+     /// uups interface
+    function _authorizeUpgrade(address newImplementation)
+        internal
+        override
+        view
+        onlyOwner
+    { }
+
 
 }
