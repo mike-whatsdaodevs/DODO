@@ -60,6 +60,8 @@ contract Index is IIndex, Filter {
     /// positionId => token adress => balance
     mapping(uint256 => mapping(address => uint256)) public override positionBalance;
 
+    mapping(address => mapping(address => uint256)) public tokenSwithAmount;
+
     constructor(
         uint256 indexId, 
         string memory indexName
@@ -92,7 +94,7 @@ contract Index is IIndex, Filter {
      * @param token token address
      * @return amount
      */
-    function tokenBalance(address token) external view returns (uint256) {
+    function tokenBalance(address token) public view returns (uint256) {
         IERC20(token).balanceOf(address(this));
     }
 
@@ -546,16 +548,37 @@ contract Index is IIndex, Filter {
         for(uint256 i; i < length; i++) {
             uint256 amountOut = abi.decode(results[i], (uint256));
 
-            bytes32 positionIdsHash = setPositionIdsHash(
-                positionIdsArray[i], 
-                tokenInArr[i], 
-                tokenOutArr[i], 
-                amountOut
-            );
-            emit PositionsSwap(i, positionIdsArray[i].length, positionIdsHash, amountOut);
+            if(positionIdsArray[i].length == 0) {
+                tokenSwithAmount[tokenInArr[i]][tokenOutArr[i]] = amountInArr[i];
+
+            } else {
+                bytes32 positionIdsHash = setPositionIdsHash(
+                    positionIdsArray[i], 
+                    tokenInArr[i], 
+                    tokenOutArr[i], 
+                    amountOut
+                );
+                emit PositionsSwap(i, positionIdsArray[i].length, positionIdsHash, amountOut);
+
+            }
+            
         }
     }
-    
+
+    function setPositionsSwithBalance(address tokenBefore, address tokenAfter, uint256[] calldata positionIds, bool clear) external {
+        uint256 amountBefore = tokenSwithAmount[tokenBefore][tokenAfter];
+        uint256 amountNow = tokenBalance(tokenAfter);
+        uint256 length = positionIds.length;
+        for(uint256 i; i < length; i ++) {
+            uint256 beforeBalance = positionBalance[i][tokenBefore];
+            positionBalance[i][tokenAfter] = beforeBalance.mul(amountNow).div(amountBefore);
+            positionBalance[i][tokenBefore] = 0;
+        }
+        if(clear) {
+            delete tokenSwithAmount[tokenBefore][tokenAfter];
+        }
+    }
+
     /**
      * @dev swap tokens by protocol
      * @param protocol : protocol address

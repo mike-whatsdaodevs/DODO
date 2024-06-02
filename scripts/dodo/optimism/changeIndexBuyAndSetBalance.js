@@ -60,8 +60,9 @@ async function main() {
   console.log("status is", await index.positionStatus(2));
   console.log("status is", await index.positionStatus(3));
 
-  console.log(await index.positionBalance(positionIds[0], weth_address));
-  console.log(await index.positionBalance(positionIds[1], weth_address));
+  console.log(await index.positionBalance(positionIds[0], DAI_ADDRESS));
+  console.log(await index.positionBalance(positionIds[1], DAI_ADDRESS));
+  return;
 
   console.log(await token.balanceOf(index_address));
 

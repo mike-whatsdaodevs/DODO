@@ -2,6 +2,7 @@
 pragma solidity >=0.8.14;
 import {IIndex} from "../interfaces/IIndex.sol";
 import {Enum} from "../libraries/Enum.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract IndexHelper {
 
@@ -18,5 +19,26 @@ contract IndexHelper {
         }
     }
 
-   
+    function batchGetIndexTokenBalance(
+        address indexAddress,
+        address[] calldata tokens
+    ) external view returns(uint256[] memory balances) {
+        uint256 length = tokens.length;
+        balances = new uint256[](length);
+        for (uint256 i; i < length; i ++) {
+            balances[i] = IERC20(tokens[i]).balanceOf(indexAddress);
+        }
+    }
+
+    function batchGetPositionTokenBalance(
+        address indexAddress,
+        uint256 positionId,
+        address[] calldata tokens
+    ) external view returns(uint256[] memory balances) {
+        uint256 length = tokens.length;
+        balances = new uint256[](length);
+        for (uint256 i; i < length; i ++) {
+            balances[i] = IIndex(indexAddress).positionBalance(positionId, tokens[i]);
+        }
+    }
 }
