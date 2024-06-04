@@ -57,9 +57,9 @@ async function main() {
   // await tokenApproveTx.wait();
   // return;
 
-  // let removeIndexTokensTx = await index.removeIndexTokens([process.env.OP_SNX]);
-  // await removeIndexTokensTx.wait();
-  // return;
+    let addIndexTokensTx = await index.addIndexTokens([DAI_ADDRESS]);
+  await addIndexTokensTx.wait();
+  return;
 
   /// batch deal positions
   let positionIds = [2,3];
@@ -69,6 +69,9 @@ async function main() {
 
   let positionsBalance = await index.getPositionsBalance(usdt_address, positionIds);
   console.log("positionsBalance is", positionsBalance);
+  return;
+
+
   let amount = Math.floor(positionsBalance.tokenInBalance.div(indexTokens.length));
   console.log("amount is", amount);
   //indexTokens.length

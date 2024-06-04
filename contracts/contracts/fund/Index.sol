@@ -12,8 +12,9 @@ import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import {Path} from "../libraries/Path.sol";
 import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import {Filter} from "./Filter.sol";
+import {IndexGas} from "./IndexGas.sol";
 
-contract Index is IIndex, Filter {
+contract Index is IIndex, Filter, IndexGas {
 
     using TransferHelper for address;
     using Address for address;
@@ -28,7 +29,7 @@ contract Index is IIndex, Filter {
     //// positons
     PositionSet.Set positionSet;
 
-    /// benchmark price 
+    /// benchmark price            
     mapping(address => uint256) public benchmark;
 
     /// position status
@@ -63,15 +64,9 @@ contract Index is IIndex, Filter {
     mapping(uint256 => mapping(address => uint256)) public override positionBalance;
 
     mapping(address => mapping(address => uint256)) public tokenSwithAmount;
+    uint256 setSwithCounter;
 
     /// gas
-    uint256 public closedPositionCount;
-    uint256 public gasUsed; 
-    uint256 public staticIndexGasUsed;
-    uint256 public exchangeRate;
-    address public gasFeeRecipient;
-
-
     constructor(
         uint256 indexId, 
         bool isDynamicIndex,
@@ -107,7 +102,7 @@ contract Index is IIndex, Filter {
      * @return amount
      */
     function tokenBalance(address token) public view returns (uint256) {
-        IERC20(token).balanceOf(address(this));
+        return IERC20(token).balanceOf(address(this));
     }
 
     /**
@@ -287,13 +282,13 @@ contract Index is IIndex, Filter {
         }
     }
 
-    function setPositionBalanceCounter(uint256 positionId) private returns (uint256) {
+    function positionBalanceCounter(uint256 positionId, uint256 indexTokensLength) private returns (bool) {
         counter[positionId] += 1;
-        return counter[positionId];
-    }
-
-    function resetPositionBalanceCounter() private {
-        delete counter[positionId];
+        if(counter[positionId] >= indexTokensLength) {
+            delete counter[positionId];
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -307,11 +302,14 @@ contract Index is IIndex, Filter {
         (uint256 positionsBalance, uint256 length) = getPositionsBalance(params.tokenIn, params.positionIds);
 
         bool isBuy = params.tokenIn == underlyingToken;
-
-        for(uint256 i; i < length; ++i) {
-            if(i < params.offset || i >= params.offset.add(params.size)) {
+        uint256 i;
+        for(; i < length; ++i) {
+            if(i < params.offset) {
                 continue;
             }
+            if(i >= params.offset.add(params.size)) {
+                break;
+            } 
             uint256 pid = params.positionIds[i];
 
             positionBalance[pid][params.tokenOut] += amountOut.
@@ -319,11 +317,10 @@ contract Index is IIndex, Filter {
                 div(positionsBalance);
 
             {
-                uint256 count = setPositionBalanceCounter(pid);
-                if(count >= indexTokensLength) {
+                bool finishSet = positionBalanceCounter(pid, indexTokensLength);
+                if(finishSet) {
                     positionStatus[pid] = isBuy ? Enum.PositionStatus.SPOT : Enum.PositionStatus.SOLD;
                     positionBalance[pid][params.tokenIn] = 0;
-                    resetPositionBalanceCounter();
                 } 
                 if(!isBuy) {
                     positionBalance[pid][params.tokenIn] = 0;
@@ -331,9 +328,32 @@ contract Index is IIndex, Filter {
             }
             if(positionStatus[pid] == Enum.PositionStatus.SOLD) {
                 closedPositionCount ++;
-            }  
+            }
         }
-        delete positionIdsHashList[hash];
+        if(i == length) {
+            delete positionIdsHashList[hash];
+        }
+    }
+
+    function setPositionsSwithBalance(address tokenBefore, address tokenAfter, uint256[] calldata positionIds) external {
+        uint256 amountBefore = tokenSwithAmount[tokenBefore][tokenAfter];
+        uint256 amountNow = tokenBalance(tokenAfter);
+        uint256 length = positionIds.length;
+        for(uint256 i; i < length; i ++) {
+            uint256 beforeBalance = positionBalance[i][tokenBefore];
+
+            if(beforeBalance == 0) {
+                continue;
+            }
+            positionBalance[i][tokenAfter] = beforeBalance.mul(amountNow).div(amountBefore);
+            positionBalance[i][tokenBefore] = 0;
+            setSwithCounter ++;
+        }
+        uint256 activePosition = positionId.sub(closedPositionCount);
+        if(setSwithCounter == activePosition) {
+            delete tokenSwithAmount[tokenBefore][tokenAfter];
+            setSwithCounter = 0;
+        }
     }
 
     function setPositionIdsHash(
@@ -349,145 +369,145 @@ contract Index is IIndex, Filter {
         positionIdsHashList[positionIdsHash] = amountOut;
     }
 
-    /**
-     * @dev swap tokens by uniswao v2
-     * @param positionIds: array of position id
-     * @param amountIn: amount to swap
-     * @param amountOutMin: minimum amount to receive;
-     * @param path: swap path
-     * 
-     * Requirements:
-     *  - token in is allowed
-     *  - token out is allowed
-     * 
-     * @return uint256
-     */
-    function swapPositionV2(
-        uint256[] memory positionIds,
-        uint256 amountIn,
-        uint256 amountOutMin,
-        address[] calldata path
-    ) public payable returns (uint256) {
-        require(path.length >= 2, "PA6");
+    // /**
+    //  * @dev swap tokens by uniswao v2
+    //  * @param positionIds: array of position id
+    //  * @param amountIn: amount to swap
+    //  * @param amountOutMin: minimum amount to receive;
+    //  * @param path: swap path
+    //  * 
+    //  * Requirements:
+    //  *  - token in is allowed
+    //  *  - token out is allowed
+    //  * 
+    //  * @return uint256
+    //  */
+    // function swapPositionV2(
+    //     uint256[] memory positionIds,
+    //     uint256 amountIn,
+    //     uint256 amountOutMin,
+    //     address[] calldata path
+    // ) public payable returns (uint256) {
+    //     require(path.length >= 2, "PA6");
 
-        (address tokenIn, address tokenOut) = (path[0], path[path.length - 1]);
-        (uint256 tokenInBalance, uint256 positionCount) = getPositionsBalance(tokenIn, positionIds);
-        validateSwapParams(
-            tokenIn, 
-            tokenOut, 
-            address(this), 
-            amountIn, 
-            tokenInBalance
-        );
+    //     (address tokenIn, address tokenOut) = (path[0], path[path.length - 1]);
+    //     (uint256 tokenInBalance, uint256 positionCount) = getPositionsBalance(tokenIn, positionIds);
+    //     validateSwapParams(
+    //         tokenIn, 
+    //         tokenOut, 
+    //         address(this), 
+    //         amountIn, 
+    //         tokenInBalance
+    //     );
 
-        uint256 amountOut = uniswapRouter.uniswapV2(amountIn, amountOutMin, path, msg.value);
+    //     uint256 amountOut = uniswapRouter.uniswapV2(amountIn, amountOutMin, path, msg.value);
 
-        if(positionCount == 1) {
-            positionBalance[positionId][tokenIn] = tokenInBalance.sub(amountIn);
-            positionBalance[positionId][tokenOut] = positionBalance[positionId][tokenOut].add(amountOut);
-        } else {
+    //     if(positionCount == 1) {
+    //         positionBalance[positionId][tokenIn] = tokenInBalance.sub(amountIn);
+    //         positionBalance[positionId][tokenOut] = positionBalance[positionId][tokenOut].add(amountOut);
+    //     } else {
 
-            bytes32 positionIdsHash = setPositionIdsHash(positionIds, tokenIn, tokenOut, amountOut);
-            emit PositionsSwap(0, positionCount, positionIdsHash, amountOut);
-        }
+    //         bytes32 positionIdsHash = setPositionIdsHash(positionIds, tokenIn, tokenOut, amountOut);
+    //         emit PositionsSwap(0, positionCount, positionIdsHash, amountOut);
+    //     }
 
-        emit Swap(tokenIn, tokenOut, amountIn, amountOut, block.timestamp);
+    //     emit Swap(tokenIn, tokenOut, amountIn, amountOut, block.timestamp);
 
-        return amountOut;
-    }
+    //     return amountOut;
+    // }
 
-    /**
-     * @dev swap tokens by uniswao v3 single router
-     * @param positionIds: array of position id
-     * @param params: ISwapRouter02.ExactInputSingleParams
-     * 
-     * Requirements:
-     *  - token in is allowed
-     *  - token out is allowed
-     * 
-     * @return uint256
-     */
-    function swapPositionsV3Single(
-        uint256[] memory positionIds,
-        ISwapRouter02.ExactInputSingleParams calldata params
-    ) external payable returns (uint256) {
-        (uint256 tokenInBalance, uint256 positionCount) = getPositionsBalance(params.tokenIn, positionIds);
-        validateSwapParams(
-            params.tokenIn, 
-            params.tokenOut, 
-            params.recipient, 
-            params.amountIn, 
-            tokenInBalance
-        );
+    // /**
+    //  * @dev swap tokens by uniswao v3 single router
+    //  * @param positionIds: array of position id
+    //  * @param params: ISwapRouter02.ExactInputSingleParams
+    //  * 
+    //  * Requirements:
+    //  *  - token in is allowed
+    //  *  - token out is allowed
+    //  * 
+    //  * @return uint256
+    //  */
+    // function swapPositionsV3Single(
+    //     uint256[] memory positionIds,
+    //     ISwapRouter02.ExactInputSingleParams calldata params
+    // ) external payable returns (uint256) {
+    //     (uint256 tokenInBalance, uint256 positionCount) = getPositionsBalance(params.tokenIn, positionIds);
+    //     validateSwapParams(
+    //         params.tokenIn, 
+    //         params.tokenOut, 
+    //         params.recipient, 
+    //         params.amountIn, 
+    //         tokenInBalance
+    //     );
 
-        uint256 amountOut = uniswapRouter.uniswapV3Single(params, msg.value);
+    //     uint256 amountOut = uniswapRouter.uniswapV3Single(params, msg.value);
 
-        if(positionCount == 1) {
-            positionBalance[positionId][params.tokenIn] = tokenInBalance.sub(params.amountIn);
+    //     if(positionCount == 1) {
+    //         positionBalance[positionId][params.tokenIn] = tokenInBalance.sub(params.amountIn);
             
-            uint256 tokenOutBalance = positionBalance[positionId][params.tokenOut];
-            positionBalance[positionId][params.tokenOut] = tokenOutBalance.add(amountOut);
-        } else {
-            bytes32 positionIdsHash = setPositionIdsHash(
-                positionIds, 
-                params.tokenIn, 
-                params.tokenOut, 
-                amountOut
-            );
+    //         uint256 tokenOutBalance = positionBalance[positionId][params.tokenOut];
+    //         positionBalance[positionId][params.tokenOut] = tokenOutBalance.add(amountOut);
+    //     } else {
+    //         bytes32 positionIdsHash = setPositionIdsHash(
+    //             positionIds, 
+    //             params.tokenIn, 
+    //             params.tokenOut, 
+    //             amountOut
+    //         );
 
-            emit PositionsSwap(0, positionCount, positionIdsHash, amountOut);
-        }
+    //         emit PositionsSwap(0, positionCount, positionIdsHash, amountOut);
+    //     }
 
-        emit Swap(params.tokenIn, params.tokenOut, params.amountIn, amountOut, block.timestamp);
+    //     emit Swap(params.tokenIn, params.tokenOut, params.amountIn, amountOut, block.timestamp);
 
-        return amountOut;
-    }
+    //     return amountOut;
+    // }
 
-    /**
-     * @dev swap tokens by uniswao v3 multi router
-     * @param positionIds: array of position id
-     * @param params: ISwapRouter02.ExactInputParams
-     * 
-     * Requirements:
-     *  - token in is allowed
-     *  - token out is allowed
-     * 
-     * @return uint256
-     */
-    function swapPositionsV3ExactInput(
-        uint256[] memory positionIds,
-        ISwapRouter02.ExactInputParams calldata params
-    ) external payable returns (uint256) {
-        (address tokenIn, address tokenOut) = params.path.decode();
+    // /**
+    //  * @dev swap tokens by uniswao v3 multi router
+    //  * @param positionIds: array of position id
+    //  * @param params: ISwapRouter02.ExactInputParams
+    //  * 
+    //  * Requirements:
+    //  *  - token in is allowed
+    //  *  - token out is allowed
+    //  * 
+    //  * @return uint256
+    //  */
+    // function swapPositionsV3ExactInput(
+    //     uint256[] memory positionIds,
+    //     ISwapRouter02.ExactInputParams calldata params
+    // ) external payable returns (uint256) {
+    //     (address tokenIn, address tokenOut) = params.path.decode();
 
-        (uint256 tokenInBalance, uint256 positionCount) = getPositionsBalance(tokenIn, positionIds);
-        validateSwapParams(tokenIn, tokenOut, params.recipient, params.amountIn, tokenInBalance);
+    //     (uint256 tokenInBalance, uint256 positionCount) = getPositionsBalance(tokenIn, positionIds);
+    //     validateSwapParams(tokenIn, tokenOut, params.recipient, params.amountIn, tokenInBalance);
 
-        uint256 amountOut = uniswapRouter.uniswapV3(params, msg.value);
+    //     uint256 amountOut = uniswapRouter.uniswapV3(params, msg.value);
 
-        if(positionCount == 1) {
-            positionBalance[positionId][tokenIn] = tokenInBalance.sub(params.amountIn);
+    //     if(positionCount == 1) {
+    //         positionBalance[positionId][tokenIn] = tokenInBalance.sub(params.amountIn);
             
-            uint256 tokenOutBalance = positionBalance[positionId][tokenOut];
-            positionBalance[positionId][tokenOut] = tokenOutBalance.add(amountOut);
+    //         uint256 tokenOutBalance = positionBalance[positionId][tokenOut];
+    //         positionBalance[positionId][tokenOut] = tokenOutBalance.add(amountOut);
 
-            positionStatus[positionId] = tokenOut == underlyingToken 
-                ? Enum.PositionStatus.SOLD 
-                : Enum.PositionStatus.SPOT;
-        } else {
-            bytes32 positionIdsHash = setPositionIdsHash(
-                positionIds, 
-                tokenIn, 
-                tokenOut, 
-                amountOut
-            );
-            emit PositionsSwap(0, positionCount, positionIdsHash, amountOut);
-        }
+    //         positionStatus[positionId] = tokenOut == underlyingToken 
+    //             ? Enum.PositionStatus.SOLD 
+    //             : Enum.PositionStatus.SPOT;
+    //     } else {
+    //         bytes32 positionIdsHash = setPositionIdsHash(
+    //             positionIds, 
+    //             tokenIn, 
+    //             tokenOut, 
+    //             amountOut
+    //         );
+    //         emit PositionsSwap(0, positionCount, positionIdsHash, amountOut);
+    //     }
 
-        emit Swap(tokenIn, tokenOut, params.amountIn, amountOut, block.timestamp);
+    //     emit Swap(tokenIn, tokenOut, params.amountIn, amountOut, block.timestamp);
 
-        return amountOut;
-    }
+    //     return amountOut;
+    // }
 
     function validateSwapParams(
         address tokenIn, 
@@ -577,54 +597,35 @@ contract Index is IIndex, Filter {
 
             }
         }
-        gasUsed = gasleft() - internalGas;
+        gasUsed =internalGas - gasleft();
     }
 
-    function distributeGas(uint256 positionId) internal view returns (uint256) {
-        uint256 activePosition = positionId.sub(closedPositionCount);
-        return gasUsed.div(activePosition);
-    }
+    // /**
+    //  * @dev swap tokens by protocol
+    //  * @param protocol : protocol address
+    //  * @param data: calldata for swap
+    //  * Requirements
+    //  * - protocol is allowned
+    //  */
+    // function swapTokens(address protocol, bytes calldata data) external payable {
+    //     require(data.length > 3, "E: data error");
+    //     if(!isAllowedProtocols(protocol)) {
+    //         revert ProtocolNotAllowed(protocol);
+    //     }
 
-    function setPositionsSwithBalance(address tokenBefore, address tokenAfter, uint256[] calldata positionIds, bool clear) external {
-        uint256 amountBefore = tokenSwithAmount[tokenBefore][tokenAfter];
-        uint256 amountNow = tokenBalance(tokenAfter);
-        uint256 length = positionIds.length;
-        for(uint256 i; i < length; i ++) {
-            uint256 beforeBalance = positionBalance[i][tokenBefore];
-            positionBalance[i][tokenAfter] = beforeBalance.mul(amountNow).div(amountBefore);
-            positionBalance[i][tokenBefore] = 0;
-        }
-        if(clear) {
-            delete tokenSwithAmount[tokenBefore][tokenAfter];
-        }
-    }
+    //     (bytes4 selector, bytes calldata params) = _decodeCalldata(data);
+    //     // execute first to analyse result
+    //     if (protocol == Constants.WETH9) {
+    //         // weth9 deposit/withdraw
+    //         require(selector == 0xd0e30db0 || selector == 0x2e1a7d4d, "PA2");
+    //     } else if (protocol == uniswapRouter) {
+    //         _checkSingleSwapCall(selector, params);
+    //     } else {
+    //         revert("SELECTOR");
+    //     }
 
-    /**
-     * @dev swap tokens by protocol
-     * @param protocol : protocol address
-     * @param data: calldata for swap
-     * Requirements
-     * - protocol is allowned
-     */
-    function swapTokens(address protocol, bytes calldata data) external payable {
-        require(data.length > 3, "E: data error");
-        if(!isAllowedProtocols(protocol)) {
-            revert ProtocolNotAllowed(protocol);
-        }
-
-        (bytes4 selector, bytes calldata params) = _decodeCalldata(data);
-        // execute first to analyse result
-        if (protocol == Constants.WETH9) {
-            // weth9 deposit/withdraw
-            require(selector == 0xd0e30db0 || selector == 0x2e1a7d4d, "PA2");
-        } else if (protocol == uniswapRouter) {
-            _checkSingleSwapCall(selector, params);
-        } else {
-            revert("SELECTOR");
-        }
-
-        protocol.functionCallWithValue(data, msg.value);
-    }
+    //     protocol.functionCallWithValue(data, msg.value);
+    // }
 
     /**
      * @dev check every swap calldata

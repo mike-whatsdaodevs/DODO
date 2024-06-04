@@ -56,16 +56,19 @@ async function main() {
   console.log(index_address);
 
   const index = await ethers.getContractAt('Index', index_address, signer);
-  const token = await ethers.getContractAt("@openzeppelin/contracts/token/ERC20/IERC20.sol:IERC20", usdt_address, signer);
+  const usdt = await ethers.getContractAt("@openzeppelin/contracts/token/ERC20/IERC20.sol:IERC20", usdt_address, signer);
   const weth = await ethers.getContractAt("@openzeppelin/contracts/token/ERC20/IERC20.sol:IERC20", weth_address, signer);
   const swap = await ethers.getContractAt('ISwapRouter02', swapRouter_address, signer);
   const pathFinder = await ethers.getContractAt('PathFinder', pathFinder_address, signer);
 
 
 
-  // let tokenApproveTx = await index.safeApprove(usdt_address, swapRouter_address);
-  // await tokenApproveTx.wait();
-  // return;
+  let allowance = await usdt.allowance(index_address, swapRouter_address);
+  if (allowance == 0) {
+    let tokenApproveTx = await index.safeApprove(usdt_address, swapRouter_address);
+    await tokenApproveTx.wait();
+  }
+
 
   // for(let i=0; i< indexTokens.length; i++) {
   //     tokenApproveTx = await index.safeApprove(indexTokens[i], swapRouter_address);
@@ -103,7 +106,7 @@ async function main() {
 
 
   /// batch deal positions
-  let positionIds = [2,3];
+  let positionIds = [1,2];
   let calldataArray = new Array();
   let positionIdsArray = new Array();
 

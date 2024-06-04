@@ -36,13 +36,16 @@ async function main() {
   let indexAddress = await dodo.indexMap(0);
   console.log(indexAddress);
 
-  // let approveTx = await usdtToken.approve(dodo_address, ethers.constants.MaxUint256);
-  // await approveTx.wait();
-  // console.log(approveTx.hash);
+  let allowance = await usdtToken.allowance(deployer.address, dodo_address);
+  if(allowance == 0) {
+      let approveTx = await usdtToken.approve(dodo_address, ethers.constants.MaxUint256);
+      await approveTx.wait();
+      console.log(approveTx.hash);
+  }
 
   let buyTx = await dodo.buy(
     0,
-    ethers.utils.parseUnits("1", 6),
+    ethers.utils.parseUnits("2", 6),
     10000,
     100,
     10000

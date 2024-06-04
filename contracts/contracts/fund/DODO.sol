@@ -2,8 +2,13 @@
 pragma solidity >=0.8.14;
 
 import { IDODO } from "../interfaces/IDODO.sol";
-import {IIndex, Index, Enum, IERC20, TransferHelper, SafeMath, Constants} from "./Index.sol";
-
+import {IIndex} from "../interfaces/IIndex.sol";
+import {Index} from "./Index.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {Enum} from "../libraries/Enum.sol";
+import {Constants} from "../libraries/Constants.sol";
+import {TransferHelper } from "../libraries/TransferHelper.sol";
+import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import {PausableUpgradeable} from "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
@@ -36,6 +41,10 @@ contract DODO is
     function initialize(
         address _feeTo, address _underlyingToken
     ) external initializer {
+        __Pausable_init();
+        __Ownable_init();
+        __UUPSUpgradeable_init();
+
         underlyingToken = _underlyingToken;
         feeTo = _feeTo;
     }
@@ -53,14 +62,13 @@ contract DODO is
      */
     function createIndex(
         string memory name, 
-        bool isDynamicIndex,
         address[] calldata allowedTokens
     ) external returns (uint256) {
         uint256 currentIndexId = id;
         _checkName(name);
 
         bytes32 salt = keccak256(abi.encodePacked(currentIndexId));
-        Index index = new Index{salt: salt}(currentIndexId, isDynamicIndex, name);
+        Index index = new Index{salt: salt}(currentIndexId, true, name);
 
         indexList.push(address(index));
         indexMap[currentIndexId] = address(index);

@@ -20,17 +20,10 @@ async function main() {
   let pathFinder_address;
   let swapRouter_address;
   let dodo_address;
+  let DAI_ADDRESS = "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1";
+  let removed_token = process.env.OP_SNX;
   let indexTokens = [
-    process.env.OP_USDC,
-    process.env.OP_WETH9,
-    process.env.OP_WBTC,
-    process.env.OP_LINK,
-    process.env.OP_OP,
-    process.env.OP_WLD,
-    // process.env.OP_LDO,
-    // process.env.OP_W,
-    // process.env.OP_PYTH,
-    process.env.OP_SNX
+    DAI_ADDRESS
   ];
   if(network == 10) {
     weth_address = process.env.OP_WETH9;
@@ -50,9 +43,10 @@ async function main() {
 
   const dodo = await ethers.getContractAt('DODO', dodo_address, signer);
 
-
+  let dodoId = await dodo.id();
+  console.log(dodoId);
   let index_address = await dodo.indexMap(0);
-  console.log(index_address);
+  console.log("index_address :", index_address);
 
   const index = await ethers.getContractAt('Index', index_address, signer);
   const token = await ethers.getContractAt("@openzeppelin/contracts/token/ERC20/IERC20.sol:IERC20", usdt_address, signer);
@@ -60,55 +54,79 @@ async function main() {
   const swap = await ethers.getContractAt('ISwapRouter02', swapRouter_address, signer);
   const pathFinder = await ethers.getContractAt('PathFinder', pathFinder_address, signer);
 
+  // let tokenApproveTx = await index.safeApprove(DAI_ADDRESS, swapRouter_address);
+  // await tokenApproveTx.wait();
+
+  // let tokenApproveTx1 = await index.safeApprove(removed_token, swapRouter_address);
+  // await tokenApproveTx.wait();
+  // return;
+
+  // let addIndexTokensTx = await index.addIndexTokens([DAI_ADDRESS]);
+  // await addIndexTokensTx.wait();
+  // return;
 
   /// batch deal positions
   let positionIds = [1,2];
-
- 
-  console.log("status is", await index.positionStatus(2));
-  console.log("status is", await index.positionStatus(3));
-
-  console.log(await index.positionBalance(positionIds[0], weth_address));
-  console.log(await index.positionBalance(positionIds[1], weth_address));
-
-  console.log(await token.balanceOf(index_address));
-
-  let positionId = 2;//await index.positionId();
+  let calldataArray = new Array();
+  let positionIdsArray = new Array();
 
 
-  for(let i = 0; i < indexTokens.length; i ++) {
-    const obj = await ethers.getContractAt("@openzeppelin/contracts/token/ERC20/IERC20.sol:IERC20", indexTokens[i], signer);
-    console.log("token balance is ", await obj.balanceOf(index_address));
+  let positionsBalance = await index.getPositionsBalance(DAI_ADDRESS, positionIds);
+  console.log("positionsBalance is", positionsBalance);
+  let indexTokenBalance = await index.tokenBalance(DAI_ADDRESS);
+  console.log("removed_token is", indexTokenBalance);
+
+  console.log(await index.positionId());
+
+  console.log(await index.tokenSwithAmount(removed_token, DAI_ADDRESS));
+  return;
 
 
-    let hash = await index.hashPositionIds(positionIds, usdt_address, indexTokens[i]);
-    let positionIdsHashData = await index.positionIdsHashList(hash);
-    console.log("position data is", positionIdsHashData);
+  let amount = positionsBalance.tokenInBalance;
+  console.log("amount is", amount);
+  
+  let tx = await pathFinder.callStatic.exactInputPath(removed_token, DAI_ADDRESS, amount);
+  // let res = await tx.wait();
+  console.log(tx);
 
-    console.log("set before:", await index.positionBalance(positionId, indexTokens[i]));
-    ////set positionBalance
-
-    let params = {
-      tokenIn: usdt_address,
-      tokenOut: indexTokens[i],
-      positionIds: positionIds,
-      offset: 0,
-      size: positionIds.length
-    }
-    let setPositionsBalanceTx = await index.setPositionsBalance(params);
-    await setPositionsBalanceTx.wait();
-    
-    console.log("set after:",await index.positionBalance(positionId, indexTokens[i]));
+  if(tx.expectedAmount == 0) {
+    console.log("skip address is:", token_address);
+    return;
   }
- 
-  // ////set positionBalance
-  // let hash = await index.hashPositionIds(positionIds, usdt_address, weth_address);
-  // console.log(hash);
-  // let positionIdsHashData = await index.positionIdsHashList(hash);
-  // console.log(positionIdsHashData);
-  // let setPositionsBalanceTx = await index.setPositionsBalance(usdt_address, weth_address,positionIds, 0, positionIds.length);
-  // await setPositionsBalanceTx.wait();
-  // return;
+  let params = {
+    path: tx.path,
+    recipient: index_address,
+    amountIn: amount,
+    amountOutMinimum: tx.expectedAmount
+  }
+  console.log(params);
+
+  /// construct calldata
+  let txcalldata = await swap.populateTransaction.exactInput(
+      params
+  );
+  calldataArray.push(txcalldata.data);
+  positionIdsArray.push([]);
+
+  console.log(calldataArray);
+  console.log(positionIdsArray);
+
+  let tx3 = await index.swapMultiCall(
+    positionIdsArray,
+    calldataArray
+  );
+  await tx3.wait();
+  console.log(tx3.hash);
+  return;
+
+  ////set positionBalance
+  let hash = await index.hashPositionIds(positionIds, usdt_address, weth_address);
+  console.log(hash);
+  let positionIdsHashData = await index.positionIdsHashList(hash);
+  console.log(positionIdsHashData);
+  let setPositionsBalanceTx = await index.setPositionsBalance(usdt_address, weth_address,positionIds, 0, positionIds.length);
+  await setPositionsBalanceTx.wait();
+  return;
 
 
   // let amountOut = ethers.utils.parseEther("0.68");
@@ -132,8 +150,8 @@ async function main() {
   // await setBalanceTx.wait();
   // console.log("set balance end,", setBalanceTx.hash);
 
-  // let weth_balance2 = await weth.balanceOf(index_address);
-  // console.log(ethers.utils.formatEther(weth_balance2));
+  let weth_balance2 = await weth.balanceOf(index_address);
+  console.log(ethers.utils.formatEther(weth_balance2));
 
 }
 
