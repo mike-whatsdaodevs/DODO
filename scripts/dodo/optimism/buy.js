@@ -45,7 +45,7 @@ async function main() {
 
   let buyTx = await dodo.buy(
     0,
-    ethers.utils.parseUnits("2", 6),
+    ethers.utils.parseUnits("1", 6),
     10000,
     100,
     10000

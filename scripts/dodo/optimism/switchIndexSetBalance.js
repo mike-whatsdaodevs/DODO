@@ -56,8 +56,10 @@ async function main() {
 
   let amount = await index.tokenSwithAmount(removed_token, DAI_ADDRESS);
   console.log(amount);
+
+  let positionbalance1 = await index.positionBalance(1, )
   return;
-  let positionIds = [1,2];
+  let positionIds = [0,1];
   let tx = await index.setPositionsSwithBalance(
     removed_token, 
     DAI_ADDRESS, 

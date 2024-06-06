@@ -294,7 +294,7 @@ contract Index is IIndex, Filter, IndexGas {
     /**
      * @dev set position token balance
      */
-    function setPositionsBalance(SetBalnaceParams calldata params) external {
+    function setPositionsBalance(SetBalnaceParams memory params) public {
         bytes32 hash = hashPositionIds(params.positionIds, params.tokenIn, params.tokenOut);
         uint256 amountOut = positionIdsHashList[hash];
         
@@ -597,7 +597,38 @@ contract Index is IIndex, Filter, IndexGas {
 
             }
         }
-        gasUsed =internalGas - gasleft();
+        gasUsed = internalGas - gasleft();
+    }
+
+    function swapAndSet(uint256[][] memory positionIdsArray, bytes[] calldata data) external payable {
+        uint256 length = data.length;
+        uint256[] memory amountInArr = new uint256[](length);
+        address[] memory tokenInArr = new address[](length);
+        address[] memory tokenOutArr = new address[](length);
+
+        for(uint256 i; i < length; i ++) {
+            (bytes4 selector, bytes memory params) = _decodeCalldata(data[i]);
+            (tokenInArr[i], tokenOutArr[i], amountInArr[i]) = _checkSingleSwapCall(selector, params);
+        }
+        bytes[] memory results = uniswapRouter.uniMulticall(data, msg.value);
+        for(uint256 i; i < length; i++) {
+            uint256 amountOut = abi.decode(results[i], (uint256));
+            bytes32 positionIdsHash = setPositionIdsHash(
+                positionIdsArray[i], 
+                tokenInArr[i], 
+                tokenOutArr[i], 
+                amountOut
+            );
+
+            SetBalnaceParams memory setParams = SetBalnaceParams(
+                tokenInArr[i], 
+                tokenOutArr[i],
+                positionIdsArray[i],
+                0,
+                positionIdsArray[i].length  
+            );
+            setPositionsBalance(setParams);
+        }
     }
 
     // /**
