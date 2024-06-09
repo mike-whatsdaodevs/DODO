@@ -46,7 +46,10 @@ async function main() {
 
   const dodo = await ethers.getContractAt('DODO', dodo_address, deployer);
 
-  let createIndexTx = await dodo.createIndex("usdt_eth", true, indexTokens);
+  /// true 为动态index
+  /// false为静态index
+  let isDynamicIndex = true;
+  let createIndexTx = await dodo.createIndex("usdt_eth", isDynamicIndex, indexTokens);
 
   await createIndexTx.wait();
 
