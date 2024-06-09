@@ -48,6 +48,8 @@ async function main() {
 
   }
 
+  let indexHelper_address = process.env.OP_INDEX_HELPER;
+
   const dodo = await ethers.getContractAt('DODO', dodo_address, signer);
 
   let dodoId = await dodo.id();
@@ -60,6 +62,14 @@ async function main() {
   const weth = await ethers.getContractAt("@openzeppelin/contracts/token/ERC20/IERC20.sol:IERC20", weth_address, signer);
   const swap = await ethers.getContractAt('ISwapRouter02', swapRouter_address, signer);
   const pathFinder = await ethers.getContractAt('PathFinder', pathFinder_address, signer);
+  const indexHelper = await ethers.getContractAt("IndexHelper", indexHelper_address, signer);
+
+
+  // let setGasFeeRecipientTx = await index.setGasFeeRecipient(deployer.address);
+  // await setGasFeeRecipientTx.wait();
+  // console.log(setGasFeeRecipientTx.hash);return;
+  let positionIds1 = await indexHelper.batchGetPositionIdsByStatus(index_address, 4);
+  console.log(positionIds1);return;
 
 
   /// batch deal positions

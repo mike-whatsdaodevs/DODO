@@ -46,7 +46,7 @@ async function main() {
 
   const dodo = await ethers.getContractAt('DODO', dodo_address, deployer);
 
-  let createIndexTx = await dodo.createIndex("usdt_eth", indexTokens);
+  let createIndexTx = await dodo.createIndex("usdt_eth", true, indexTokens);
 
   await createIndexTx.wait();
 

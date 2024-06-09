@@ -62,18 +62,18 @@ async function main() {
 
 
   /// batch deal positions
-  let positionIds = [1,2];
+  let positionIds = [0,1];
 
  
-  console.log("status is", await index.positionStatus(2));
-  console.log("status is", await index.positionStatus(3));
+  console.log("status is", await index.positionStatus(0));
+  console.log("status is", await index.positionStatus(1));
 
   console.log(await index.positionBalance(positionIds[0], weth_address));
   console.log(await index.positionBalance(positionIds[1], weth_address));
 
   console.log(await token.balanceOf(index_address));
 
-  let positionId = 2;//await index.positionId();
+  let positionId = 1;//await index.positionId();
 
 
   for(let i = 0; i < indexTokens.length; i ++) {
@@ -100,40 +100,6 @@ async function main() {
     
     console.log("set after:",await index.positionBalance(positionId, indexTokens[i]));
   }
- 
-  // ////set positionBalance
-  // let hash = await index.hashPositionIds(positionIds, usdt_address, weth_address);
-  // console.log(hash);
-  // let positionIdsHashData = await index.positionIdsHashList(hash);
-  // console.log(positionIdsHashData);
-  // let setPositionsBalanceTx = await index.setPositionsBalance(usdt_address, weth_address,positionIds, 0, positionIds.length);
-  // await setPositionsBalanceTx.wait();
-  // return;
-
-
-  // let amountOut = ethers.utils.parseEther("0.68");
-  // let avg = amountOut.div(2);
-  // let positionIdsLength = positionIds.length;
-
-  // let values = new Array(positionIdsLength);
-  // for(let i = 0; i < positionIdsLength; ++i ) {
-  //     if(i < positionIdsLength - 1) {
-  //       values[i] = avg;
-  //     } else {
-  //       values[i] = amountOut.sub(avg.mul(positionIdsLength - 1));
-  //     }
-  // }
-
-  // let setBalanceTx = await index.setPositionsBalance(
-  //   usdt_address, 
-  //   positionIds, 
-  //   values
-  // );
-  // await setBalanceTx.wait();
-  // console.log("set balance end,", setBalanceTx.hash);
-
-  // let weth_balance2 = await weth.balanceOf(index_address);
-  // console.log(ethers.utils.formatEther(weth_balance2));
 
 }
 

@@ -70,7 +70,6 @@ async function main() {
 
   console.log(await index.positionBalance(positionIds[0], usdt_address));
   console.log(await index.positionBalance(positionIds[1], usdt_address));
-  return;
 
   console.log(await token.balanceOf(index_address));
 

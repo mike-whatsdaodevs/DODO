@@ -140,40 +140,6 @@ async function main() {
   console.log(tx3.hash);
   return;
 
-  ////set positionBalance
-  let hash = await index.hashPositionIds(positionIds, usdt_address, weth_address);
-  console.log(hash);
-  let positionIdsHashData = await index.positionIdsHashList(hash);
-  console.log(positionIdsHashData);
-  let setPositionsBalanceTx = await index.setPositionsBalance(usdt_address, weth_address,positionIds, 0, positionIds.length);
-  await setPositionsBalanceTx.wait();
-  return;
-
-
-  // let amountOut = ethers.utils.parseEther("0.68");
-  // let avg = amountOut.div(2);
-  // let positionIdsLength = positionIds.length;
-
-  // let values = new Array(positionIdsLength);
-  // for(let i = 0; i < positionIdsLength; ++i ) {
-  //     if(i < positionIdsLength - 1) {
-  //       values[i] = avg;
-  //     } else {
-  //       values[i] = amountOut.sub(avg.mul(positionIdsLength - 1));
-  //     }
-  // }
-
-  // let setBalanceTx = await index.setPositionsBalance(
-  //   usdt_address, 
-  //   positionIds, 
-  //   values
-  // );
-  // await setBalanceTx.wait();
-  // console.log("set balance end,", setBalanceTx.hash);
-
-  let weth_balance2 = await weth.balanceOf(index_address);
-  console.log(ethers.utils.formatEther(weth_balance2));
-
 }
 
 main()

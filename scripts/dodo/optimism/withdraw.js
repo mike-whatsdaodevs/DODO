@@ -61,7 +61,20 @@ async function main() {
   const pathFinder = await ethers.getContractAt('PathFinder', pathFinder_address, signer);
 
 
-  let withdrawPositionTx = await dodo.withdrawPosition(0, 0);
+  // let setGasFeeRecipientTx = await index.setGasFeeRecipient(deployer.address);
+  // await setGasFeeRecipientTx.wait();
+  // console.log(setGasFeeRecipientTx.hash);
+
+  // let setExchangeRateTx = await index.setExchangeRate(100);
+  // await setExchangeRateTx.wait();
+  // console.log(setExchangeRateTx.hash);
+
+  // let setStaticIndexGasUsedTx = await index.setStaticIndexGasUsed(100);
+  // await setStaticIndexGasUsedTx.wait();
+  // console.log(setStaticIndexGasUsedTx.hash);
+  // return;
+
+  let withdrawPositionTx = await index.withdraw(0, deployer.address);
   await withdrawPositionTx.wait();
   // function withdrawPosition(uint256 indexId, uint256 positionId) external {
   console.log(withdrawPositionTx.hash);
