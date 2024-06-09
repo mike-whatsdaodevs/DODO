@@ -24,7 +24,15 @@ contract IndexGas {
     }
 
     function setExchangeRate(uint256 newExchangeRate) external {
-        exchangeRate =newExchangeRate;
+        exchangeRate = newExchangeRate;
+    }
+
+    function setStaticIndexGasUsed(uint256 staticGas) external {
+        staticIndexGasUsed = staticGas;
+    }
+
+    function gasExchageUnderlying() internal view returns (uint256) {
+        return staticIndexGasUsed * exchangeRate;
     }
 
     function setGasFeeRecipient(address recipient) external {

@@ -41,4 +41,18 @@ contract IndexHelper {
             balances[i] = IIndex(indexAddress).positionBalance(positionId, tokens[i]);
         }
     }
+
+    function batchGetPositionIdsByStatus(
+        address indexAddress, 
+        Enum.PositionStatus status
+    ) external view returns (uint256[] memory positionIds) {
+        uint256 currentPositionId = IIndex(indexAddress).positionId();
+        uint counter;
+        for (uint256 i; i < currentPositionId; i ++) {
+            if(IIndex(indexAddress).positionStatus(i) == status) {
+                positionIds[counter] = i;
+                counter ++;
+            }
+        }
+    }
 }

@@ -45,7 +45,7 @@ contract Index is IIndex, Filter, IndexGas {
     bool public isDynamic;
 
     //// position id
-    uint256 public positionId;
+    uint256 public override positionId;
 
     /// index name
     string public name;
@@ -737,14 +737,16 @@ contract Index is IIndex, Filter, IndexGas {
             revert();
         }
 
-        uint256 gasfee = staticIndexGasUsed;
-        if(isDynamic) {
-            uint256 distributedGas = distributeGas(positionId);
-            gasfee = distributedGas.mul(exchangeRate).div(1E18);
-        } 
+        uint256 gasfee = gasExchageUnderlying();
+        // if(isDynamic) {
+        //     uint256 distributedGas = distributeGas(positionId);
+        //     gasfee = distributedGas.mul(exchangeRate).div(1E18);
+        // } 
         amount = positionBalance[positionId][underlyingToken];
 
-        underlyingToken.safeTransfer(gasFeeRecipient, gasfee);
+        if(gasfee != 0) {
+            underlyingToken.safeTransfer(gasFeeRecipient, gasfee);
+        }
         underlyingToken.safeTransfer(recipient, amount.sub(gasfee));
 
         positionBalance[positionId][underlyingToken] = 0;

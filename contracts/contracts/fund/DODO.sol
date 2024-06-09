@@ -62,13 +62,14 @@ contract DODO is
      */
     function createIndex(
         string memory name, 
+        bool isDynamicIndex,
         address[] calldata allowedTokens
     ) external returns (uint256) {
         uint256 currentIndexId = id;
         _checkName(name);
 
         bytes32 salt = keccak256(abi.encodePacked(currentIndexId));
-        Index index = new Index{salt: salt}(currentIndexId, true, name);
+        Index index = new Index{salt: salt}(currentIndexId, isDynamicIndex, name);
 
         indexList.push(address(index));
         indexMap[currentIndexId] = address(index);

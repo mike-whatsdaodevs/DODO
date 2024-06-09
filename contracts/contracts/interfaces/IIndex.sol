@@ -70,6 +70,7 @@ interface IIndex {
 
     error ProtocolNotAllowed(address protocol);
 
+    function positionId() external view returns (uint256);
 
     function feeRate() external view returns (uint256);
 
