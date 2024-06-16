@@ -46,6 +46,8 @@ contract Index is IIndex, Filter, IndexGas {
 
     //// position id
     uint256 public override positionId;
+    /// position closed amount
+    uint256 public closedPositionCount;
 
     /// index name
     string public name;
@@ -232,6 +234,7 @@ contract Index is IIndex, Filter, IndexGas {
         uint128 healthFactor,
         uint256 expiration
     ) external returns (uint256) {
+        uint256 internalGas = gasleft();
         uint256 currentPositionId = positionId;
         PositionSet.Position memory position = PositionSet.Position(
             currentPositionId, 
@@ -259,6 +262,10 @@ contract Index is IIndex, Filter, IndexGas {
             expiration,
             block.timestamp
         );
+
+        initPositionGasUsedAverage(currentPositionId);
+
+        gasUsed += internalGas - gasleft();
 
         return currentPositionId;
     }
@@ -295,6 +302,7 @@ contract Index is IIndex, Filter, IndexGas {
      * @dev set position token balance
      */
     function setPositionsBalance(SetBalnaceParams memory params) public {
+        uint256 internalGas = gasleft();
         bytes32 hash = hashPositionIds(params.positionIds, params.tokenIn, params.tokenOut);
         uint256 amountOut = positionIdsHashList[hash];
         
@@ -328,11 +336,14 @@ contract Index is IIndex, Filter, IndexGas {
             }
             if(positionStatus[pid] == Enum.PositionStatus.SOLD) {
                 closedPositionCount ++;
+                uint256 currentAverage = calcuAverageGasUsed(positionId.sub(closedPositionCount));
+                closedPositionGasUsedAverage(pid, currentAverage);
             }
         }
         if(i == length) {
             delete positionIdsHashList[hash];
         }
+        gasUsed += internalGas - gasleft();
     }
 
     function setPositionsSwithBalance(address tokenBefore, address tokenAfter, uint256[] calldata positionIds) external {
@@ -597,10 +608,11 @@ contract Index is IIndex, Filter, IndexGas {
 
             }
         }
-        gasUsed = internalGas - gasleft();
+        gasUsed += internalGas - gasleft();
     }
 
     function swapAndSet(uint256[][] memory positionIdsArray, bytes[] calldata data) external payable {
+        uint256 internalGas = gasleft();
         uint256 length = data.length;
         uint256[] memory amountInArr = new uint256[](length);
         address[] memory tokenInArr = new address[](length);
@@ -629,6 +641,7 @@ contract Index is IIndex, Filter, IndexGas {
             );
             setPositionsBalance(setParams);
         }
+        gasUsed += internalGas - gasleft();
     }
 
     // /**
@@ -737,11 +750,15 @@ contract Index is IIndex, Filter, IndexGas {
             revert();
         }
 
-        uint256 gasfee = gasExchageUnderlying();
-        // if(isDynamic) {
-        //     uint256 distributedGas = distributeGas(positionId);
-        //     gasfee = distributedGas.mul(exchangeRate).div(1E18);
-        // } 
+        uint256 positionGasUsed;
+        if(isDynamic) {
+            positionGasUsed = calcuPositionGasUsed(positionId);
+        } else {
+            positionGasUsed = staticGasUsed;
+        }
+
+        uint256 gasfee = gasExchageUnderlying(positionGasUsed);
+        
         amount = positionBalance[positionId][underlyingToken];
 
         if(gasfee != 0) {
