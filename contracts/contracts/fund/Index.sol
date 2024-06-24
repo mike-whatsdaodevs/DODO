@@ -11,10 +11,10 @@ import {UniswapAdapter, ISwapRouter02} from "../libraries/UniswapAdapter.sol";
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import {Path} from "../libraries/Path.sol";
 import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import {Filter} from "./Filter.sol";
+import {IFilter} from "../interfaces/IFilter.sol";
 import {IndexGas} from "./IndexGas.sol";
 
-contract Index is IIndex, Filter, IndexGas {
+contract Index is IIndex, IndexGas {
 
     using TransferHelper for address;
     using Address for address;
@@ -68,20 +68,21 @@ contract Index is IIndex, Filter, IndexGas {
     mapping(address => mapping(address => uint256)) public tokenSwithAmount;
     uint256 setSwithCounter;
 
+    address public filter;
+
     /// gas
     constructor(
         uint256 indexId, 
         bool isDynamicIndex,
-        string memory indexName
+        string memory indexName,
+        address _filter
     ) {
         operators[msg.sender] = true;
         id = indexId;
         isDynamic = isDynamicIndex;
         name = indexName;
         feeRate = 10;
-        allowedTokens[underlyingToken] = true;
-        addProtocol(uniswapRouter);
-
+        filter = _filter;
         emit CreatedIndex(id, address(this), feeRate, name, block.timestamp);
     }
    
@@ -117,11 +118,11 @@ contract Index is IIndex, Filter, IndexGas {
      *  - protocol is allowed
      */
     function safeApprove(address token, address protocol) external {
-        if(!isAllowedProtocols(protocol)) {
+        if(!IFilter(filter).isAllowedProtocols(protocol)) {
             revert();
         }
 
-        if(! isAllowedToken(token)) {
+        if(!IFilter(filter).isAllowedToken(token)) {
             revert();
         }
         token.safeApprove(protocol, type(uint256).max);
@@ -306,7 +307,7 @@ contract Index is IIndex, Filter, IndexGas {
         bytes32 hash = hashPositionIds(params.positionIds, params.tokenIn, params.tokenOut);
         uint256 amountOut = positionIdsHashList[hash];
         
-        uint256 indexTokensLength = indexTokensLenth();
+        uint256 indexTokensLength = IFilter(filter).indexTokensLenth();
         (uint256 positionsBalance, uint256 length) = getPositionsBalance(params.tokenIn, params.positionIds);
 
         bool isBuy = params.tokenIn == underlyingToken;
@@ -527,11 +528,11 @@ contract Index is IIndex, Filter, IndexGas {
         uint256 amountIn,
         uint256 tokenInBalance
     ) private returns (uint256) {
-        if(! isAllowedToken(tokenIn)) {
+        if(! IFilter(filter).isAllowedToken(tokenIn)) {
             revert TokenNotAllow(tokenIn);
         }
 
-        if(! isAllowedToken(tokenOut)) {
+        if(! IFilter(filter).isAllowedToken(tokenOut)) {
             revert TokenNotAllow(tokenOut);
         }
 
@@ -549,11 +550,11 @@ contract Index is IIndex, Filter, IndexGas {
         address tokenOut, 
         address recipient
     ) private returns (uint256) {
-        if(! isAllowedToken(tokenIn)) {
+        if(! IFilter(filter).isAllowedToken(tokenIn)) {
             revert TokenNotAllow(tokenIn);
         }
 
-        if(! isAllowedToken(tokenOut)) {
+        if(! IFilter(filter).isAllowedToken(tokenOut)) {
             revert TokenNotAllow(tokenOut);
         }
 

@@ -5,44 +5,54 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import {Path} from "../libraries/Path.sol";
 import {IFilter} from "../interfaces/IFilter.sol";
+import {Constants} from "../libraries/Constants.sol";
 
 abstract contract Filter is IFilter {
 
     using EnumerableSet for EnumerableSet.AddressSet;
     /// allowed tokens to buy
-    EnumerableSet.AddressSet indexTokens;
+    mapping(address => EnumerableSet.AddressSet) indexTokensMap;
 
     /// allowed lp to approve
     EnumerableSet.AddressSet allowedProtocols;
 
     /// allowed tokens to sell
     mapping(address => bool) allowedTokens;
+    
+    constructor() {
+        allowedTokens[Constants.USDT] = true;
+    }
 
-    function addIndexTokens(address[] memory addrs) public {
-        uint256 length = addrs.length;
+    function addIndexTokens(address targetIndex, address[] memory tokens) public {
+        EnumerableSet.AddressSet storage indexTokens = indexTokensMap[targetIndex];
+        
+        uint256 length = tokens.length;
         for(uint256 i; i < length; i ++) {
-            address indexToken = addrs[i];
-            if(indexTokens.contains(indexToken)) {
+            address token = tokens[i];
+            if(indexTokens.contains(token)) {
                 continue;
             }
-            indexTokens.add(indexToken);
+            indexTokens.add(token);
             /// allow to sell
-            allowedTokens[indexToken] = true;
+            allowedTokens[token] = true;
         }
     }
 
-    function indexTokensLenth() public view returns (uint256) {
+    function indexTokensLenth(address targetIndex) public view returns (uint256) {
+        EnumerableSet.AddressSet storage indexTokens = indexTokensMap[targetIndex];
         return indexTokens.length();
     }
 
-    function removeIndexTokens(address[] memory addrs) external {
-        uint256 length = addrs.length;
+    function removeIndexTokens(address targetIndex, address[] memory tokens) external {
+        EnumerableSet.AddressSet storage indexTokens = indexTokensMap[targetIndex];
+
+        uint256 length = tokens.length;
         for(uint256 i; i < length; i ++) {
-            address indexToken = addrs[i];
-            if(!indexTokens.contains(indexToken)) {
+            address token = tokens[i];
+            if(!indexTokens.contains(token)) {
                 continue;
             }
-            indexTokens.remove(indexToken);
+            indexTokens.remove(token);
         }
     }
 
@@ -81,7 +91,9 @@ abstract contract Filter is IFilter {
      * 
      * @return tokens address
      */
-    function getIndexTokens() external view returns (address[] memory) {
+    function getIndexTokens(address targetIndex) external view returns (address[] memory) {
+        EnumerableSet.AddressSet storage indexTokens = indexTokensMap[targetIndex];
+
         return indexTokens.values();
     }
 

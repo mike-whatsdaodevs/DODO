@@ -32,6 +32,8 @@ contract DODO is
 
     address[] public indexList;
 
+    address public filter;
+
     constructor() {
         _disableInitializers();
     }
@@ -39,7 +41,9 @@ contract DODO is
     receive() external payable {}
 
     function initialize(
-        address _feeTo, address _underlyingToken
+        address _feeTo, 
+        address _underlyingToken, 
+        address _filter
     ) external initializer {
         __Pausable_init();
         __Ownable_init();
@@ -47,6 +51,7 @@ contract DODO is
 
         underlyingToken = _underlyingToken;
         feeTo = _feeTo;
+        filter = _filter;
     }
 
     function idIncrease() private {
@@ -69,12 +74,12 @@ contract DODO is
         _checkName(name);
 
         bytes32 salt = keccak256(abi.encodePacked(currentIndexId));
-        Index index = new Index{salt: salt}(currentIndexId, isDynamicIndex, name);
+        Index index = new Index{salt: salt}(currentIndexId, isDynamicIndex, name, filter);
 
         indexList.push(address(index));
         indexMap[currentIndexId] = address(index);
 
-        index.addIndexTokens(allowedTokens);
+        //// index.addIndexTokens(allowedTokens);
 
         idIncrease();
 
