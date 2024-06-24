@@ -4,8 +4,9 @@ pragma solidity >=0.8.14;
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import {Path} from "../libraries/Path.sol";
+import {IFilter} from "../interfaces/IFilter.sol";
 
-abstract contract Filter {
+abstract contract Filter is IFilter {
 
     using EnumerableSet for EnumerableSet.AddressSet;
     /// allowed tokens to buy
