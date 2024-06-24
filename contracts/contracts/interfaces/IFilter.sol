@@ -3,11 +3,11 @@ pragma solidity >=0.8.14;
 
 interface IFilter {
 
-    function addIndexTokens(address[] memory addrs) external;
+    function addIndexTokens(address targetIndex, address[] memory addrs) external;
     
-    function indexTokensLenth() external view returns (uint256);
+    function indexTokensLenth(address targetIndex) external view returns (uint256);
 
-    function removeIndexTokens(address[] memory addrs) external;
+    function removeIndexTokens(address targetIndex, address[] memory addrs) external;
 
     function addAllowedProtocols(address[] memory protocols) external;
 
@@ -19,7 +19,7 @@ interface IFilter {
      * 
      * @return tokens address
      */
-    function getIndexTokens() external view returns (address[] memory);
+    function getIndexTokens(address targetIndex) external view returns (address[] memory);
     /**
      * @dev index supoorts tokens
      * 

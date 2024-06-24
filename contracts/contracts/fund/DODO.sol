@@ -12,11 +12,13 @@ import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import {PausableUpgradeable} from "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
+import {Filter} from "./Filter.sol";
 
 contract DODO is 
     IDODO,
     OwnableUpgradeable, 
     PausableUpgradeable, 
+    Filter,
     UUPSUpgradeable 
 {
     using TransferHelper for address;
@@ -58,7 +60,6 @@ contract DODO is
         id += 1;
     }
 
-
     /**
      * @dev create index 
      * @param name: array of position id
@@ -79,7 +80,7 @@ contract DODO is
         indexList.push(address(index));
         indexMap[currentIndexId] = address(index);
 
-        //// index.addIndexTokens(allowedTokens);
+        addIndexTokens(address(index),allowedTokens);
 
         idIncrease();
 

@@ -307,7 +307,7 @@ contract Index is IIndex, IndexGas {
         bytes32 hash = hashPositionIds(params.positionIds, params.tokenIn, params.tokenOut);
         uint256 amountOut = positionIdsHashList[hash];
         
-        uint256 indexTokensLength = IFilter(filter).indexTokensLenth();
+        uint256 indexTokensLength = IFilter(filter).indexTokensLenth(address(this));
         (uint256 positionsBalance, uint256 length) = getPositionsBalance(params.tokenIn, params.positionIds);
 
         bool isBuy = params.tokenIn == underlyingToken;
