@@ -6,8 +6,10 @@ import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet
 import {Path} from "../libraries/Path.sol";
 import {IFilter} from "../interfaces/IFilter.sol";
 import {Constants} from "../libraries/Constants.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
-abstract contract Filter is IFilter {
+contract Filter is IFilter, OwnableUpgradeable, UUPSUpgradeable  {
 
     using EnumerableSet for EnumerableSet.AddressSet;
     /// allowed tokens to buy
@@ -18,12 +20,25 @@ abstract contract Filter is IFilter {
 
     /// allowed tokens to sell
     mapping(address => bool) allowedTokens;
-    
+
+    mapping(address => mapping(address => bool)) public override indexManagers;
+
     constructor() {
+        _disableInitializers();
+    }
+
+    function initialize() external initializer {
+        __Ownable_init();
+        __UUPSUpgradeable_init();
         allowedTokens[Constants.USDT] = true;
     }
 
-    function addIndexTokens(address targetIndex, address[] memory tokens) public {
+    modifier onlyManager(address targetIndex) {
+        require(indexManagers[targetIndex][msg.sender], "E: caller is not allowed");
+        _;
+    }
+
+    function addIndexTokens(address targetIndex, address[] memory tokens) public onlyManager(targetIndex) {
         EnumerableSet.AddressSet storage indexTokens = indexTokensMap[targetIndex];
         
         uint256 length = tokens.length;
@@ -34,7 +49,9 @@ abstract contract Filter is IFilter {
             }
             indexTokens.add(token);
             /// allow to sell
-            allowedTokens[token] = true;
+            if(! allowedTokens[token]) {
+                allowedTokens[token] = true;
+            }
         }
     }
 
@@ -43,7 +60,7 @@ abstract contract Filter is IFilter {
         return indexTokens.length();
     }
 
-    function removeIndexTokens(address targetIndex, address[] memory tokens) external {
+    function removeIndexTokens(address targetIndex, address[] memory tokens) external onlyManager(targetIndex) {
         EnumerableSet.AddressSet storage indexTokens = indexTokensMap[targetIndex];
 
         uint256 length = tokens.length;
@@ -56,18 +73,18 @@ abstract contract Filter is IFilter {
         }
     }
 
-    function addAllowedProtocols(address[] memory protocols) external {
+    function addAllowedProtocols(address[] memory protocols) external onlyOwner {
         uint256 length = protocols.length;
         for(uint256 i; i < length; i++) {
             address protocol = protocols[i];
             if(allowedProtocols.contains(protocol)) {
                 continue;
             }
-            addProtocol(protocol);
+            allowedProtocols.add(protocol);
         }
     }
 
-    function removeAllowedProtocols(address[] memory protocols) external {
+    function removeAllowedProtocols(address[] memory protocols) external onlyOwner {
         uint256 length = protocols.length;
         for(uint256 i; i < length; i ++) {
             address protocol = protocols[i];
@@ -78,11 +95,7 @@ abstract contract Filter is IFilter {
         }
     }
 
-    function addProtocol(address protocol) internal {
-        allowedProtocols.add(protocol);
-    }
-
-    function manageAllowedToken(address token, bool status) external {
+    function manageAllowedToken(address token, bool status) external onlyOwner {
         allowedTokens[token] = status;
     }
 
@@ -108,7 +121,7 @@ abstract contract Filter is IFilter {
 
     /**
      * @dev list all allowed lps
-     * 
+     *   
      * @return lps
      */
     function getAllowedProtocols() external view returns (address[] memory) {
@@ -125,4 +138,16 @@ abstract contract Filter is IFilter {
     function isAllowedProtocols(address lp) public view returns (bool) {
         return allowedProtocols.contains(lp);
     }
+
+    function manageIndexManager(address targetIndex, address manager, bool status) external onlyOwner {
+        indexManagers[targetIndex][manager] = status;
+    }
+
+     /// uups interface
+    function _authorizeUpgrade(address newImplementation)
+        internal
+        override
+        view
+        onlyOwner
+    { }
 }

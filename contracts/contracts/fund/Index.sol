@@ -58,9 +58,6 @@ contract Index is IIndex, IndexGas {
     /// index fee amount
     uint256 public feeAmount;
 
-    /// operators
-    mapping(address => bool) public operators;
-
     /// position balances
     /// positionId => token adress => balance
     mapping(uint256 => mapping(address => uint256)) public override positionBalance;
@@ -70,6 +67,8 @@ contract Index is IIndex, IndexGas {
 
     address public filter;
 
+    address public THIS;
+
     /// gas
     constructor(
         uint256 indexId, 
@@ -77,19 +76,19 @@ contract Index is IIndex, IndexGas {
         string memory indexName,
         address _filter
     ) {
-        operators[msg.sender] = true;
         id = indexId;
         isDynamic = isDynamicIndex;
         name = indexName;
         feeRate = 10;
         filter = _filter;
-        emit CreatedIndex(id, address(this), feeRate, name, block.timestamp);
+        THIS = address(this);
+        emit CreatedIndex(id, THIS, feeRate, name, block.timestamp);
     }
    
     receive() external payable {}
    
     modifier onlyOperator() {
-        require(! operators[msg.sender], "E: caller is not allowed");
+        require(! IFilter(filter).indexManagers(THIS, msg.sender), "E: caller is not allowed");
         _;
     }
 
@@ -105,7 +104,7 @@ contract Index is IIndex, IndexGas {
      * @return amount
      */
     function tokenBalance(address token) public view returns (uint256) {
-        return IERC20(token).balanceOf(address(this));
+        return IERC20(token).balanceOf(THIS);
     }
 
     /**
@@ -247,7 +246,7 @@ contract Index is IIndex, IndexGas {
         );
         positionSet.add(position);
 
-        uint256 underlyingTokenAmount = IERC20(underlyingToken).balanceOf(address(this));
+        uint256 underlyingTokenAmount = IERC20(underlyingToken).balanceOf(THIS);
 
         positionBalance[currentPositionId][underlyingToken] = amount;
 
@@ -307,7 +306,7 @@ contract Index is IIndex, IndexGas {
         bytes32 hash = hashPositionIds(params.positionIds, params.tokenIn, params.tokenOut);
         uint256 amountOut = positionIdsHashList[hash];
         
-        uint256 indexTokensLength = IFilter(filter).indexTokensLenth(address(this));
+        uint256 indexTokensLength = IFilter(filter).indexTokensLenth(THIS);
         (uint256 positionsBalance, uint256 length) = getPositionsBalance(params.tokenIn, params.positionIds);
 
         bool isBuy = params.tokenIn == underlyingToken;
@@ -536,7 +535,7 @@ contract Index is IIndex, IndexGas {
             revert TokenNotAllow(tokenOut);
         }
 
-        if(recipient != address(this)) {
+        if(recipient != THIS) {
             revert RecipientNotAllow(recipient);
         }
 
@@ -558,7 +557,7 @@ contract Index is IIndex, IndexGas {
             revert TokenNotAllow(tokenOut);
         }
 
-        if(recipient != address(this)) {
+        if(recipient != THIS) {
             revert RecipientNotAllow(recipient);
         }
     }
@@ -712,7 +711,7 @@ contract Index is IIndex, IndexGas {
     function manageFeeRate(uint256 newFeeRate) external {
         require(newFeeRate > 0 && newFeeRate < Constants.DENOMINATOR, "E: Fee rate error");
 
-        emit ChangeFeeRate(address(this), feeRate, newFeeRate, block.timestamp);
+        emit ChangeFeeRate(THIS, feeRate, newFeeRate, block.timestamp);
         feeRate = newFeeRate;
     }
 
@@ -774,18 +773,9 @@ contract Index is IIndex, IndexGas {
 
     /// force withdraw token balance
     function recovery(address token, address recipient) external {
-        uint256 balance = IERC20(token).balanceOf(address(this));
+        uint256 balance = IERC20(token).balanceOf(THIS);
         token.safeTransfer(recipient, balance);
         emit Withdraw(0, recipient, balance, block.timestamp);
-    }
-
-    /**
-     * @dev manage index operator
-     * 
-     * @param operator: operator address
-     */
-    function manageOperator(address operator, bool status) external {
-        operators[operator] = status;
     }
 
     function acculateFee(uint256 platformFee) external {

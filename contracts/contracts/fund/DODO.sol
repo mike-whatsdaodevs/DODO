@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.14;
 
-import { IDODO } from "../interfaces/IDODO.sol";
+import {IDODO} from "../interfaces/IDODO.sol";
 import {IIndex} from "../interfaces/IIndex.sol";
 import {Index} from "./Index.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -62,14 +62,12 @@ contract DODO is
     /**
      * @dev create index 
      * @param name: array of position id
-     * @param allowedTokens: array of token address
      * @return uint256 index id
      */
     function createIndex(
         string memory name, 
-        bool isDynamicIndex,
-        address[] calldata allowedTokens
-    ) external returns (uint256) {
+        bool isDynamicIndex
+    ) external onlyOwner returns (uint256) {
         uint256 currentIndexId = id;
         _checkName(name);
 
@@ -78,8 +76,6 @@ contract DODO is
 
         indexList.push(address(index));
         indexMap[currentIndexId] = address(index);
-
-        IFilter(filter).addIndexTokens(address(index),allowedTokens);
 
         idIncrease();
 

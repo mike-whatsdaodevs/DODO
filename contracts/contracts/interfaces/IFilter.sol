@@ -3,6 +3,8 @@ pragma solidity >=0.8.14;
 
 interface IFilter {
 
+    function indexManagers(address targetIndex, address caller) external view returns (bool);
+
     function addIndexTokens(address targetIndex, address[] memory addrs) external;
     
     function indexTokensLenth(address targetIndex) external view returns (uint256);
