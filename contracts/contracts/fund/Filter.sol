@@ -47,11 +47,9 @@ contract Filter is IFilter, OwnableUpgradeable, UUPSUpgradeable  {
             if(indexTokens.contains(token)) {
                 continue;
             }
+            require(allowedTokens[token], "E: token is not allowed");
+            
             indexTokens.add(token);
-            /// allow to sell
-            if(! allowedTokens[token]) {
-                allowedTokens[token] = true;
-            }
         }
     }
 
