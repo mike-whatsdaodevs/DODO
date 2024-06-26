@@ -3,7 +3,6 @@ pragma solidity >=0.8.14;
 
 import {IDODO} from "../interfaces/IDODO.sol";
 import {IIndex} from "../interfaces/IIndex.sol";
-import {Index} from "./Index.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {Enum} from "../libraries/Enum.sol";
 import {Constants} from "../libraries/Constants.sol";
@@ -13,6 +12,7 @@ import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/Own
 import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import {PausableUpgradeable} from "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
 import {IFilter} from "../interfaces/IFilter.sol";
+import {IndexProxy} from "./IndexProxy.sol";
 
 contract DODO is 
     IDODO,
@@ -33,6 +33,8 @@ contract DODO is
 
     address[] public indexList;
 
+    address public indexSingleton;
+
     address public filter;
 
     constructor() {
@@ -43,14 +45,14 @@ contract DODO is
 
     function initialize(
         address _feeTo, 
-        address _underlyingToken, 
+        address _indexSigleton, 
         address _filter
     ) external initializer {
         __Pausable_init();
         __Ownable_init();
         __UUPSUpgradeable_init();
 
-        underlyingToken = _underlyingToken;
+        indexSingleton = _indexSigleton;
         feeTo = _feeTo;
         filter = _filter;
     }
@@ -72,7 +74,10 @@ contract DODO is
         _checkName(name);
 
         bytes32 salt = keccak256(abi.encodePacked(currentIndexId));
-        Index index = new Index{salt: salt}(currentIndexId, isDynamicIndex, name, filter);
+
+        bytes memory initializeData = abi.encodeCall(IIndex.initialize, (currentIndexId, isDynamicIndex, name, filter));
+
+        IndexProxy index = new IndexProxy{salt: salt}(indexSingleton, initializeData);
 
         indexList.push(address(index));
         indexMap[currentIndexId] = address(index);

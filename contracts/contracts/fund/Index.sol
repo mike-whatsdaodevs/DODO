@@ -14,7 +14,11 @@ import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import {IFilter} from "../interfaces/IFilter.sol";
 import {IndexGas} from "./IndexGas.sol";
 
-contract Index is IIndex, IndexGas {
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import {PausableUpgradeable} from "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
+
+contract Index is IIndex, IndexGas, OwnableUpgradeable, UUPSUpgradeable, PausableUpgradeable {
 
     using TransferHelper for address;
     using Address for address;
@@ -40,7 +44,7 @@ contract Index is IIndex, IndexGas {
     mapping(uint256 => uint256) public counter;
 
     /// index id
-    uint256 public immutable id;
+    uint256 public id;
 
     bool public isDynamic;
 
@@ -55,9 +59,6 @@ contract Index is IIndex, IndexGas {
     /// index fee rate
     uint256 public feeRate;
 
-    /// index fee amount
-    uint256 public feeAmount;
-
     /// position balances
     /// positionId => token adress => balance
     mapping(uint256 => mapping(address => uint256)) public override positionBalance;
@@ -70,12 +71,20 @@ contract Index is IIndex, IndexGas {
     address public THIS;
 
     /// gas
-    constructor(
+    constructor() {
+        _disableInitializers();
+    }
+
+    function initialize(
         uint256 indexId, 
         bool isDynamicIndex,
         string memory indexName,
         address _filter
-    ) {
+    ) external {
+        __Pausable_init();
+        __Ownable_init();
+        __UUPSUpgradeable_init();
+
         id = indexId;
         isDynamic = isDynamicIndex;
         name = indexName;
@@ -777,8 +786,12 @@ contract Index is IIndex, IndexGas {
         token.safeTransfer(recipient, balance);
         emit Withdraw(0, recipient, balance, block.timestamp);
     }
-
-    function acculateFee(uint256 platformFee) external {
-        feeAmount = feeAmount.add(platformFee);
-    }
+    
+    /// uups interface
+    function _authorizeUpgrade(address newImplementation)
+        internal
+        override
+        view
+        onlyOwner
+    { }
 }

@@ -31,6 +31,7 @@ contract Filter is IFilter, OwnableUpgradeable, UUPSUpgradeable  {
         __Ownable_init();
         __UUPSUpgradeable_init();
         allowedTokens[Constants.USDT] = true;
+        allowedProtocols.add(Constants.UNISWAP_ROUTER);
     }
 
     modifier onlyManager(address targetIndex) {
@@ -48,7 +49,7 @@ contract Filter is IFilter, OwnableUpgradeable, UUPSUpgradeable  {
                 continue;
             }
             require(allowedTokens[token], "E: token is not allowed");
-            
+
             indexTokens.add(token);
         }
     }
