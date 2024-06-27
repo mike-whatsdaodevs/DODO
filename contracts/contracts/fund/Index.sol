@@ -80,7 +80,7 @@ contract Index is IIndex, IndexGas, OwnableUpgradeable, UUPSUpgradeable, Pausabl
         bool isDynamicIndex,
         string memory indexName,
         address _filter
-    ) external {
+    ) external initializer {
         __Pausable_init();
         __Ownable_init();
         __UUPSUpgradeable_init();

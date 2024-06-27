@@ -12,28 +12,26 @@ async function main() {
   // If this script is run directly using `node` you may want to call compile
   // manually to make sure everything is compiled
   // await hre.run('compile');
-
   // We get the contract to deploy
 
-  const [deployer] = await ethers.getSigners()
-  console.log('deployer:' + deployer.address)
+  // 0x4BE6339E1480761e650D2F2Eb27a702dD458654A
+  let provider = ethers.provider
+  const [signer] = await ethers.getSigners()
+  let my_address = signer.address;
+  console.log('my_address is:', my_address)
 
-  const network = (await ethers.provider.getNetwork()).chainId;
-  console.log(network);
+  // let weth9_address = process.env.WETH9;
+  // let usdc_address = process.env.USDC;
 
-  let proxy_address = process.env.OP_DODO_MAIN;
+  const Index = await hre.ethers.getContractFactory('Index')
+  const index = await Index.deploy();
+  await index.deployed()
+  console.log('index deployed to:', index.address)
+  
+  return;
 
-  const DODO = await hre.ethers.getContractFactory('DODO')
-  const dodo = await DODO.deploy()
-  await dodo.deployed()
-  console.log('dodo deployed to:', dodo.address);
+  // 0xf67394B56827246644359D4A3fc0D817dF8E90c0
 
-  let implement_address = dodo.address;
-  const proxy = await ethers.getContractAt('DODO', proxy_address, deployer);
-  let upgradeToTx = await proxy.upgradeTo(implement_address);
-  await upgradeToTx.wait();
-
-  console.log(upgradeToTx.hash);
 }
 
 // We recommend this pattern to be able to use async/await everywhere

@@ -23,9 +23,9 @@ contract DODO is
     using TransferHelper for address;
     using SafeMath for uint256;
 
-    uint256 public id;
-    address public underlyingToken;
+    address public constant underlyingToken = Constants.USDT;
 
+    uint256 public id;
     uint256 public feeAmount;
     address public feeTo; 
 
@@ -199,6 +199,14 @@ contract DODO is
 
         uint256 amount = IIndex(indexAddress).withdraw(positionId, msg.sender);
         emit Withdraw(indexId, indexAddress, msg.sender, amount, block.timestamp);
+    }
+
+    function changeFilter(address newFilter) external onlyOwner {
+        filter = newFilter;
+    }
+
+    function changeSingleton(address newSingleton) external onlyOwner {
+        indexSingleton = newSingleton;
     }
 
      /// uups interface

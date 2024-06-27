@@ -53,7 +53,7 @@ async function main() {
   let dodoId = await dodo.id();
   console.log(dodoId);
   let index_address = await dodo.indexMap(0);
-  console.log(index_address);
+  console.log("index address is:",index_address);
 
   const index = await ethers.getContractAt('Index', index_address, signer);
   const usdt = await ethers.getContractAt("@openzeppelin/contracts/token/ERC20/IERC20.sol:IERC20", usdt_address, signer);
@@ -64,11 +64,11 @@ async function main() {
 
 
   let allowance = await usdt.allowance(index_address, swapRouter_address);
+  console.log("allowance is:", allowance);
   if (allowance == 0) {
     let tokenApproveTx = await index.safeApprove(usdt_address, swapRouter_address);
     await tokenApproveTx.wait();
   }
-
   /// batch deal positions
   let positionIds = [0,1];
   let calldataArray = new Array();
@@ -79,6 +79,8 @@ async function main() {
   console.log("positionsBalance is", positionsBalance);
   let amount = Math.floor(positionsBalance.tokenInBalance.div(indexTokens.length));
   console.log("amount is", amount);
+
+  console.log("uniswapRouter is:", await index.uniswapRouter());
   //indexTokens.length
   
   for(let i=0; i < indexTokens.length ; i++) {
@@ -95,7 +97,7 @@ async function main() {
         path: tx.path,
         recipient: index_address,
         amountIn: amount,
-        amountOutMinimum: tx.expectedAmount
+        amountOutMinimum: 0
       }
       console.log(params);
 

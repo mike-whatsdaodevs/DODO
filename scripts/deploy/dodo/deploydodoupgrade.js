@@ -29,8 +29,14 @@ async function main() {
   await dodo.deployed()
   console.log('dodo deployed to:', dodo.address);
 
- // const ex = await hre.ethers.getContractAt('DODO', dodo.address, deployer)
-  const initialize_data = await dodo.populateTransaction.initialize(deployer.address, usdt_address);
+  let indexSingleton_address = process.env.OP_INDEX;
+  let filter_address = process.env.OP_FILTER;
+
+  const initialize_data = await dodo.populateTransaction.initialize(
+    deployer.address, 
+    indexSingleton_address, 
+    filter_address
+  );
   console.log("initialize_data data is",initialize_data)
 
   const DODOProxy = await hre.ethers.getContractFactory('DODOProxy')
