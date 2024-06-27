@@ -62,23 +62,26 @@ async function main() {
 
 
   /// batch deal positions
-  let positionIds = [0,1];
+  let positionIds = [2,3];
 
  
-  console.log("status is", await index.positionStatus(0));
-  console.log("status is", await index.positionStatus(1));
-
-  console.log(await index.positionBalance(positionIds[0], usdt_address));
-  console.log(await index.positionBalance(positionIds[1], usdt_address));
-
-  console.log(await token.balanceOf(index_address));
+  console.log("status is", await index.positionStatus(positionIds[0]));
+  console.log("status is", await index.positionStatus(positionIds[1]));
 
 
-  let positionId = 0;//await index.positionId();
+  let hash = await index.hashPositionIds(positionIds, usdt_address, indexTokens[1]);
+  let positionIdsHashData = await index.positionIdsHashList(hash);
+  console.log("position data is", positionIdsHashData);
+
+  let positionsBalance = await index.getPositionsBalance(indexTokens[0], positionIds);
+  console.log("positionsBalance is:", positionsBalance);
+  return;
+
+  let positionId = positionIds[0];//await index.positionId();
 
 
   for(let i = 0; i < indexTokens.length; i ++) {
-    const obj = await ethers.getContractAt("@openzeppelin/contracts/token/ERC20/IERC20.sol:IERC20", indexTokens[i], signer);
+    const obj = token.attach(indexTokens[i]);
     console.log("token balance is ", await obj.balanceOf(index_address));
 
     let hash = await index.hashPositionIds(positionIds, indexTokens[i], usdt_address);

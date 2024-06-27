@@ -93,7 +93,7 @@ async function main() {
 
 
   /// batch deal positions
-  let positionIds = [0,1];
+  let positionIds = [2,3];
   let calldataArray = new Array();
   let positionIdsArray = new Array();
 
@@ -117,7 +117,7 @@ async function main() {
         path: tx.path,
         recipient: index_address,
         amountIn: amount,
-        amountOutMinimum: tx.expectedAmount
+        amountOutMinimum: 0
       }
       console.log(params);
 

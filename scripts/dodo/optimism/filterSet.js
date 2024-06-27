@@ -57,14 +57,17 @@ async function main() {
   let index_address = await dodo.indexMap(0);
   console.log(index_address);
 
+  console.log("indexTokensLenth is :", await filter.indexTokensLenth(index_address));
+  return;
+
+  let manageIndexManagerTx = await filter.manageIndexManager(index_address, deployer.address, true);
+  await manageIndexManagerTx.wait();
+  console.log(manageIndexManagerTx.hash);
+  
   let addIndexTokensTx = await filter.addIndexTokens(index_address, indexTokens);
   await addIndexTokensTx.wait();
   console.log(addIndexTokensTx.hash);
   return;
- 
-  let manageIndexManagerTx = await filter.manageIndexManager(index_address, deployer.address, true);
-  await manageIndexManagerTx.wait();
-  console.log(manageIndexManagerTx.hash);
 
   let len = indexTokens.length;
   for(let i = 0; i < len; i ++) {

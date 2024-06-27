@@ -70,7 +70,7 @@ async function main() {
     await tokenApproveTx.wait();
   }
   /// batch deal positions
-  let positionIds = [0,1];
+  let positionIds = [2,3];
   let calldataArray = new Array();
   let positionIdsArray = new Array();
 
