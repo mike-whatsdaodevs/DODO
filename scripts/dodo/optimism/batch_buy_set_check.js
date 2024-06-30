@@ -68,17 +68,20 @@ async function main() {
   // let setGasFeeRecipientTx = await index.setGasFeeRecipient(deployer.address);
   // await setGasFeeRecipientTx.wait();
   // console.log(setGasFeeRecipientTx.hash);return;
-  let positionIds1 = await indexHelper.batchGetPositionIdsByStatus(index_address, 4);
-  console.log(positionIds1);return;
+  // let positionIds1 = await indexHelper.batchGetPositionIdsByStatus(index_address, 4);
+  // console.log(positionIds1);return;
 
 
   /// batch deal positions
-  let positionIds = [0,1];
+  let positionIds = [4,5];
 
-  console.log(await index.positionStatus(1));
+  console.log(await index.positionStatus(positionIds[0]));
+  console.log(await index.positionStatus(positionIds[1]));
   for(let i=0; i < indexTokens.length ; i++) {
-      let positionsBalance = await index.positionBalance(1, usdt_address);
-      console.log(positionsBalance);
+      let positionsBalance0 = await index.positionBalance(positionIds[0], usdt_address);
+      console.log(positionsBalance0);
+      let positionsBalance1 = await index.positionBalance(positionIds[1], usdt_address);
+      console.log(positionsBalance1);
   }
 
 }

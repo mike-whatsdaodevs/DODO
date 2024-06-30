@@ -50,35 +50,17 @@ async function main() {
 
   const dodo = await ethers.getContractAt('DODO', dodo_address, signer);
 
-
   let index_address = await dodo.indexMap(0);
   console.log(index_address);
-
   const index = await ethers.getContractAt('Index', index_address, signer);
-  const token = await ethers.getContractAt("@openzeppelin/contracts/token/ERC20/IERC20.sol:IERC20", usdt_address, signer);
-  const weth = await ethers.getContractAt("@openzeppelin/contracts/token/ERC20/IERC20.sol:IERC20", weth_address, signer);
-  const swap = await ethers.getContractAt('ISwapRouter02', swapRouter_address, signer);
-  const pathFinder = await ethers.getContractAt('PathFinder', pathFinder_address, signer);
 
+  let index_template_address = "0x46330a2DA748fEfc9F9837E5Bc09b397dc5E5597";
 
-  // let setGasFeeRecipientTx = await index.setGasFeeRecipient(deployer.address);
-  // await setGasFeeRecipientTx.wait();
-  // console.log(setGasFeeRecipientTx.hash);
+  let calldata = await dodo.populateTransaction.upgradeTo(index_template_address);
 
-  // let setExchangeRateTx = await index.setExchangeRate(100);
-  // await setExchangeRateTx.wait();
-  // console.log(setExchangeRateTx.hash);
-
-  // let setStaticIndexGasUsedTx = await index.setStaticIndexGasUsed(100);
-  // await setStaticIndexGasUsedTx.wait();
-  // console.log(setStaticIndexGasUsedTx.hash);
-  // return;
-
-  let withdrawPositionTx = await index.withdraw(5, deployer.address);
-  await withdrawPositionTx.wait();
-  // function withdrawPosition(uint256 indexId, uint256 positionId) external {
-  console.log(withdrawPositionTx.hash);
-
+  let upgradeTx = await dodo.managerIndex(0, calldata.data);
+  await upgradeTx.wait();
+  console.log(upgradeTx.hash);
 }
 
 main()

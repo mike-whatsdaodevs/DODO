@@ -60,25 +60,42 @@ async function main() {
   const swap = await ethers.getContractAt('ISwapRouter02', swapRouter_address, signer);
   const pathFinder = await ethers.getContractAt('PathFinder', pathFinder_address, signer);
 
+  let setExchangeRateTx = await index.setExchangeRate(ethers.utils.parseEther("0.0001"));
+  await setExchangeRateTx.wait();
+  console.log(setExchangeRateTx.hash);
 
-  // let setGasFeeRecipientTx = await index.setGasFeeRecipient(deployer.address);
-  // await setGasFeeRecipientTx.wait();
-  // console.log(setGasFeeRecipientTx.hash);
+  let indexOwner = await index.owner();
+  console.log("index owner is :", indexOwner);
 
-  // let setExchangeRateTx = await index.setExchangeRate(100);
-  // await setExchangeRateTx.wait();
-  // console.log(setExchangeRateTx.hash);
+  let gasUsed = await index.gasUsed();
+  console.log("gas used :", gasUsed);
 
-  // let setStaticIndexGasUsedTx = await index.setStaticIndexGasUsed(100);
-  // await setStaticIndexGasUsedTx.wait();
-  // console.log(setStaticIndexGasUsedTx.hash);
-  // return;
+  let averageGasUsed = await index.averageGasUsed();
+  console.log("averageGasUsed used :", averageGasUsed);
 
-  let withdrawPositionTx = await index.withdraw(5, deployer.address);
-  await withdrawPositionTx.wait();
-  // function withdrawPosition(uint256 indexId, uint256 positionId) external {
-  console.log(withdrawPositionTx.hash);
+  let staticGasUsed = await index.staticGasUsed();
+  console.log("staticGasUsed used :", staticGasUsed);
 
+  let exchangeRate = await index.exchangeRate();
+  console.log("exchangeRate :", exchangeRate);
+
+  let gasFeeRecipient = await index.gasFeeRecipient();
+  console.log("gasFeeRecipient :", gasFeeRecipient);
+
+  let positionsGasUsedAverage = await index.positionsGasUsedAverage(5);
+  console.log("positionsGasUsedAverage :", positionsGasUsedAverage);
+
+
+  return;
+  let setGasFeeRecipientTx = await index.setGasFeeRecipient(deployer.address);
+  await setGasFeeRecipientTx.wait();
+  console.log(setGasFeeRecipientTx.hash);
+
+
+  /// 3000000
+  let setStaticGasUsedTx = await index.setStaticGasUsed(3000000);
+  await setStaticGasUsedTx.wait();
+  console.log(setStaticGasUsedTx.hash);
 }
 
 main()

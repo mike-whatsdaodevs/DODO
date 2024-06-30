@@ -72,7 +72,7 @@ async function main() {
 
 
   /// batch deal positions
-  let positionIds = [0,1];
+  let positionIds = [4,5];
   let calldataArray = new Array();
   let positionIdsArray = new Array();
 

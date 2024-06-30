@@ -68,13 +68,13 @@ async function main() {
   console.log("status is", await index.positionStatus(positionIds[0]));
   console.log("status is", await index.positionStatus(positionIds[1]));
 
-  // let hash = await index.hashPositionIds(positionIds, usdt_address, indexTokens[1]);
-  // let positionIdsHashData = await index.positionIdsHashList(hash);
-  // console.log("position data is", positionIdsHashData);
+  let hash = await index.hashPositionIds(positionIds, usdt_address, indexTokens[1]);
+  let positionIdsHashData = await index.positionIdsHashList(hash);
+  console.log("position data is", positionIdsHashData);
 
-  // let positionsBalance = await index.getPositionsBalance(usdt_address, positionIds);
-  // console.log("positionsBalance is:", positionsBalance);
-  // return;
+  let positionsBalance = await index.getPositionsBalance(usdt_address, positionIds);
+  console.log("positionsBalance is:", positionsBalance);
+  return;
 
 
   let positionId = positionIds[0];//await index.positionId();
