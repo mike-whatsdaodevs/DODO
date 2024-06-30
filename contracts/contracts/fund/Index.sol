@@ -771,10 +771,15 @@ contract Index is IIndex, IndexGas, OwnableUpgradeable, UUPSUpgradeable, Pausabl
         amount = positionBalance[positionId][underlyingToken];
 
         if(gasfee != 0) {
+
+            //// gas fee exceed amount
+            if(gasfee >= amount) {
+                gasfee = amount;
+            }
             underlyingToken.safeTransfer(gasFeeRecipient, gasfee);
         }
         underlyingToken.safeTransfer(recipient, amount.sub(gasfee));
-
+        
         positionBalance[positionId][underlyingToken] = 0;
 
         emit Withdraw(positionId, tx.origin, amount, block.timestamp);

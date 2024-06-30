@@ -45,7 +45,7 @@ contract IndexGas {
     }
 
     function gasExchageUnderlying(uint256 _gasUsed) internal view returns (uint256) {
-        return _gasUsed * exchangeRate;
+        return (_gasUsed * exchangeRate).div(1E18) ;
     }
 
     function setGasFeeRecipient(address recipient) external {
