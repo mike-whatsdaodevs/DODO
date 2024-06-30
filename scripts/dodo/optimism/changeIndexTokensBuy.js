@@ -57,7 +57,7 @@ async function main() {
   // await tokenApproveTx.wait();
   // return;
 
-    let addIndexTokensTx = await index.addIndexTokens([DAI_ADDRESS]);
+  let addIndexTokensTx = await index.addIndexTokens([DAI_ADDRESS]);
   await addIndexTokensTx.wait();
   return;
 

@@ -1,10 +1,10 @@
 const { ethers, run } = require('hardhat')
-require('dotenv').config({ path: '.env' })
 
 async function main() {
   await run('compile')
 
   let provider = ethers.provider
+  let signer = provider.getSigner()
 
   console.log('NetWorks ID is ', (await ethers.provider.getNetwork()).chainId)
   console.log('NetWorks Name is ', (await ethers.provider.getNetwork()).name)
@@ -17,43 +17,42 @@ async function main() {
 
   let weth_address;
   let usdt_address;
+  let pathFinder_address;
+  let swapRouter_address;
   let dodo_address;
+  let indexTokens = [
+    process.env.OP_USDC,
+    process.env.OP_WETH9,
+    process.env.OP_WBTC,
+    process.env.OP_LINK,
+    process.env.OP_OP,
+    process.env.OP_WLD,
+    // process.env.OP_LDO,
+    // process.env.OP_W,
+    // process.env.OP_PYTH,
+    process.env.OP_SNX
+  ];
   if(network == 10) {
     weth_address = process.env.OP_WETH9;
     usdt_address = process.env.OP_USDT;
+    pathFinder_address =  process.env.OP_PATH_FINDER_MAIN;
+    swapRouter_address = process.env.OP_SWAP_ROUTER_V2;
     dodo_address = process.env.OP_DODO_MAIN;
   } else if(network == 31337) {
     weth_address = process.env.OP_WETH9;
     usdt_address = process.env.OP_USDT;
+    pathFinder_address =  process.env.OP_PATH_FINDER_MAIN;
+    swapRouter_address = process.env.OP_SWAP_ROUTER_V2;
     dodo_address = process.env.OP_DODO_LOCAL;
   } else {
 
   }
 
-  const dodo = await ethers.getContractAt('DODO', dodo_address, deployer);
-  const usdtToken = await ethers.getContractAt('@openzeppelin/contracts/token/ERC20/IERC20.sol:IERC20', usdt_address, deployer);
+  const dodo = await ethers.getContractAt('DODO', dodo_address, signer);
 
-  let indexAddress = await dodo.indexMap(0);
-  console.log(indexAddress);
-
-  let allowance = await usdtToken.allowance(deployer.address, dodo_address);
-  if(allowance == 0) {
-      let approveTx = await usdtToken.approve(dodo_address, ethers.constants.MaxUint256);
-      await approveTx.wait();
-      console.log(approveTx.hash);
-  }
-
-  let buyTx = await dodo.buy(
-    0,
-    ethers.utils.parseUnits("1", 6),
-    10000,
-    100,
-    10000
-  );
-
-  await buyTx.wait();
-  console.log(buyTx.hash);
-
+  let index_address = await dodo.indexMap(0);
+  console.log(index_address);
+  const index = await ethers.getContractAt('Index', index_address, signer);
 
 }
 
