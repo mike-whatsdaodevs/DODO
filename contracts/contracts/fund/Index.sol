@@ -360,13 +360,14 @@ contract Index is IIndex, IndexGas, OwnableUpgradeable, UUPSUpgradeable, Pausabl
         uint256 amountNow = tokenBalance(tokenAfter);
         uint256 length = positionIds.length;
         for(uint256 i; i < length; i ++) {
-            uint256 beforeBalance = positionBalance[i][tokenBefore];
+            uint256 pid = positionIds[i];
+            uint256 beforeBalance = positionBalance[pid][tokenBefore];
 
             if(beforeBalance == 0) {
                 continue;
             }
-            positionBalance[i][tokenAfter] = beforeBalance.mul(amountNow).div(amountBefore);
-            positionBalance[i][tokenBefore] = 0;
+            positionBalance[pid][tokenAfter] = beforeBalance.mul(amountNow).div(amountBefore);
+            positionBalance[pid][tokenBefore] = 0;
             setSwithCounter ++;
         }
         uint256 activePosition = positionId.sub(closedPositionCount);
