@@ -21,15 +21,15 @@ async function main() {
   let swapRouter_address;
   let dodo_address;
   let DAI_ADDRESS = "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1";
-  let indexTokens = [
-    DAI_ADDRESS
-  ];
+  let snx_address = process.env.OP_SNX;
+
   if(network == 10) {
     weth_address = process.env.OP_WETH9;
     usdt_address = process.env.OP_USDT;
     pathFinder_address =  process.env.OP_PATH_FINDER_MAIN;
     swapRouter_address = process.env.OP_SWAP_ROUTER_V2;
     dodo_address = process.env.OP_DODO_MAIN;
+    filter_address = process.env.OP_FILTER;
   } else if(network == 31337) {
     weth_address = process.env.OP_WETH9;
     usdt_address = process.env.OP_USDT;
@@ -47,6 +47,7 @@ async function main() {
   let index_address = await dodo.indexMap(0);
   console.log(index_address);
 
+  const filter = await ethers.getContractAt('Filter', filter_address, deployer);
   const index = await ethers.getContractAt('Index', index_address, signer);
   const token = await ethers.getContractAt("@openzeppelin/contracts/token/ERC20/IERC20.sol:IERC20", usdt_address, signer);
   const weth = await ethers.getContractAt("@openzeppelin/contracts/token/ERC20/IERC20.sol:IERC20", weth_address, signer);
@@ -57,12 +58,15 @@ async function main() {
   // await tokenApproveTx.wait();
   // return;
 
-  let addIndexTokensTx = await index.addIndexTokens([DAI_ADDRESS]);
-  await addIndexTokensTx.wait();
-  return;
+  // let removeIndexTokensTx = await filter.removeIndexTokens([snx_address]);
+  // await removeIndexTokensTx.wait();
+  // console.log(removeIndexTokensTx.hash);
+  // let addIndexTokensTx = await filter.addIndexTokens([DAI_ADDRESS]);
+  // await addIndexTokensTx.wait();
+  // return;
 
   /// batch deal positions
-  let positionIds = [2,3];
+  let positionIds = [6,7];
   let calldataArray = new Array();
   let positionIdsArray = new Array();
 

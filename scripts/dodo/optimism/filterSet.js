@@ -54,10 +54,10 @@ async function main() {
   const filter = await ethers.getContractAt('Filter', filter_address, deployer);
   const usdtToken = await ethers.getContractAt('@openzeppelin/contracts/token/ERC20/IERC20.sol:IERC20', usdt_address, deployer);
  
-  let index_address = await dodo.indexMap(0);
+  let index_address = await dodo.indexMap(1);
   console.log(index_address);
 
-  console.log("indexTokensLenth is :", await filter.indexTokensLenth(index_address));
+  console.log("getIndexTokens is :", await filter.getIndexTokens(index_address));
   return;
 
   let manageIndexManagerTx = await filter.manageIndexManager(index_address, deployer.address, true);

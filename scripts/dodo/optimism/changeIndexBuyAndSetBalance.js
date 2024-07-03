@@ -24,6 +24,7 @@ async function main() {
   let indexTokens = [
     DAI_ADDRESS
   ];
+  let filter_address;
   if(network == 10) {
     weth_address = process.env.OP_WETH9;
     usdt_address = process.env.OP_USDT;

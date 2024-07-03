@@ -51,7 +51,7 @@ async function main() {
   const dodo = await ethers.getContractAt('DODO', dodo_address, signer);
 
 
-  let index_address = await dodo.indexMap(0);
+  let index_address = await dodo.indexMap(1);
   console.log(index_address);
 
   const index = await ethers.getContractAt('Index', index_address, signer);
@@ -74,7 +74,7 @@ async function main() {
   // console.log(setStaticIndexGasUsedTx.hash);
   // return;
 
-  let withdrawPositionTx = await index.withdraw(5, deployer.address);
+  let withdrawPositionTx = await index.withdraw(4, deployer.address);
   await withdrawPositionTx.wait();
   // function withdrawPosition(uint256 indexId, uint256 positionId) external {
   console.log(withdrawPositionTx.hash);

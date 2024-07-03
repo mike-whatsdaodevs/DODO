@@ -19,6 +19,7 @@ async function main() {
   let usdt_address;
   let pathFinder_address;
   let swapRouter_address;
+  let DAI_ADDRESS = "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1";
   let dodo_address;
   let indexTokens = [
     process.env.OP_USDC,
@@ -30,7 +31,8 @@ async function main() {
     // process.env.OP_LDO,
     // process.env.OP_W,
     // process.env.OP_PYTH,
-    process.env.OP_SNX
+    // process.env.OP_SNX
+     DAI_ADDRESS
   ];
   if(network == 10) {
     weth_address = process.env.OP_WETH9;
@@ -60,42 +62,74 @@ async function main() {
   const swap = await ethers.getContractAt('ISwapRouter02', swapRouter_address, signer);
   const pathFinder = await ethers.getContractAt('PathFinder', pathFinder_address, signer);
 
+  // let updateTokensTx = await pathFinder.updateTokens([]);
+  // await updateTokensTx.wait();
+  // console.log(updateTokensTx.hash);
+  // console.log(await pathFinder.getSharedTokens());
+  // // console.log(await index.counter(7));
 
-  let indexOwner = await index.owner();
-  console.log("index owner is :", indexOwner);
+  // let tx1 = await pathFinder.callStatic.exactInputPath(process.env.OP_WBTC, usdt_address, "681");
+  // console.log(tx1);return;
 
-  let gasUsed = await index.gasUsed();
-  console.log("gas used :", gasUsed);
+  /// batch deal positions
+  let positionIds = [4, 5];
 
-  let averageGasUsed = await index.averageGasUsed();
-  console.log("averageGasUsed used :", averageGasUsed);
 
-  let staticGasUsed = await index.staticGasUsed();
-  console.log("staticGasUsed used :", staticGasUsed);
+  // let positionsBalance1 = await index.getPositionsBalance(DAI_ADDRESS, positionIds);
+  // console.log("positionsBalance1 is", positionsBalance1);
 
-  let exchangeRate = await index.exchangeRate();
-  console.log("exchangeRate :", exchangeRate);
+  // let tokenBalance1 = await index.tokenBalance(DAI_ADDRESS)
+  // console.log(positionsBalance1, tokenBalance1);
 
-  let gasFeeRecipient = await index.gasFeeRecipient();
-  console.log("gasFeeRecipient :", gasFeeRecipient);
+  let calldataArray = new Array();
+  let positionIdsArray = new Array();
+  
+  for(let i=0; i < indexTokens.length ; i++) {
+      console.log("i is", i);
+      console.log("address is", indexTokens[i]);
+      let positionsBalance = await index.getPositionsBalance(indexTokens[i], positionIds);
+      console.log("positionsBalance is", positionsBalance);
 
-  let positionsGasUsedAverage = await index.positionsGasUsedAverage(5);
-  console.log("positionsGasUsedAverage :", positionsGasUsedAverage);
+      let tokenBalance = await index.tokenBalance(indexTokens[i]);
+      console.log(tokenBalance);
 
+      let amount = positionsBalance.tokenInBalance;
+
+      let token_address = indexTokens[i];
+      let tx = await pathFinder.callStatic.exactInputPath(token_address, usdt_address, amount);
+      // let res = await tx.wait();
+      console.log(tx);
+
+      if(tx.expectedAmount == 0) {
+        console.log("skip address is:", token_address);
+        continue;
+      }
+      let params = {
+        path: tx.path,
+        recipient: index_address,
+        amountIn: amount,
+        amountOutMinimum: 0
+      }
+      console.log(params);
+
+      /// construct calldata
+      let txcalldata = await swap.populateTransaction.exactInput(
+          params
+      );
+      calldataArray.push(txcalldata.data);
+      positionIdsArray.push(positionIds);
+  }
+
+  console.log(calldataArray);
+  console.log(positionIdsArray);
+
+  let tx3 = await index.swapAndSet(
+    positionIdsArray,
+    calldataArray
+  );
+  await tx3.wait();
+  console.log(tx3.hash);
   return;
-  let setGasFeeRecipientTx = await index.setGasFeeRecipient(deployer.address);
-  await setGasFeeRecipientTx.wait();
-  console.log(setGasFeeRecipientTx.hash);
-
-
-  let setExchangeRateTx = await index.setExchangeRate(ethers.utils.parseEther("0.0001"));
-  await setExchangeRateTx.wait();
-  console.log(setExchangeRateTx.hash);
-
-  /// 3000000
-  let setStaticGasUsedTx = await index.setStaticGasUsed(3000000);
-  await setStaticGasUsedTx.wait();
-  console.log(setStaticGasUsedTx.hash);
 }
 
 main()

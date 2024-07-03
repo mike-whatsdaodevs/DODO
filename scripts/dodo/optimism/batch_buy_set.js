@@ -52,7 +52,7 @@ async function main() {
 
   let dodoId = await dodo.id();
   console.log(dodoId);
-  let index_address = await dodo.indexMap(0);
+  let index_address = await dodo.indexMap(1);
   console.log(index_address);
 
   const index = await ethers.getContractAt('Index', index_address, signer);
@@ -105,7 +105,7 @@ async function main() {
 
 
   /// batch deal positions
-  let positionIds = [6,7];
+  let positionIds = [4 , 5];
   let calldataArray = new Array();
   let positionIdsArray = new Array();
 
@@ -114,7 +114,6 @@ async function main() {
   console.log("positionsBalance is", positionsBalance);
   let amount = Math.floor(positionsBalance.tokenInBalance.div(indexTokens.length));
   console.log("amount is", amount);
-  //indexTokens.length
 
   for(let i=0; i < indexTokens.length ; i++) {
       let token_address = indexTokens[i];
@@ -130,7 +129,7 @@ async function main() {
         path: tx.path,
         recipient: index_address,
         amountIn: amount,
-        amountOutMinimum: tx.expectedAmount
+        amountOutMinimum: 0
       }
       console.log(params);
 

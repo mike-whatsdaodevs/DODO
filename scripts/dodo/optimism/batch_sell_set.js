@@ -20,6 +20,7 @@ async function main() {
   let pathFinder_address;
   let swapRouter_address;
   let dodo_address;
+  let DAI_ADDRESS = "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1";
   let indexTokens = [
     process.env.OP_USDC,
     process.env.OP_WETH9,
@@ -30,7 +31,8 @@ async function main() {
     // process.env.OP_LDO,
     // process.env.OP_W,
     // process.env.OP_PYTH,
-    process.env.OP_SNX
+    process.env.OP_SNX,
+    DAI_ADDRESS
   ];
   if(network == 10) {
     weth_address = process.env.OP_WETH9;
@@ -51,7 +53,7 @@ async function main() {
   const dodo = await ethers.getContractAt('DODO', dodo_address, signer);
 
 
-  let index_address = await dodo.indexMap(0);
+  let index_address = await dodo.indexMap(1);
   console.log(index_address);
 
   const index = await ethers.getContractAt('Index', index_address, signer);
@@ -61,14 +63,16 @@ async function main() {
   const pathFinder = await ethers.getContractAt('PathFinder', pathFinder_address, signer);
 
 
-
-
-  // for(let i=0; i< indexTokens.length; i++) {
-  //     tokenApproveTx = await index.safeApprove(indexTokens[i], swapRouter_address);
-  //     await tokenApproveTx.wait();
-  //     console.log("i is ", i, indexTokens[i]);
-  // }
-  // return;
+  for(let i=0; i< indexTokens.length; i++) {
+ 
+      let allowance = await token.attach(indexTokens[i]).allowance(index_address, swapRouter_address);
+      if(allowance == 0) {
+          tokenApproveTx = await index.safeApprove(indexTokens[i], swapRouter_address);
+          await tokenApproveTx.wait();
+          console.log("i is ", i, indexTokens[i]);
+      }
+  }
+  return;
 
 
   /// batch deal positions
