@@ -20,7 +20,7 @@ contract IndexGas {
     mapping(uint256 => GasUsedAverage) public positionsGasUsedAverage;
 
     function calcuAverageGasUsed(uint256 activePosition) internal returns (uint256) {
-        uint256 currentAverage = gasUsed.div(activePosition);
+        uint256 currentAverage = activePosition == 0 ? gasUsed : gasUsed.div(activePosition);
         averageGasUsed = currentAverage;
         return currentAverage;
     }
