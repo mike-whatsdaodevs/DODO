@@ -53,7 +53,7 @@ async function main() {
   const dodo = await ethers.getContractAt('DODO', dodo_address, signer);
 
 
-  let index_address = await dodo.indexMap(1);
+  let index_address = await dodo.indexMap(2);
   console.log(index_address);
 
   const index = await ethers.getContractAt('Index', index_address, signer);
@@ -62,17 +62,17 @@ async function main() {
   const swap = await ethers.getContractAt('ISwapRouter02', swapRouter_address, signer);
   const pathFinder = await ethers.getContractAt('PathFinder', pathFinder_address, signer);
 
-  // let updateTokensTx = await pathFinder.updateTokens([]);
-  // await updateTokensTx.wait();
-  // console.log(updateTokensTx.hash);
-  // console.log(await pathFinder.getSharedTokens());
+  let updateTokensTx = await pathFinder.updateTokens([]);
+  await updateTokensTx.wait();
+  console.log(updateTokensTx.hash);
+  console.log(await pathFinder.getSharedTokens());
   // // console.log(await index.counter(7));
 
   // let tx1 = await pathFinder.callStatic.exactInputPath(process.env.OP_WBTC, usdt_address, "681");
   // console.log(tx1);return;
 
   /// batch deal positions
-  let positionIds = [10, 11, 12];
+  let positionIds = [5, 6, 7];
 
 
   // let positionsBalance1 = await index.getPositionsBalance(DAI_ADDRESS, positionIds);
@@ -102,7 +102,7 @@ async function main() {
 
       if(tx.expectedAmount == 0) {
         console.log("skip address is:", token_address);
-        continue;
+        return;
       }
       let params = {
         path: tx.path,

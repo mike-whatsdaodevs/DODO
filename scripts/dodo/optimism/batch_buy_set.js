@@ -52,7 +52,7 @@ async function main() {
 
   let dodoId = await dodo.id();
   console.log(dodoId);
-  let index_address = await dodo.indexMap(1);
+  let index_address = await dodo.indexMap(2);
   console.log(index_address);
 
   const index = await ethers.getContractAt('Index', index_address, signer);
@@ -105,7 +105,7 @@ async function main() {
 
 
   /// batch deal positions
-  let positionIds = [10, 11, 12];
+  let positionIds = [5, 6, 7];
   let calldataArray = new Array();
   let positionIdsArray = new Array();
 
@@ -123,7 +123,7 @@ async function main() {
 
       if(tx.expectedAmount == 0) {
         console.log("skip address is:", token_address);
-        continue;
+        return;
       }
       let params = {
         path: tx.path,

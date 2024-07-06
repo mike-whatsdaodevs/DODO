@@ -64,7 +64,7 @@ contract Index is IIndex, IndexGas, OwnableUpgradeable, UUPSUpgradeable, Pausabl
     mapping(uint256 => mapping(address => uint256)) public override positionBalance;
 
     mapping(address => mapping(address => uint256)) public tokenSwithAmount;
-    uint256 setSwithCounter;
+    uint256 public setSwithCounter;
 
     address public filter;
 
@@ -345,8 +345,8 @@ contract Index is IIndex, IndexGas, OwnableUpgradeable, UUPSUpgradeable, Pausabl
             }
             if(positionStatus[pid] >= Enum.PositionStatus.SOLD) {
                 closedPositionCount ++;
-                uint256 currentAverage = calcuAverageGasUsed(positionId.sub(closedPositionCount));
-                closedPositionGasUsedAverage(pid, currentAverage);
+                calcuAverageGasUsed(positionId.sub(closedPositionCount));
+                closedPositionGasUsedAverage(pid);
             }
         }
         if(i == length) {
@@ -356,6 +356,7 @@ contract Index is IIndex, IndexGas, OwnableUpgradeable, UUPSUpgradeable, Pausabl
     }
 
     function setPositionsSwithBalance(address tokenBefore, address tokenAfter, uint256[] calldata positionIds) external {
+        uint256 internalGas = gasleft();
         uint256 amountBefore = tokenSwithAmount[tokenBefore][tokenAfter];
         uint256 amountNow = tokenBalance(tokenAfter);
         uint256 length = positionIds.length;
@@ -375,6 +376,7 @@ contract Index is IIndex, IndexGas, OwnableUpgradeable, UUPSUpgradeable, Pausabl
             delete tokenSwithAmount[tokenBefore][tokenAfter];
             setSwithCounter = 0;
         }
+        gasUsed += internalGas - gasleft();
     }
 
     function setPositionIdsHash(

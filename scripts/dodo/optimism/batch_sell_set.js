@@ -32,7 +32,6 @@ async function main() {
     // process.env.OP_W,
     // process.env.OP_PYTH,
     process.env.OP_SNX,
-    DAI_ADDRESS
   ];
   if(network == 10) {
     weth_address = process.env.OP_WETH9;
@@ -53,7 +52,7 @@ async function main() {
   const dodo = await ethers.getContractAt('DODO', dodo_address, signer);
 
 
-  let index_address = await dodo.indexMap(1);
+  let index_address = await dodo.indexMap(2);
   console.log(index_address);
 
   const index = await ethers.getContractAt('Index', index_address, signer);
@@ -72,20 +71,21 @@ async function main() {
           console.log("i is ", i, indexTokens[i]);
       }
   }
-  return;
-
-
   /// batch deal positions
-  let positionIds = [4,5];
+  let positionIds = [2, 3, 4];
   let calldataArray = new Array();
   let positionIdsArray = new Array();
 
-  //indexTokens.length
-  
   for(let i=0; i < indexTokens.length ; i++) {
       let positionsBalance = await index.getPositionsBalance(indexTokens[i], positionIds);
       console.log("positionsBalance is", positionsBalance);
       let amount = positionsBalance.tokenInBalance;
+
+      // let hash = await index.hashPositionIds(positionIds, usdt_address, indexTokens[i]);
+      // let positionIdsHashData = await index.positionIdsHashList(hash);
+      // console.log("position data is", positionIdsHashData);
+
+      // continue;
 
       let token_address = indexTokens[i];
       let tx = await pathFinder.callStatic.exactInputPath(token_address, usdt_address, amount);
@@ -94,13 +94,13 @@ async function main() {
 
       if(tx.expectedAmount == 0) {
         console.log("skip address is:", token_address);
-        continue;
+        return;
       }
       let params = {
         path: tx.path,
         recipient: index_address,
         amountIn: amount,
-        amountOutMinimum: tx.expectedAmount
+        amountOutMinimum: 0
       }
       console.log(params);
 
@@ -114,7 +114,6 @@ async function main() {
 
   console.log(calldataArray);
   console.log(positionIdsArray);
-
   let tx3 = await index.swapAndSet(
     positionIdsArray,
     calldataArray

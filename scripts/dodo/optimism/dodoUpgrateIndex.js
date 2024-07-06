@@ -50,15 +50,15 @@ async function main() {
 
   const dodo = await ethers.getContractAt('DODO', dodo_address, signer);
 
-  let index_address = await dodo.indexMap(1);
+  let index_address = await dodo.indexMap(2);
   console.log(index_address);
   const index = await ethers.getContractAt('Index', index_address, signer);
 
-  let index_template_address = "0xcd3F1a072a1805ab7a9F2e6109659DE23d033884";
+  let index_template_address = "0xea54aE1Ff570C6870fFc5fd29967656791C315b8";
 
   let calldata = await dodo.populateTransaction.upgradeTo(index_template_address);
 
-  let upgradeTx = await dodo.managerIndex(1, calldata.data);
+  let upgradeTx = await dodo.managerIndex(2, calldata.data);
   await upgradeTx.wait();
   console.log(upgradeTx.hash);
 }

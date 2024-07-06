@@ -21,16 +21,15 @@ contract IndexGas {
 
     function calcuAverageGasUsed(uint256 activePosition) internal returns (uint256) {
         uint256 currentAverage = activePosition == 0 ? gasUsed : gasUsed.div(activePosition);
-        averageGasUsed = currentAverage;
-        return currentAverage;
+        averageGasUsed += currentAverage;
     }
 
     function initPositionGasUsedAverage(uint256 positionId) internal {
         positionsGasUsedAverage[positionId].created = averageGasUsed; 
     }
 
-    function closedPositionGasUsedAverage(uint256 positionId, uint256 currentAverage) internal {
-        positionsGasUsedAverage[positionId].closed = currentAverage;
+    function closedPositionGasUsedAverage(uint256 positionId) internal {
+        positionsGasUsedAverage[positionId].closed = averageGasUsed;
     }
 
     function setExchangeRate(uint256 newExchangeRate) external {

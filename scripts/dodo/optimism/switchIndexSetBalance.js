@@ -45,7 +45,7 @@ async function main() {
 
   let dodoId = await dodo.id();
   console.log(dodoId);
-  let index_address = await dodo.indexMap(1);
+  let index_address = await dodo.indexMap(2);
   console.log("index_address :", index_address);
 
   const index = await ethers.getContractAt('Index', index_address, signer);
@@ -55,7 +55,7 @@ async function main() {
   const pathFinder = await ethers.getContractAt('PathFinder', pathFinder_address, signer);
 
   let amount = await index.tokenSwithAmount(removed_token, DAI_ADDRESS);
-  console.log("amount is:", amount);
+  console.log("amount before is:", amount);
 
   let tokenBalance = await index.tokenBalance(DAI_ADDRESS);
   console.log("dai balance is:", tokenBalance);
@@ -63,8 +63,7 @@ async function main() {
 
   let snxtokenBalance = await index.tokenBalance(removed_token);
   console.log("snx balance is:", snxtokenBalance);
-
-  let positionIds = [10, 11, 12];
+  let positionIds = [5, 6, 7];
 
   let positionbalance0 = await index.positionBalance(positionIds[0], removed_token);
   let positionbalance1 = await index.positionBalance(positionIds[1], removed_token);
@@ -74,7 +73,7 @@ async function main() {
 
   let positionbalance01 = await index.positionBalance(positionIds[0], DAI_ADDRESS);
   let positionbalance11 = await index.positionBalance(positionIds[1], DAI_ADDRESS);
-  let positionbalance02 = await index.positionBalance(positionIds[1], DAI_ADDRESS);
+  let positionbalance02 = await index.positionBalance(positionIds[2], DAI_ADDRESS);
   console.log(ethers.utils.formatEther(positionbalance01), ethers.utils.formatEther(positionbalance11), ethers.utils.formatEther(positionbalance02));
   return;
   let tx = await index.setPositionsSwithBalance(

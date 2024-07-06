@@ -48,7 +48,7 @@ async function main() {
 
   }
 
-  let index_template_address = "0xc9D3F58AeA6e2752c0672f94d5223E6e71274fC3";
+  let index_template_address = "0x9582E7533FC661dd990f78632F655c68aA830ed5";
 
   const dodo = await ethers.getContractAt('DODO', dodo_address, signer);
 

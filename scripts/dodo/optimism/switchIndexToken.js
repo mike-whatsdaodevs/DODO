@@ -47,7 +47,7 @@ async function main() {
 
   let dodoId = await dodo.id();
   console.log(dodoId);
-  let index_address = await dodo.indexMap(1);
+  let index_address = await dodo.indexMap(2);
   console.log("index_address :", index_address);
 
   const index = await ethers.getContractAt('Index', index_address, signer);
@@ -61,24 +61,25 @@ async function main() {
   // let tokenApproveTx = await index.safeApprove(DAI_ADDRESS, swapRouter_address);
   // await tokenApproveTx.wait();
 
-  // let tokenApproveTx1 = await index.safeApprove(removed_token, swapRouter_address);
-  // await tokenApproveTx.wait();
+  // // let tokenApproveTx1 = await index.safeApprove(removed_token, swapRouter_address);
+  // // await tokenApproveTx.wait();
 
   // let addIndexTokensTx = await filter.addIndexTokens(index_address, [DAI_ADDRESS]);
   // await addIndexTokensTx.wait();
 
   // let removeIndexTokensTx = await filter.removeIndexTokens(index_address, [removed_token]);
   // await removeIndexTokensTx.wait();
+  // return;
 
 
-  // let updateTokensTx = await pathFinder.updateTokens([]);
-  // await updateTokensTx.wait();
-  // console.log(updateTokensTx.hash);
+  let updateTokensTx = await pathFinder.updateTokens([weth_address, usdt_address]);
+  await updateTokensTx.wait();
+  console.log(updateTokensTx.hash);
   console.log(await pathFinder.getSharedTokens());
   // console.log(await index.counter(7));
 
   /// batch deal positions
-  let positionIds = [10, 11, 12];
+  let positionIds = [5, 6, 7];
 
   console.log(await filter.getIndexTokens(index_address));
 

@@ -55,6 +55,8 @@ async function main() {
 
   console.log(createIndexTx.hash);
 
+  console.log(await dodo.id());
+
 }
 
 main()
