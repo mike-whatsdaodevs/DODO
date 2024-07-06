@@ -6,8 +6,11 @@ import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 contract IndexGas {
 
     using SafeMath for uint256;
+
+    bytes32 public constant KEY_STORE_LOCK = keccak256("KEY_STORE_LOCK");
     /// gas
-    uint256 public gasUsed; 
+    uint256 public gasUsed;
+    uint256 public lastGasUsed;
     uint256 public averageGasUsed;
     uint256 public staticGasUsed;
     uint256 public exchangeRate;
@@ -20,15 +23,21 @@ contract IndexGas {
     mapping(uint256 => GasUsedAverage) public positionsGasUsedAverage;
 
     function calcuAverageGasUsed(uint256 activePosition) internal returns (uint256) {
-        uint256 currentAverage = activePosition == 0 ? gasUsed : gasUsed.div(activePosition);
+        uint256 gas = gasUsed.sub(lastGasUsed);
+        uint256 currentAverage = activePosition == 0 ? gas : gas.div(activePosition);
         averageGasUsed += currentAverage;
+        lastGasUsed = gasUsed;
     }
 
     function initPositionGasUsedAverage(uint256 positionId) internal {
         positionsGasUsedAverage[positionId].created = averageGasUsed; 
     }
 
-    function closedPositionGasUsedAverage(uint256 positionId) internal {
+    function closedPositionGasUsedAverage(uint256 positionId, uint256 activePosition) internal {
+        if (! isLocked()) {
+            calcuAverageGasUsed(activePosition);
+            lock();
+        }
         positionsGasUsedAverage[positionId].closed = averageGasUsed;
     }
 
@@ -51,6 +60,20 @@ contract IndexGas {
     function calcuPositionGasUsed(uint256 positionId) public returns (uint256) {
         GasUsedAverage memory average = positionsGasUsedAverage[positionId];
         return average.closed - average.created;
+    }
+
+    function lock() internal {
+        bytes32 lockFlag = KEY_STORE_LOCK;
+        assembly ("memory-safe") {
+            tstore(lockFlag, 1)
+        }
+    }
+
+    function isLocked() internal view returns (bool locked) {
+        bytes32 lockFlag = KEY_STORE_LOCK;
+        assembly {
+            locked := tload(lockFlag)
+        }
     }
 
 }

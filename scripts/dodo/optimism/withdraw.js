@@ -51,7 +51,7 @@ async function main() {
   const dodo = await ethers.getContractAt('DODO', dodo_address, signer);
 
 
-  let index_address = await dodo.indexMap(2);
+  let index_address = await dodo.indexMap(3);
   console.log(index_address);
 
   const index = await ethers.getContractAt('Index', index_address, signer);
@@ -69,15 +69,17 @@ async function main() {
   // await setExchangeRateTx.wait();
   // console.log(setExchangeRateTx.hash);
 
-  // let setStaticIndexGasUsedTx = await index.setStaticIndexGasUsed(100);
-  // await setStaticIndexGasUsedTx.wait();
-  // console.log(setStaticIndexGasUsedTx.hash);
-  // return;
 
-  let positionsGasUsedAverage = await index.positionsGasUsedAverage(5);
+  let gasUsed = await index.gasUsed();
+  console.log(gasUsed);
+  let lastGasUsed = await index.lastGasUsed();
+  console.log(lastGasUsed);
+  ///
+
+  let positionsGasUsedAverage = await index.positionsGasUsedAverage(3);
   console.log(positionsGasUsedAverage);
 
-  let withdrawPositionTx = await index.withdraw(5, deployer.address);
+  let withdrawPositionTx = await index.withdraw(3, deployer.address);
   await withdrawPositionTx.wait();
   // function withdrawPosition(uint256 indexId, uint256 positionId) external {
   console.log(withdrawPositionTx.hash);

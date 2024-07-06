@@ -52,7 +52,7 @@ async function main() {
   const dodo = await ethers.getContractAt('DODO', dodo_address, signer);
 
 
-  let index_address = await dodo.indexMap(2);
+  let index_address = await dodo.indexMap(3);
   console.log(index_address);
 
   const index = await ethers.getContractAt('Index', index_address, signer);
@@ -72,7 +72,7 @@ async function main() {
       }
   }
   /// batch deal positions
-  let positionIds = [2, 3, 4];
+  let positionIds = [2, 3];
   let calldataArray = new Array();
   let positionIdsArray = new Array();
 

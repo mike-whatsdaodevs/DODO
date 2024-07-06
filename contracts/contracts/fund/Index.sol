@@ -294,6 +294,7 @@ contract Index is IIndex, IndexGas, OwnableUpgradeable, UUPSUpgradeable, Pausabl
         length = positionIds.length;
         for(uint256 i; i < length; ++i) {
             uint256 balance = positionBalance[positionIds[i]][token];
+            if(balance == 0) { revert(); }
             tokenInBalance = tokenInBalance.add(balance);
         }
     }
@@ -344,9 +345,8 @@ contract Index is IIndex, IndexGas, OwnableUpgradeable, UUPSUpgradeable, Pausabl
                 } 
             }
             if(positionStatus[pid] >= Enum.PositionStatus.SOLD) {
+                closedPositionGasUsedAverage(pid, positionId.sub(closedPositionCount));
                 closedPositionCount ++;
-                calcuAverageGasUsed(positionId.sub(closedPositionCount));
-                closedPositionGasUsedAverage(pid);
             }
         }
         if(i == length) {

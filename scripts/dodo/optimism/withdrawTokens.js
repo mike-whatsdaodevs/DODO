@@ -12,56 +12,60 @@ async function main() {
   const [deployer] = await ethers.getSigners()
 
   console.log('deployer:' + deployer.address)
-
   const network = (await ethers.provider.getNetwork()).chainId;
   console.log(network);
 
-  let pathFinder_address = "0xC92B72ecf468D2642992b195bea99F9B9BB4A838"//process.env.OP_PATH_FINDER_MAIN;
-  let weth9_address = process.env.OP_WETH9;
-  let usdt_address = process.env.OP_USDT;
+  let weth_address;
+  let usdt_address;
+  let pathFinder_address;
+  let swapRouter_address;
+  let dodo_address;
+  let indexTokens = [
+    process.env.OP_USDC,
+    process.env.OP_WETH9,
+    process.env.OP_WBTC,
+    process.env.OP_LINK,
+    process.env.OP_OP,
+    process.env.OP_WLD,
+    // process.env.OP_LDO,
+    // process.env.OP_W,
+    // process.env.OP_PYTH,
+    process.env.OP_SNX
+  ];
+  if(network == 10) {
+    weth_address = process.env.OP_WETH9;
+    usdt_address = process.env.OP_USDT;
+    pathFinder_address =  process.env.OP_PATH_FINDER_MAIN;
+    swapRouter_address = process.env.OP_SWAP_ROUTER_V2;
+    dodo_address = process.env.OP_DODO_MAIN;
+  } else if(network == 31337) {
+    weth_address = process.env.OP_WETH9;
+    usdt_address = process.env.OP_USDT;
+    pathFinder_address =  process.env.OP_PATH_FINDER_MAIN;
+    swapRouter_address = process.env.OP_SWAP_ROUTER_V2;
+    dodo_address = process.env.OP_DODO_LOCAL;
+  } else {
 
-  const pathFinder = await ethers.getContractAt('PathFinder', pathFinder_address, signer)
+  }
 
-  let amount = ethers.utils.parseUnits("100", 6);
-
-  let tx = await pathFinder.callStatic.exactInputPath(usdt_address, weth9_address, amount);
- // let res = await tx.wait();
-
-  decodePath(tx.path);
-  console.log(tx);
-
-  // let ethAmount = await priceOracle.convertToETH(token_address, ethers.utils.parseUnits("1", 6));
-  // console.log(
-  // 	ethers.utils.formatEther(ethAmount)
-  // );
+  const dodo = await ethers.getContractAt('DODO', dodo_address, signer);
 
 
-}
+  let index_address = await dodo.indexMap(2);
+  console.log(index_address);
 
-function decodePath(path) {
-    const decodedPath = []
+  const index = await ethers.getContractAt('Index', index_address, signer);
+  const token = await ethers.getContractAt("@openzeppelin/contracts/token/ERC20/IERC20.sol:IERC20", usdt_address, signer);
+  const weth = await ethers.getContractAt("@openzeppelin/contracts/token/ERC20/IERC20.sol:IERC20", weth_address, signer);
+  const swap = await ethers.getContractAt('ISwapRouter02', swapRouter_address, signer);
+  const pathFinder = await ethers.getContractAt('PathFinder', pathFinder_address, signer);
 
-    const pathData = path.slice(2)
+  let calldata = await index.populateTransaction.recovery(usdt_address, deployer.address);
 
-    let idx = 0;
-    let inputToken
+  let upgradeTx = await dodo.managerIndex(2, calldata.data);
+  await upgradeTx.wait();
+  console.log(upgradeTx.hash);
 
-    inputToken = `0x${pathData.slice(idx, idx + 40)}`
-    idx += 40;
-
-    while (idx < pathData.length) {
-        const fee = parseInt(pathData.slice(idx, idx + 6), 16)
-        idx += 6;
-
-        const outputToken = `0x${pathData.slice(idx, idx + 40)}`
-        idx += 40;
-
-        decodedPath.push({ inputToken: inputToken, fee, outputToken: outputToken })
-
-        inputToken = outputToken
-    }
-
-    console.log(decodedPath)
 }
 
 main()
@@ -70,4 +74,3 @@ main()
     console.error(error)
     process.exit(1)
   })
-

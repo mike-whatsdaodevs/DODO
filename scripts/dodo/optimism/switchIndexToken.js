@@ -47,7 +47,7 @@ async function main() {
 
   let dodoId = await dodo.id();
   console.log(dodoId);
-  let index_address = await dodo.indexMap(2);
+  let index_address = await dodo.indexMap(3);
   console.log("index_address :", index_address);
 
   const index = await ethers.getContractAt('Index', index_address, signer);
@@ -58,30 +58,32 @@ async function main() {
   const pathFinder = await ethers.getContractAt('PathFinder', pathFinder_address, signer);
 
 
-  // let tokenApproveTx = await index.safeApprove(DAI_ADDRESS, swapRouter_address);
-  // await tokenApproveTx.wait();
+  let tokenApproveTx = await index.safeApprove(DAI_ADDRESS, swapRouter_address);
+  await tokenApproveTx.wait();
 
   // // let tokenApproveTx1 = await index.safeApprove(removed_token, swapRouter_address);
   // // await tokenApproveTx.wait();
 
-  // let addIndexTokensTx = await filter.addIndexTokens(index_address, [DAI_ADDRESS]);
-  // await addIndexTokensTx.wait();
+  let addIndexTokensTx = await filter.addIndexTokens(index_address, [DAI_ADDRESS]);
+  await addIndexTokensTx.wait();
 
-  // let removeIndexTokensTx = await filter.removeIndexTokens(index_address, [removed_token]);
-  // await removeIndexTokensTx.wait();
+  let removeIndexTokensTx = await filter.removeIndexTokens(index_address, [removed_token]);
+  await removeIndexTokensTx.wait();
+
+  console.log(await filter.getIndexTokens(index_address));
+
   // return;
 
 
-  let updateTokensTx = await pathFinder.updateTokens([weth_address, usdt_address]);
-  await updateTokensTx.wait();
-  console.log(updateTokensTx.hash);
-  console.log(await pathFinder.getSharedTokens());
+  // let updateTokensTx = await pathFinder.updateTokens([weth_address, usdt_address]);
+  // await updateTokensTx.wait();
+  // console.log(updateTokensTx.hash);
+  // console.log(await pathFinder.getSharedTokens());
   // console.log(await index.counter(7));
 
   /// batch deal positions
-  let positionIds = [5, 6, 7];
+  let positionIds = [4, 5, 6];
 
-  console.log(await filter.getIndexTokens(index_address));
 
   let calldataArray = new Array();
   let positionIdsArray = new Array();
