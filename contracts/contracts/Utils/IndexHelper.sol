@@ -2,7 +2,7 @@
 pragma solidity >=0.8.14;
 import {IIndex} from "../interfaces/IIndex.sol";
 import {Enum} from "../libraries/Enum.sol";
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract IndexHelper {
 

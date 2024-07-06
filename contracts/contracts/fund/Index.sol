@@ -718,7 +718,7 @@ contract Index is IIndex, IndexGas, OwnableUpgradeable, UUPSUpgradeable, Pausabl
     }
 
     /// @dev manage fee rate
-    function manageFeeRate(uint256 newFeeRate) external {
+    function manageFeeRate(uint256 newFeeRate) external onlyOwner {
         require(newFeeRate > 0 && newFeeRate < Constants.DENOMINATOR, "E: Fee rate error");
 
         emit ChangeFeeRate(THIS, feeRate, newFeeRate, block.timestamp);
@@ -726,7 +726,7 @@ contract Index is IIndex, IndexGas, OwnableUpgradeable, UUPSUpgradeable, Pausabl
     }
 
     /// set benchmark
-    function setBenchmark(address[] memory tokens, uint256[] memory prices) external {
+    function setBenchmark(address[] memory tokens, uint256[] memory prices) external onlyOwner.    {
         uint256 length = tokens.length;
         for(uint256 i; i < length; i++) {
             benchmark[tokens[i]] = prices[i];
@@ -787,7 +787,7 @@ contract Index is IIndex, IndexGas, OwnableUpgradeable, UUPSUpgradeable, Pausabl
     }
 
     /// force withdraw token balance
-    function recovery(address token, address recipient) external {
+    function recovery(address token, address recipient) external onlyOwner {
         uint256 balance = IERC20(token).balanceOf(THIS);
         token.safeTransfer(recipient, balance);
         emit Withdraw(0, recipient, balance, block.timestamp);
