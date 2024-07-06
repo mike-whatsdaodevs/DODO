@@ -100,4 +100,12 @@ interface IIndex {
         uint256 positionId, 
         Enum.PositionStatus status
     ) external;
+
+    function swapMultiCall(uint256[][] memory positionIdsArray, bytes[] calldata data) external payable;
+
+    function setPositionsSwithBalance(
+        address tokenBefore, 
+        address tokenAfter, 
+        uint256[] calldata positionIds
+    ) external;
 }

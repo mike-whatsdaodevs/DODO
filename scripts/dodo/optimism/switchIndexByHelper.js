@@ -23,6 +23,7 @@ async function main() {
   let DAI_ADDRESS = "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1";
   let removed_token = process.env.OP_SNX;
   let filter_address;
+  let indexHelper_address;
   let indexTokens = [
     DAI_ADDRESS
   ];
@@ -33,6 +34,7 @@ async function main() {
     swapRouter_address = process.env.OP_SWAP_ROUTER_V2;
     dodo_address = process.env.OP_DODO_MAIN;
     filter_address = process.env.OP_FILTER;
+    indexHelper_address = process.env.OP_INDEX_HELPER;
   } else if(network == 31337) {
     weth_address = process.env.OP_WETH9;
     usdt_address = process.env.OP_USDT;
@@ -56,22 +58,23 @@ async function main() {
   const weth = await ethers.getContractAt("@openzeppelin/contracts/token/ERC20/IERC20.sol:IERC20", weth_address, signer);
   const swap = await ethers.getContractAt('ISwapRouter02', swapRouter_address, signer);
   const pathFinder = await ethers.getContractAt('PathFinder', pathFinder_address, signer);
+  const indexhelper = await ethers.getContractAt('IndexHelper', indexHelper_address, signer);
 
 
-  let tokenApproveTx = await index.safeApprove(DAI_ADDRESS, swapRouter_address);
-  await tokenApproveTx.wait();
+  // let tokenApproveTx = await index.safeApprove(DAI_ADDRESS, swapRouter_address);
+  // await tokenApproveTx.wait();
 
   // // let tokenApproveTx1 = await index.safeApprove(removed_token, swapRouter_address);
   // // await tokenApproveTx.wait();
-
-  let addIndexTokensTx = await filter.addIndexTokens(index_address, [DAI_ADDRESS]);
-  await addIndexTokensTx.wait();
-
-  let removeIndexTokensTx = await filter.removeIndexTokens(index_address, [removed_token]);
-  await removeIndexTokensTx.wait();
-
   console.log(await filter.getIndexTokens(index_address));
 
+  // let changeIndexTokenTx = await indexhelper.changeIndexTokens(
+  //   index_address, 
+  //   [DAI_ADDRESS], 
+  //   [removed_token]
+  // );
+
+  // console.log(await filter.getIndexTokens(index_address));
   // return;
 
 
@@ -114,16 +117,15 @@ async function main() {
   let txcalldata = await swap.populateTransaction.exactInput(
       params
   );
-  calldataArray.push(txcalldata.data);
-  positionIdsArray.push([]);
+  console.log(txcalldata.data);
 
-  console.log(calldataArray);
-  console.log(positionIdsArray);
-
-  let tx3 = await index.swapMultiCall(
-    positionIdsArray,
-    calldataArray
-  );
+  let tx3 = await indexhelper.switchPositions(
+        index_address, 
+        txcalldata.data,
+        positionIds,
+        removed_token,
+        DAI_ADDRESS
+  ); 
   await tx3.wait();
   console.log(tx3.hash);
   return;

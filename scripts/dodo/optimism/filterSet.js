@@ -21,6 +21,7 @@ async function main() {
   let swapRouter_address;
   let dodo_address;
   let filter_address;
+  let indexHelper_address;
   let indexTokens = [
     process.env.OP_USDC,
     process.env.OP_WETH9,
@@ -40,6 +41,7 @@ async function main() {
     swapRouter_address = process.env.OP_SWAP_ROUTER_V2;
     dodo_address = process.env.OP_DODO_MAIN;
     filter_address = process.env.OP_FILTER;
+    indexHelper_address = process.env.OP_INDEX_HELPER;
   } else if(network == 31337) {
     weth_address = process.env.OP_WETH9;
     usdt_address = process.env.OP_USDT;
@@ -59,9 +61,10 @@ async function main() {
 
   console.log("getIndexTokens is :", await filter.getIndexTokens(index_address));
 
-  let manageIndexManagerTx = await filter.manageIndexManager(index_address, deployer.address, true);
+  let manageIndexManagerTx = await filter.manageIndexManager(index_address, indexHelper_address, true);
   await manageIndexManagerTx.wait();
   console.log(manageIndexManagerTx.hash);
+  return
   
   let addIndexTokensTx = await filter.addIndexTokens(index_address, indexTokens);
   await addIndexTokensTx.wait();

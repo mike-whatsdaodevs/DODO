@@ -3,10 +3,16 @@ pragma solidity >=0.8.14;
 import {IIndex} from "../interfaces/IIndex.sol";
 import {Enum} from "../libraries/Enum.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {IFilter} from "../interfaces/IFilter.sol";
 
-contract IndexHelper {
+contract IndexHelper is Ownable {
 
-    constructor() {}
+    IFilter public filter;
+
+    constructor(address _filter) {
+        filter = IFilter(_filter);
+    }
 
     function batchGetPositionStatus(
         address indexAddress, 
@@ -56,5 +62,28 @@ contract IndexHelper {
                 counter ++;
             }
         }
+    }
+
+    function changeIndexTokens(address indexAddress, address[] memory addTokens, address[] memory removedTokens) external onlyOwner {
+        filter.addIndexTokens(indexAddress, addTokens);
+        filter.removeIndexTokens(indexAddress, removedTokens);
+    }
+
+    function switchPositions(
+        address indexAddress, 
+        bytes calldata data,
+        uint256[] memory positionIds,
+        address removedToken,
+        address addToken
+    ) external onlyOwner {
+        uint256[][] memory positionArr = new uint256[][](1);
+        bytes[] memory dataArr = new bytes[](1);
+        dataArr[0] = data;
+        IIndex(indexAddress).swapMultiCall(positionArr, dataArr);
+        IIndex(indexAddress).setPositionsSwithBalance(
+            removedToken, 
+            addToken, 
+            positionIds
+        );
     }
 }

@@ -105,7 +105,7 @@ async function main() {
 
 
   /// batch deal positions
-  let positionIds = [4, 5, 6];
+  let positionIds = [7, 8];
   let calldataArray = new Array();
   let positionIdsArray = new Array();
 

@@ -23,12 +23,10 @@ async function main() {
   // let weth9_address = process.env.WETH9;
   // let usdc_address = process.env.USDC;
 
-  let weth9_address = process.env.OP_WETH9;
-  let usdt_address = process.env.OP_USDT;
-
+  let filter_address = process.env.OP_FILTER;
 
   const IndexHelper = await hre.ethers.getContractFactory('IndexHelper')
-  const indexHelper = await IndexHelper.deploy();
+  const indexHelper = await IndexHelper.deploy(filter_address);
   await indexHelper.deployed()
   console.log('indexHelper deployed to:', indexHelper.address)
   

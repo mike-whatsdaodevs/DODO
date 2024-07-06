@@ -76,10 +76,10 @@ async function main() {
   console.log(lastGasUsed);
   ///
 
-  let positionsGasUsedAverage = await index.positionsGasUsedAverage(3);
+  let positionsGasUsedAverage = await index.positionsGasUsedAverage(6);
   console.log(positionsGasUsedAverage);
 
-  let withdrawPositionTx = await index.withdraw(3, deployer.address);
+  let withdrawPositionTx = await index.withdraw(6, deployer.address);
   await withdrawPositionTx.wait();
   // function withdrawPosition(uint256 indexId, uint256 positionId) external {
   console.log(withdrawPositionTx.hash);
