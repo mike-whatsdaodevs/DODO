@@ -73,16 +73,17 @@ async function main() {
 
 
   /// batch deal positions
-  let positionIds = [4,5];
+  let positionIds = [10, 11, 12];
 
   console.log(await index.positionStatus(positionIds[0]));
   console.log(await index.positionStatus(positionIds[1]));
-  for(let i=0; i < indexTokens.length ; i++) {
-      let positionsBalance0 = await index.positionBalance(positionIds[0], usdt_address);
-      console.log(positionsBalance0);
-      let positionsBalance1 = await index.positionBalance(positionIds[1], usdt_address);
-      console.log(positionsBalance1);
-  }
+  console.log(await index.positionStatus(positionIds[2]));
+  let positionsBalance0 = await index.positionBalance(positionIds[0], usdt_address);
+  console.log(positionsBalance0);
+  let positionsBalance1 = await index.positionBalance(positionIds[1], usdt_address);
+  console.log(positionsBalance1);
+  let positionsBalance2 = await index.positionBalance(positionIds[2], usdt_address);
+  console.log(positionsBalance2);
 
 }
 

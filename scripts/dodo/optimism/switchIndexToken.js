@@ -78,7 +78,7 @@ async function main() {
   // console.log(await index.counter(7));
 
   /// batch deal positions
-  let positionIds = [2, 3];
+  let positionIds = [10, 11, 12];
 
   console.log(await filter.getIndexTokens(index_address));
 
@@ -96,7 +96,7 @@ async function main() {
   console.log(tx);
 
   if(tx.expectedAmount == 0) {
-    console.log("skip address is:", token_address);
+    console.log("!!! skip address is:", token_address);
     return;
   }
   let params = {

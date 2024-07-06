@@ -343,7 +343,7 @@ contract Index is IIndex, IndexGas, OwnableUpgradeable, UUPSUpgradeable, Pausabl
                     positionBalance[pid][params.tokenIn] = 0;
                 } 
             }
-            if(positionStatus[pid] == Enum.PositionStatus.SOLD) {
+            if(positionStatus[pid] >= Enum.PositionStatus.SOLD) {
                 closedPositionCount ++;
                 uint256 currentAverage = calcuAverageGasUsed(positionId.sub(closedPositionCount));
                 closedPositionGasUsedAverage(pid, currentAverage);
@@ -726,7 +726,7 @@ contract Index is IIndex, IndexGas, OwnableUpgradeable, UUPSUpgradeable, Pausabl
     }
 
     /// set benchmark
-    function setBenchmark(address[] memory tokens, uint256[] memory prices) external onlyOwner.    {
+    function setBenchmark(address[] memory tokens, uint256[] memory prices) external onlyOwner {
         uint256 length = tokens.length;
         for(uint256 i; i < length; i++) {
             benchmark[tokens[i]] = prices[i];
@@ -782,6 +782,7 @@ contract Index is IIndex, IndexGas, OwnableUpgradeable, UUPSUpgradeable, Pausabl
         underlyingToken.safeTransfer(recipient, amount.sub(gasfee));
         
         positionBalance[positionId][underlyingToken] = 0;
+        positionStatus[positionId] = Enum.PositionStatus.WITHDRAWN;
 
         emit Withdraw(positionId, tx.origin, amount, block.timestamp);
     }

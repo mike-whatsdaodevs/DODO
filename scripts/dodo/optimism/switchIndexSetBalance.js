@@ -64,17 +64,19 @@ async function main() {
   let snxtokenBalance = await index.tokenBalance(removed_token);
   console.log("snx balance is:", snxtokenBalance);
 
-  let positionIds = [4, 5];
+  let positionIds = [10, 11, 12];
 
   let positionbalance0 = await index.positionBalance(positionIds[0], removed_token);
   let positionbalance1 = await index.positionBalance(positionIds[1], removed_token);
+  let positionbalance2 = await index.positionBalance(positionIds[2], removed_token);
 
-  console.log(positionbalance0, positionbalance1);
+  console.log(positionbalance0, positionbalance1, positionbalance2);
 
   let positionbalance01 = await index.positionBalance(positionIds[0], DAI_ADDRESS);
   let positionbalance11 = await index.positionBalance(positionIds[1], DAI_ADDRESS);
-  console.log(ethers.utils.formatEther(positionbalance01), ethers.utils.formatEther(positionbalance11));
-return;
+  let positionbalance02 = await index.positionBalance(positionIds[1], DAI_ADDRESS);
+  console.log(ethers.utils.formatEther(positionbalance01), ethers.utils.formatEther(positionbalance11), ethers.utils.formatEther(positionbalance02));
+  return;
   let tx = await index.setPositionsSwithBalance(
     removed_token, 
     DAI_ADDRESS, 

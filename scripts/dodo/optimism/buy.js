@@ -31,10 +31,13 @@ async function main() {
   }
 
   const dodo = await ethers.getContractAt('DODO', dodo_address, deployer);
-  const usdtToken = await ethers.getContractAt('@openzeppelin/contracts/token/ERC20/IERC20.sol:IERC20', usdt_address, deployer);
 
-  let indexAddress = await dodo.indexMap(1);
-  console.log(indexAddress);
+  let index_address = await dodo.indexMap(1);
+  console.log(index_address);
+  const usdtToken = await ethers.getContractAt('@openzeppelin/contracts/token/ERC20/IERC20.sol:IERC20', usdt_address, deployer);
+  const index = await ethers.getContractAt('Index', index_address, deployer);
+ 
+
 
   let allowance = await usdtToken.allowance(deployer.address, dodo_address);
   if(allowance == 0) {
@@ -45,7 +48,7 @@ async function main() {
 
   let buyTx = await dodo.buy(
     1,
-    ethers.utils.parseUnits("2", 6),
+    ethers.utils.parseUnits("1", 6),
     10000,
     100,
     10000
@@ -53,7 +56,7 @@ async function main() {
 
   await buyTx.wait();
   console.log(buyTx.hash);
-
+  console.log(await index.positionId());
 
 }
 

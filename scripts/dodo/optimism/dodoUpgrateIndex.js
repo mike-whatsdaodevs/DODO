@@ -54,7 +54,7 @@ async function main() {
   console.log(index_address);
   const index = await ethers.getContractAt('Index', index_address, signer);
 
-  let index_template_address = "0xc9D3F58AeA6e2752c0672f94d5223E6e71274fC3";
+  let index_template_address = "0xcd3F1a072a1805ab7a9F2e6109659DE23d033884";
 
   let calldata = await dodo.populateTransaction.upgradeTo(index_template_address);
 

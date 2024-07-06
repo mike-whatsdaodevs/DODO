@@ -26,14 +26,11 @@ contract IndexGas {
     }
 
     function initPositionGasUsedAverage(uint256 positionId) internal {
-        GasUsedAverage memory initAverage = GasUsedAverage(averageGasUsed, 0);
-        positionsGasUsedAverage[positionId] = initAverage; 
+        positionsGasUsedAverage[positionId].created = averageGasUsed; 
     }
 
     function closedPositionGasUsedAverage(uint256 positionId, uint256 currentAverage) internal {
-        GasUsedAverage memory average = positionsGasUsedAverage[positionId];
-        average.closed = currentAverage;
-        positionsGasUsedAverage[positionId] = average;
+        positionsGasUsedAverage[positionId].closed = currentAverage;
     }
 
     function setExchangeRate(uint256 newExchangeRate) external {
@@ -52,9 +49,8 @@ contract IndexGas {
         gasFeeRecipient = recipient;
     }
 
-    function calcuPositionGasUsed(uint256 positionId) internal returns (uint256) {
+    function calcuPositionGasUsed(uint256 positionId) public returns (uint256) {
         GasUsedAverage memory average = positionsGasUsedAverage[positionId];
-        delete positionsGasUsedAverage[positionId];
         return average.closed - average.created;
     }
 

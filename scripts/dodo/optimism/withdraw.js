@@ -74,7 +74,10 @@ async function main() {
   // console.log(setStaticIndexGasUsedTx.hash);
   // return;
 
-  let withdrawPositionTx = await index.withdraw(4, deployer.address);
+  let positionsGasUsedAverage = await index.positionsGasUsedAverage(10);
+  console.log(positionsGasUsedAverage);return;
+
+  let withdrawPositionTx = await index.withdraw(10, deployer.address);
   await withdrawPositionTx.wait();
   // function withdrawPosition(uint256 indexId, uint256 positionId) external {
   console.log(withdrawPositionTx.hash);

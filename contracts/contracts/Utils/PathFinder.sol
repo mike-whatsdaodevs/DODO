@@ -4,6 +4,8 @@ pragma solidity >=0.8.14;
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {IPathFinder} from "../interfaces/external/IPathFinder.sol";
 import {IQuoterV2} from "../intergrations/uniswap/IQuoterV2.sol";
+import {IUniswapV3Factory} from "../intergrations/uniswap/IUniswapV3Factory.sol";
+import {IPeripheryImmutableState} from "../intergrations/uniswap/IPeripheryImmutableState.sol";
 import {Constants} from "../libraries/Constants.sol";
 
 contract PathFinder is IPathFinder, Ownable {
@@ -11,12 +13,15 @@ contract PathFinder is IPathFinder, Ownable {
     uint24[] private fees = [100, 500, 3000, 10000];
     address[] private sharedTokens;
 
+    address public immutable factory;
+
     // Contract version
     uint256 public constant version = 1;
 
     constructor(address _quoter, address[] memory _tokens) {
         quoter = IQuoterV2(_quoter);
         sharedTokens = _tokens;
+        factory = IPeripheryImmutableState(_quoter).factory();
     }
 
     function buildSinglePath(address token0, address token1, uint24 fee) public view returns (bytes memory path) {
@@ -96,6 +101,9 @@ contract PathFinder is IPathFinder, Ownable {
 
         tradePath.expectedAmount = tradeType == Constants.EXACT_INPUT ? 0 : Constants.MAX_UINT256;
         for (uint256 i = 0; i < fees.length; i++) {
+            if(! checkV3PoolExist(tokenIn, tokenOut, fees[i])) {
+                continue;
+            }
             bytes memory path = abi.encodePacked(tokenIn, fees[i], tokenOut);
             (
                 bool best,
@@ -116,6 +124,12 @@ contract PathFinder is IPathFinder, Ownable {
             if (tokenIn == tokens[i] || tokenOut == tokens[i]) continue;
             for (uint256 j = 0; j < fees.length; j++) {
                 for (uint256 k = 0; k < fees.length; k++) {
+                    if(! checkV3PoolExist(tokenIn, tokens[i], fees[j])) {
+                        continue;
+                    }
+                    if(! checkV3PoolExist(tokenOut, tokens[i], fees[k])) {
+                        continue;
+                    }
                     bytes memory path = abi.encodePacked(tokenIn, fees[j], tokens[i], fees[k], tokenOut);
                     (
                         bool best,
@@ -134,6 +148,11 @@ contract PathFinder is IPathFinder, Ownable {
                 }
             }
         }
+    }
+
+    function checkV3PoolExist(address token0, address token1, uint24 fee) private view returns (bool) {
+        address pool = IUniswapV3Factory(factory).getPool(token0,token1, fee);
+        return pool != address(0);
     }
 
     function _getAmount(

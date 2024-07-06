@@ -72,7 +72,7 @@ async function main() {
   // console.log(tx1);return;
 
   /// batch deal positions
-  let positionIds = [4, 5];
+  let positionIds = [10, 11, 12];
 
 
   // let positionsBalance1 = await index.getPositionsBalance(DAI_ADDRESS, positionIds);
