@@ -125,7 +125,7 @@ contract Index is IIndex, IndexGas, OwnableUpgradeable, UUPSUpgradeable, Pausabl
      *  - token is allowed
      *  - protocol is allowed
      */
-    function safeApprove(address token, address protocol) external {
+    function safeApprove(address token, address protocol) external onlyOperator {
         if(!IFilter(filter).isAllowedProtocols(protocol)) {
             revert();
         }
@@ -144,7 +144,7 @@ contract Index is IIndex, IndexGas, OwnableUpgradeable, UUPSUpgradeable, Pausabl
      * Requirements:
      *  - status large than current status
      */
-    function changePositionStatus(uint256 positionId, Enum.PositionStatus status) external {
+    function changePositionStatus(uint256 positionId, Enum.PositionStatus status) external onlyOwner {
         Enum.PositionStatus currentStatus = positionStatus[positionId];
         if(status <= currentStatus) {
             revert();
@@ -242,7 +242,7 @@ contract Index is IIndex, IndexGas, OwnableUpgradeable, UUPSUpgradeable, Pausabl
         uint128 currentIndex,
         uint128 healthFactor,
         uint256 expiration
-    ) external returns (uint256) {
+    ) external onlyOperator returns (uint256) {
         uint256 internalGas = gasleft();
         uint256 currentPositionId = positionId;
         PositionSet.Position memory position = PositionSet.Position(
@@ -311,7 +311,7 @@ contract Index is IIndex, IndexGas, OwnableUpgradeable, UUPSUpgradeable, Pausabl
     /**
      * @dev set position token balance
      */
-    function setPositionsBalance(SetBalnaceParams memory params) public {
+    function setPositionsBalance(SetBalnaceParams memory params) public onlyOperator {
         uint256 internalGas = gasleft();
         bytes32 hash = hashPositionIds(params.positionIds, params.tokenIn, params.tokenOut);
         uint256 amountOut = positionIdsHashList[hash];
@@ -355,7 +355,7 @@ contract Index is IIndex, IndexGas, OwnableUpgradeable, UUPSUpgradeable, Pausabl
         gasUsed += internalGas - gasleft();
     }
 
-    function setPositionsSwithBalance(address tokenBefore, address tokenAfter, uint256[] calldata positionIds) external {
+    function setPositionsSwithBalance(address tokenBefore, address tokenAfter, uint256[] calldata positionIds) external onlyOperator {
         uint256 internalGas = gasleft();
         uint256 amountBefore = tokenSwithAmount[tokenBefore][tokenAfter];
         uint256 amountNow = tokenBalance(tokenAfter);
@@ -591,7 +591,7 @@ contract Index is IIndex, IndexGas, OwnableUpgradeable, UUPSUpgradeable, Pausabl
      * @param data: array of swap calldata
      * 
      */
-    function swapMultiCall(uint256[][] memory positionIdsArray, bytes[] calldata data) external payable  {
+    function swapMultiCall(uint256[][] memory positionIdsArray, bytes[] calldata data) external payable onlyOperator {
         uint256 internalGas = gasleft();
         uint256 length = data.length;
         uint256[] memory amountInArr = new uint256[](length);
@@ -623,7 +623,7 @@ contract Index is IIndex, IndexGas, OwnableUpgradeable, UUPSUpgradeable, Pausabl
         gasUsed += internalGas - gasleft();
     }
 
-    function swapAndSet(uint256[][] memory positionIdsArray, bytes[] calldata data) external payable {
+    function swapAndSet(uint256[][] memory positionIdsArray, bytes[] calldata data) external payable onlyOperator {
         uint256 internalGas = gasleft();
         uint256 length = data.length;
         uint256[] memory amountInArr = new uint256[](length);
@@ -746,7 +746,7 @@ contract Index is IIndex, IndexGas, OwnableUpgradeable, UUPSUpgradeable, Pausabl
      * - currentStatus large than REQUEST_LIQUIDATION
      * - position owner id transaction caller
      */
-    function withdraw(uint256 positionId, address recipient) external returns (uint256 amount) {
+    function withdraw(uint256 positionId, address recipient) external onlyOwner returns (uint256 amount) {
         (PositionSet.Position memory position, bool isExist) = getPositionById(positionId);
         if(! isExist) {
             revert();

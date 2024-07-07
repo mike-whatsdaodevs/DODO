@@ -21,7 +21,8 @@ async function main() {
   let swapRouter_address;
   let dodo_address;
   let DAI_ADDRESS = "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1";
-  let removed_token = process.env.OP_SNX;
+  let removed_token = process.env.OP_WBTC;
+  let add_token = process.env.OP_LINK;
   let filter_address;
   let indexTokens = [
     DAI_ADDRESS
@@ -58,21 +59,21 @@ async function main() {
   const pathFinder = await ethers.getContractAt('PathFinder', pathFinder_address, signer);
 
 
-  let tokenApproveTx = await index.safeApprove(DAI_ADDRESS, swapRouter_address);
-  await tokenApproveTx.wait();
+  // let tokenApproveTx = await index.safeApprove(DAI_ADDRESS, swapRouter_address);
+  // await tokenApproveTx.wait();
 
-  // // let tokenApproveTx1 = await index.safeApprove(removed_token, swapRouter_address);
-  // // await tokenApproveTx.wait();
+  // // // let tokenApproveTx1 = await index.safeApprove(removed_token, swapRouter_address);
+  // // // await tokenApproveTx.wait();
 
-  let addIndexTokensTx = await filter.addIndexTokens(index_address, [DAI_ADDRESS]);
-  await addIndexTokensTx.wait();
+  // let addIndexTokensTx = await filter.addIndexTokens(index_address, [DAI_ADDRESS]);
+  // await addIndexTokensTx.wait();
 
-  let removeIndexTokensTx = await filter.removeIndexTokens(index_address, [removed_token]);
-  await removeIndexTokensTx.wait();
+  // let removeIndexTokensTx = await filter.removeIndexTokens(index_address, [removed_token]);
+  // await removeIndexTokensTx.wait();
 
-  console.log(await filter.getIndexTokens(index_address));
+  // console.log(await filter.getIndexTokens(index_address));
 
-  // return;
+  // // return;
 
 
   // let updateTokensTx = await pathFinder.updateTokens([weth_address, usdt_address]);
@@ -82,21 +83,22 @@ async function main() {
   // console.log(await index.counter(7));
 
   /// batch deal positions
-  let positionIds = [7, 8];
+  // let positionIds = [7, 8];
 
 
-  let calldataArray = new Array();
-  let positionIdsArray = new Array();
+  // let calldataArray = new Array();
+  // let positionIdsArray = new Array();
 
-  let tokenBalance = await index.tokenBalance(removed_token);
-  console.log("removed_token balance is:", tokenBalance);
+  // let tokenBalance = await index.tokenBalance(removed_token);
+  // console.log("removed_token balance is:", tokenBalance);
 
-  let amount = tokenBalance;
+  let amount = ethers.utils.parseUnits("0.01", 8);
   console.log("amount is", amount);
 
-  let tx = await pathFinder.callStatic.exactInputPath(removed_token, DAI_ADDRESS, amount);
+  let tx = await pathFinder.callStatic.exactInputPath(removed_token, add_token, amount);
   // let res = await tx.wait();
   console.log(tx);
+  return;
 
   if(tx.expectedAmount == 0) {
     console.log("!!! skip address is:", token_address);

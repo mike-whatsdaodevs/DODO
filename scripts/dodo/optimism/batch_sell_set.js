@@ -32,6 +32,7 @@ async function main() {
     // process.env.OP_W,
     // process.env.OP_PYTH,
     process.env.OP_SNX,
+    DAI_ADDRESS
   ];
   if(network == 10) {
     weth_address = process.env.OP_WETH9;
@@ -52,7 +53,7 @@ async function main() {
   const dodo = await ethers.getContractAt('DODO', dodo_address, signer);
 
 
-  let index_address = await dodo.indexMap(3);
+  let index_address = await dodo.indexMap(4);
   console.log(index_address);
 
   const index = await ethers.getContractAt('Index', index_address, signer);
@@ -61,6 +62,7 @@ async function main() {
   const swap = await ethers.getContractAt('ISwapRouter02', swapRouter_address, signer);
   const pathFinder = await ethers.getContractAt('PathFinder', pathFinder_address, signer);
 
+  console.log(indexTokens);return;
 
   for(let i=0; i< indexTokens.length; i++) {
  
@@ -71,6 +73,7 @@ async function main() {
           console.log("i is ", i, indexTokens[i]);
       }
   }
+  return;
   /// batch deal positions
   let positionIds = [2, 3];
   let calldataArray = new Array();

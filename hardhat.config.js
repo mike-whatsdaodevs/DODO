@@ -35,7 +35,7 @@ module.exports = {
   },
   networks: {
     op: {
-      url: "https://rpc.ankr.com/optimism",// "https://optimism-mainnet.infura.io/v3/b084830758e840efa86148741bff0f70",//"https://optimism.llamarpc.com",//process.env.OP_URL,
+      url: "https://optimism-mainnet.infura.io/v3/b084830758e840efa86148741bff0f70",//"https://optimism.llamarpc.com",//process.env.OP_URL,
       accounts: 
         process.env.PRIVATE_KEY_DODO !== undefined ? [process.env.PRIVATE_KEY_DODO] : [],
     },

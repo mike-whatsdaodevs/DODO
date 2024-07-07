@@ -49,7 +49,7 @@ async function main() {
 
   let dodoId = await dodo.id();
   console.log(dodoId);
-  let index_address = await dodo.indexMap(3);
+  let index_address = await dodo.indexMap(4);
   console.log("index_address :", index_address);
 
   const index = await ethers.getContractAt('Index', index_address, signer);
@@ -67,6 +67,7 @@ async function main() {
   // // let tokenApproveTx1 = await index.safeApprove(removed_token, swapRouter_address);
   // // await tokenApproveTx.wait();
   console.log(await filter.getIndexTokens(index_address));
+  return;
 
   // let changeIndexTokenTx = await indexhelper.changeIndexTokens(
   //   index_address, 

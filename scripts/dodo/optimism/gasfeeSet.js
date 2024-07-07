@@ -51,7 +51,7 @@ async function main() {
   const dodo = await ethers.getContractAt('DODO', dodo_address, signer);
 
 
-  let index_address = await dodo.indexMap(3);
+  let index_address = await dodo.indexMap(5);
   console.log(index_address);
 
   const index = await ethers.getContractAt('Index', index_address, signer);

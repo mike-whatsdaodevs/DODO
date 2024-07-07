@@ -86,4 +86,19 @@ contract IndexHelper is Ownable {
             positionIds
         );
     }
+
+    function changeIndexAndSwitch(
+        address indexAddress, 
+        bytes calldata data,
+        address[] memory removedTokens,
+        address[] memory addTokens
+    ) external onlyOwner {
+        uint256[][] memory positionArr = new uint256[][](1);
+        bytes[] memory dataArr = new bytes[](1);
+        dataArr[0] = data;
+        IIndex(indexAddress).swapMultiCall(positionArr, dataArr);
+       
+        filter.addIndexTokens(indexAddress, addTokens);
+        filter.removeIndexTokens(indexAddress, removedTokens);
+    }
 }

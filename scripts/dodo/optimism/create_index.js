@@ -48,7 +48,7 @@ async function main() {
 
   /// true 为动态index
   /// false为静态index
-  let isDynamicIndex = true;
+  let isDynamicIndex = false;
   let createIndexTx = await dodo.createIndex("usdt_eth", isDynamicIndex);
 
   await createIndexTx.wait();

@@ -76,10 +76,10 @@ async function main() {
   console.log(lastGasUsed);
   ///
 
-  let positionsGasUsedAverage = await index.positionsGasUsedAverage(6);
+  let positionsGasUsedAverage = await index.positionsGasUsedAverage(8);
   console.log(positionsGasUsedAverage);
 
-  let withdrawPositionTx = await index.withdraw(6, deployer.address);
+  let withdrawPositionTx = await dodo.withdrawPosition(3, 8);
   await withdrawPositionTx.wait();
   // function withdrawPosition(uint256 indexId, uint256 positionId) external {
   console.log(withdrawPositionTx.hash);

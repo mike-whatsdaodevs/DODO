@@ -67,31 +67,16 @@ async function main() {
   }
 
   const dodo = await ethers.getContractAt('DODO', dodo_address, deployer);
-  const filter = await ethers.getContractAt('Filter', filter_address, deployer);
-  const token = await ethers.getContractAt('@openzeppelin/contracts/token/ERC20/IERC20.sol:IERC20', usdt_address, deployer);
- 
   let index_address = await dodo.indexMap(5);
   console.log(index_address);
 
+  const filter = await ethers.getContractAt('Filter', filter_address, deployer);
+  const token = await ethers.getContractAt('@openzeppelin/contracts/token/ERC20/IERC20.sol:IERC20', usdt_address, deployer);
+  const index = await ethers.getContractAt('Index', index_address, deployer);
+ 
+
+
   console.log("getIndexTokens is :", await filter.getIndexTokens(index_address));
-
-  // let manageIndexManagerTx = await filter.manageIndexManager(index_address, indexHelper_address, true);
-  // await manageIndexManagerTx.wait();
-  // console.log(manageIndexManagerTx.hash);
-
-  // let manageIndexManagerTx1 = await filter.manageIndexManager(index_address, deployer.address, true);
-  // await manageIndexManagerTx1.wait();
-  // console.log(manageIndexManagerTx1.hash);
-
-  let manageIndexManagerDODOTx = await filter.manageIndexManager(index_address, dodo_address, true);
-  await manageIndexManagerDODOTx.wait();
-  console.log(manageIndexManagerDODOTx.hash);
-  return;
-  
-  // let addIndexTokensTx = await filter.addIndexTokens(index_address, indexTokens);
-  // await addIndexTokensTx.wait();
-  // console.log(addIndexTokensTx.hash);
-
 
  for(let i=0; i< allowedTokens.length; i++) {
  
@@ -102,14 +87,7 @@ async function main() {
           console.log("i is ", i, allowedTokens[i]);
       }
   }
-  return;
 
-  // let len = allowedTokens.length;
-  // for(let i = 0; i < len; i ++) {
-  //    let manageAllowedTokenTx = await filter.manageAllowedToken(allowedTokens[i], true);
-  //    await manageAllowedTokenTx.wait();
-  //    console.log(manageAllowedTokenTx.hash);
-  // }
 
 }
 
