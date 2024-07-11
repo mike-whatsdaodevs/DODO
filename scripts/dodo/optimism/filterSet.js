@@ -70,18 +70,23 @@ async function main() {
   const filter = await ethers.getContractAt('Filter', filter_address, deployer);
   const token = await ethers.getContractAt('@openzeppelin/contracts/token/ERC20/IERC20.sol:IERC20', usdt_address, deployer);
  
-  let index_address = await dodo.indexMap(5);
+  let index_address = await dodo.indexMap(4);
   console.log(index_address);
 
   console.log("getIndexTokens is :", await filter.getIndexTokens(index_address));
 
-  // let manageIndexManagerTx = await filter.manageIndexManager(index_address, indexHelper_address, true);
-  // await manageIndexManagerTx.wait();
-  // console.log(manageIndexManagerTx.hash);
+  let manageIndexManagerTx0 = await filter.manageIndexManager(index_address, indexHelper_address, true);
+  await manageIndexManagerTx0.wait();
+  console.log(manageIndexManagerTx0.hash);
 
-  // let manageIndexManagerTx1 = await filter.manageIndexManager(index_address, deployer.address, true);
-  // await manageIndexManagerTx1.wait();
-  // console.log(manageIndexManagerTx1.hash);
+  let manageIndexManagerTx1 = await filter.manageIndexManager(index_address, "0x674323Fcb56106Ed1AB89B7d861dd23e438b81A6", true);
+  await manageIndexManagerTx1.wait();
+  console.log(manageIndexManagerTx1.hash);
+  return;
+
+  // let manageIndexManagerTx2 = await filter.manageIndexManager(index_address, deployer.address, true);
+  // await manageIndexManagerTx2.wait();
+  // console.log(manageIndexManagerTx2.hash);
 
   let manageIndexManagerDODOTx = await filter.manageIndexManager(index_address, dodo_address, true);
   await manageIndexManagerDODOTx.wait();
