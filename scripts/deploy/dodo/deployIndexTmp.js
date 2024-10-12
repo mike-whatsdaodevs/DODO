@@ -20,8 +20,6 @@ async function main() {
   let my_address = signer.address;
   console.log('my_address is:', my_address)
 
-  // let weth9_address = process.env.WETH9;
-  // let usdc_address = process.env.USDC;
 
   const Index = await hre.ethers.getContractFactory('Index')
   const index = await Index.deploy();

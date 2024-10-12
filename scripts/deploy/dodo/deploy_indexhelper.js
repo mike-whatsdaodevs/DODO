@@ -23,7 +23,7 @@ async function main() {
   // let weth9_address = process.env.WETH9;
   // let usdc_address = process.env.USDC;
 
-  let filter_address = process.env.OP_FILTER;
+  let filter_address = process.env.ETH_FILTER_MAIN;
 
   const IndexHelper = await hre.ethers.getContractFactory('IndexHelper')
   const indexHelper = await IndexHelper.deploy(filter_address);

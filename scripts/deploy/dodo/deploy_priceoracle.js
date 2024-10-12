@@ -20,8 +20,8 @@ async function main() {
   let my_address = signer.address;
   console.log('my_address is:', my_address)
 
-  let facotry_address =  process.env.OP_FACTORY;
-  let weth9_address =  process.env.OP_WETH9;
+  let facotry_address =  process.env.ETH_FACTORY;
+  let weth9_address =  process.env.ETH_WETH9;
 
 
   const PriceOracle = await hre.ethers.getContractFactory('PriceOracle')

@@ -21,15 +21,11 @@ async function main() {
   const network = (await ethers.provider.getNetwork()).chainId;
   console.log(network);
 
- // let weth9_address = process.env.OP_WETH9;
-  let usdt_address = process.env.OP_USDT;
-
   const Filter = await hre.ethers.getContractFactory('Filter')
   const filter = await Filter.deploy()
   await filter.deployed()
   console.log('filter deployed to:', filter.address);
 
- // const ex = await hre.ethers.getContractAt('DODO', dodo.address, deployer)
   const initialize_data = await filter.populateTransaction.initialize();
   console.log("initialize_data data is",initialize_data)
 

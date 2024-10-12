@@ -21,16 +21,13 @@ async function main() {
   const network = (await ethers.provider.getNetwork()).chainId;
   console.log(network);
 
- // let weth9_address = process.env.OP_WETH9;
-  let usdt_address = process.env.OP_USDT;
-
   const DODO = await hre.ethers.getContractFactory('DODO')
   const dodo = await DODO.deploy()
   await dodo.deployed()
   console.log('dodo deployed to:', dodo.address);
 
-  let indexSingleton_address = process.env.OP_INDEX;
-  let filter_address = process.env.OP_FILTER;
+  let indexSingleton_address = process.env.ETH_INDEX_HELPER_MAIN;
+  let filter_address = process.env.ETH_FILTER_MAIN;
 
   const initialize_data = await dodo.populateTransaction.initialize(
     deployer.address, 

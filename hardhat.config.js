@@ -40,7 +40,7 @@ module.exports = {
         process.env.PRIVATE_KEY_DODO !== undefined ? [process.env.PRIVATE_KEY_DODO] : [],
     },
     eth: {
-      url: "https://eth.llamarpc.com",//"https://optimism.llamarpc.com",//process.env.OP_URL,
+      url: "https://eth.llamarpc.com",
       accounts: 
         process.env.PRIVATE_KEY_DODO !== undefined ? [process.env.PRIVATE_KEY_DODO] : [],
     },
@@ -52,26 +52,30 @@ module.exports = {
     local: {
       url: process.env.LOCAL,
       accounts: 
-        process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
+        process.env.PRIVATE_KEY_DODO !== undefined ? [process.env.PRIVATE_KEY_DODO] : [],
+    },
+    hardhat: {
+      forking: {
+        ignoreUnknownTxType: true,
+        /// enabled: process.env.NODE_ENV == "dev" ? true : false,
+        // blockNumber: 54000000,
+        // url: "https://base-rpc.publicnode.com", //ETH
+        // url: "https://1rpc.io/avax/c", //AVAX
+        // url: "https://1rpc.io/linea" //Linea
+        // url: "https://mainnet.optimism.io", //OP
+        // url: "https://arb1.arbitrum.io/rpc", //ARB
+        // url: "https://1rpc.io/matic", //Polygon
+        // url: "https://bsc-dataseed4.binance.org", //BNB
+        // url: "https://mainnet.infura.io/v3/a9888517f076475d805eae5283c7c007",
+        url: "https://eth.llamarpc.com",
+      },
     },
   },
   mocha: {
     timeout: 40000,
   },
   etherscan: {
-    apiKey: {
-      btcc: "Jo4nzq1PZTlknkfLht960WfC3J4jMKKX"
-    },
-    customChains: [
-      {
-        network: "btcc",
-        chainId: 963,
-        urls: {
-          apiURL: "https://scan.bitcoincode.technology/api",
-          browserURL: "https://scan.bitcoincode.technology"
-        }
-      }
-    ]
+    apiKey: "CCR517D7D6TYMHN7CGR4TSPYQIBQ9VFWQ3"
   }
 
 }
