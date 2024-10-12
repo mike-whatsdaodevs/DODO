@@ -97,7 +97,7 @@ contract Index is IIndex, IndexGas, OwnableUpgradeable, UUPSUpgradeable, Pausabl
     receive() external payable {}
    
     modifier onlyOperator() {
-        require(! IFilter(filter).indexManagers(THIS, msg.sender), "E: caller is not allowed");
+        require(IFilter(filter).indexManagers(THIS, msg.sender), "E: caller is not allowed");
         _;
     }
 
