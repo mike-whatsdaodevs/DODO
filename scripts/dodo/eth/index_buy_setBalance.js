@@ -15,11 +15,21 @@ async function main() {
   const network = (await ethers.provider.getNetwork()).chainId;
   console.log(network);
 
-  let indexTokens = [
+  let index0Tokens = [
     process.env.ETH_WETH9,
     process.env.ETH_WBTC,
     process.env.ETH_UNI,
   ];
+
+  let index1Tokens = [
+    // process.env.ETH_PEPE,
+    // process.env.ETH_FLOKI,
+    // process.env.ETH_MOG,
+    // process.env.ETH_PAC,
+    // process.env.ETH_Neiro,
+  ]
+
+  let indexTokens = index1Tokens;
 
   let usdt_address = process.env.ETH_USDT;
 
@@ -42,13 +52,46 @@ async function main() {
   const index = await ethers.getContractAt('Index', index_address, deployer);
 
   /// batch deal positions
-  let positionIds = [2];
+  let positionIds = [0];
+ 
 
-  console.log(await index.positionStatus(positionIds[0]));
+  // let changePositionStatusJson = await index.populateTransaction.changePositionStatus(positionIds[0], 2);
 
-  let positionsBalance0 = await index.positionBalance(positionIds[0], usdt_address);
-  console.log(positionsBalance0);
-  
+  // console.log(changePositionStatusJson);;
+  // let managerIndexTx = await dodo.managerIndex(indexID, changePositionStatusJson.data);
+  // await managerIndexTx.wait();
+  // console.log(managerIndexTx.hash);
+
+  console.log("status is", await index.positionStatus(positionIds[0]));
+  return;
+
+  console.log(await index.positionBalance(positionIds[0], usdt_address));
+
+  let positionId = positionIds[0];
+
+  for(let i = 0; i < indexTokens.length; i ++) {
+    console.log("token balance is ", await token.attach(indexTokens[i]).balanceOf(index_address));
+
+    let hash = await index.hashPositionIds(positionIds, indexTokens[i], usdt_address);
+    let positionIdsHashData = await index.positionIdsHashList(hash);
+    console.log("position data is", positionIdsHashData);
+
+    console.log("set before:", await index.positionBalance(positionId, indexTokens[i]));
+    ////set positionBalance
+
+    let params = {
+      tokenIn: indexTokens[i],
+      tokenOut: usdt_address,
+      positionIds: positionIds,
+      offset: 0,
+      size: positionIds.length
+    }
+    let setPositionsBalanceTx = await index.setPositionsBalance(params);
+    await setPositionsBalanceTx.wait();
+    
+    console.log("set after:",await index.positionBalance(positionId, indexTokens[i]));
+  }
+
 }
 
 main()

@@ -15,12 +15,22 @@ async function main() {
   const network = (await ethers.provider.getNetwork()).chainId;
   console.log(network);
 
-  let indexTokens = [
+  let index0Tokens = [
     process.env.ETH_USDT,
     // process.env.ETH_WETH9,
     // process.env.ETH_WBTC,
     // process.env.ETH_UNI,
   ];
+
+  let index1Tokens = [
+    process.env.ETH_PEPE,
+    // process.env.ETH_FLOKI,
+    // process.env.ETH_MOG,
+    // process.env.ETH_Neiro,
+    // process.env.ETH_USDT
+  ]
+
+  let indexTokens = index1Tokens;
 
   let usdt_address = process.env.ETH_USDT;
 
@@ -33,15 +43,18 @@ async function main() {
   const filter = await ethers.getContractAt('Filter', filter_address, deployer);
   const token = await ethers.getContractAt('@openzeppelin/contracts/token/ERC20/IERC20.sol:IERC20', usdt_address, deployer);
 
-  let index_address = await dodo.indexMap(0);
+  let indexID = 1;
+  let index_address = await dodo.indexMap(indexID);
   console.log(index_address);
 
   const index = await ethers.getContractAt('Index', index_address, deployer);
 
 
-  console.log(await index.filter());
-  console.log(await index.THIS());
-  console.log(await filter.isAllowedToken(process.env.ETH_USDT))
+  console.log(indexTokens);
+
+  // console.log(await index.filter());
+  // console.log(await index.THIS());
+  // console.log(await filter.isAllowedToken(process.env.ETH_USDT))
   /// console.log(await filter.indexManagers(await index.THIS(), deployer.address));
 
   let len = indexTokens.length;

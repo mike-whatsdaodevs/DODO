@@ -15,11 +15,21 @@ async function main() {
   const network = (await ethers.provider.getNetwork()).chainId;
   console.log(network);
 
-  let indexTokens = [
+  let index0Tokens = [
     process.env.ETH_WETH9,
     process.env.ETH_WBTC,
     process.env.ETH_UNI,
   ];
+
+  let index1Tokens = [
+    process.env.ETH_PEPE,
+    process.env.ETH_FLOKI,
+    process.env.ETH_MOG,
+    process.env.ETH_Neiro,
+    // process.env.ETH_PAC,
+  ]
+
+  let indexTokens = index1Tokens;
 
   let usdt_address = process.env.ETH_USDT;
 
@@ -35,13 +45,14 @@ async function main() {
   const swap = await ethers.getContractAt('ISwapRouter02', swapRouter_address, deployer);
   const pathFinder = await ethers.getContractAt('PathFinder', pathFinder_address, deployer);
 
-  let index_address = await dodo.indexMap(0);
+  let indexID = 1;
+  let index_address = await dodo.indexMap(indexID);
   console.log(index_address);
 
   const index = await ethers.getContractAt('Index', index_address, deployer);
 
   /// batch deal positions
-  let positionIds = [0];
+  let positionIds = [2];
 
   console.log(await index.positionStatus(positionIds[0]));
 

@@ -217,6 +217,10 @@ contract DODO is
         indexAddress.functionCall(data);
     }
 
+    function upgradeIndexImplement(address indexProxy, address indexImp, bytes calldata data) external onlyOwner {
+        UUPSUpgradeable(indexProxy).upgradeToAndCall(indexImp, data);
+    }
+
      /// uups interface
     function _authorizeUpgrade(address newImplementation)
         internal

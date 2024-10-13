@@ -21,7 +21,7 @@ async function main() {
   const network = (await ethers.provider.getNetwork()).chainId;
   console.log(network);
 
-  let proxy_address = process.env.OP_DODO_MAIN;
+  let proxy_address = process.env.ETH_DODO_MAIN;
 
   const DODO = await hre.ethers.getContractFactory('DODO')
   const dodo = await DODO.deploy()

@@ -15,11 +15,21 @@ async function main() {
   const network = (await ethers.provider.getNetwork()).chainId;
   console.log(network);
 
-  let indexTokens = [
+  let index0Tokens = [
     process.env.ETH_WETH9,
     process.env.ETH_WBTC,
     process.env.ETH_UNI,
   ];
+
+  let index1Tokens = [
+    process.env.ETH_PEPE,
+    process.env.ETH_FLOKI,
+    process.env.ETH_MOG,
+    process.env.ETH_Neiro,
+    // process.env.ETH_PAC
+  ]
+
+  let indexTokens = index1Tokens;
 
   let usdt_address = process.env.ETH_USDT;
 
@@ -35,30 +45,21 @@ async function main() {
   const swap = await ethers.getContractAt('ISwapRouter02', swapRouter_address, deployer);
   const pathFinder = await ethers.getContractAt('PathFinder', pathFinder_address, deployer);
 
-  let index_address = await dodo.indexMap(0);
+  let indexID = 1;
+  let index_address = await dodo.indexMap(indexID);
   console.log(index_address);
 
   const index = await ethers.getContractAt('Index', index_address, deployer);
 
-
-  let allowance = await token.allowance(index_address, swapRouter_address);
-  if (allowance == 0) {
-    let tokenApproveTx = await index.safeApprove(usdt_address, swapRouter_address);
-    await tokenApproveTx.wait();
-  }
-
-  let index_token_balance = await index.positionBalance(0, usdt_address);
-  console.log("position balance 0",index_token_balance);
-
   /// batch deal positions
-  let positionIds = [0];
+  let positionIds = [2];
   let calldataArray = new Array();
   let positionIdsArray = new Array();
 
   for(let i=0; i < indexTokens.length ; i++) {
       let positionsBalance = await index.getPositionsBalance(indexTokens[i], positionIds);
-      console.log("positionsBalance is", positionsBalance);
       let amount = positionsBalance.tokenInBalance;
+      console.log("token balance is:", amount);
 
       // let hash = await index.hashPositionIds(positionIds, usdt_address, indexTokens[i]);
       // let positionIdsHashData = await index.positionIdsHashList(hash);
@@ -67,7 +68,16 @@ async function main() {
       // continue;
 
       let token_address = indexTokens[i];
-      let tx = await pathFinder.callStatic.exactInputPath(token_address, usdt_address, amount);
+
+      console.log("token_address is :", token_address);
+
+      let tx;
+      if(indexTokens[i] == process.env.ETH_MOG || indexTokens[i] == process.env.ETH_Neiro) {
+        tx = await pathFinder.callStatic.bestExactInputPath(token_address, usdt_address, amount, [process.env.ETH_WETH9]);
+      } else {
+        tx = await pathFinder.callStatic.bestExactInputPath(token_address, usdt_address, amount, []);
+      }
+      /// let tx = await pathFinder.callStatic.exactInputPath(token_address, usdt_address, amount);
       // let res = await tx.wait();
       console.log(tx);
 
@@ -90,9 +100,9 @@ async function main() {
       calldataArray.push(txcalldata.data);
       positionIdsArray.push(positionIds);
   }
-
   console.log(calldataArray);
   console.log(positionIdsArray);
+
 
   let tx3 = await index.swapAndSet(
     positionIdsArray,
