@@ -16,25 +16,23 @@ async function main() {
   const network = (await ethers.provider.getNetwork()).chainId;
   console.log(network);
 
-  let indexTokens = [
-    process.env.ETH_WETH9,
-    process.env.ETH_WBTC,
-    process.env.ETH_UNI,
-  ];
+  let dodo_address;
 
-  
-
-  let swapRouter_address = process.env.ETH_SWAP_ROUTER_V2;
-  let dodo_address = process.env.ETH_DODO_MAIN;
-  let filter_address = process.env.ETH_FILTER_MAIN;
-  let indexHelper_address = process.env.ETH_INDEX_HELPER_MAIN;
+  if (network == 1) {
+    dodo_address = process.env.ETH_DODO_MAIN;
+  } else if(network == 10) {
+    dodo_address = process.env.OP_DODO_MAIN;
+  } else {
+    console.log("network error");
+    return;
+  }
 
   const dodo = await ethers.getContractAt('DODO', dodo_address, deployer);
 
   /// true 为动态index
   /// false为静态index
-  let isDynamicIndex = true;
-  let createIndexTx = await dodo.createIndex("ETH_BTC_UNI", isDynamicIndex);
+  let isDynamicIndex = false;
+  let createIndexTx = await dodo.createIndex("ETH_BTC_OP", isDynamicIndex);
 
   await createIndexTx.wait();
 
@@ -42,7 +40,7 @@ async function main() {
 
   console.log(await dodo.id());
 
-  let index_address = await dodo.indexMap(1);
+  let index_address = await dodo.indexMap(0);
   console.log(index_address);
 
 }

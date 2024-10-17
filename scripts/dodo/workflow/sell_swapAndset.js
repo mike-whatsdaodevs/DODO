@@ -51,8 +51,10 @@ async function main() {
 
   const index = await ethers.getContractAt('Index', index_address, deployer);
 
+  console.log(await filter.getIndexTokens(index_address));
+
   /// batch deal positions
-  let positionIds = [2];
+  let positionIds = [11];
   let calldataArray = new Array();
   let positionIdsArray = new Array();
 

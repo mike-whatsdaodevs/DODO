@@ -52,7 +52,7 @@ async function main() {
   const index = await ethers.getContractAt('Index', index_address, deployer);
 
   /// batch deal positions
-  let positionIds = [2];
+  let positionIds = [11];
 
   console.log(await index.positionStatus(positionIds[0]));
 

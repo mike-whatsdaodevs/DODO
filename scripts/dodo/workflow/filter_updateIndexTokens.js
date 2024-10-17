@@ -24,8 +24,8 @@ async function main() {
 
   const dodo = await ethers.getContractAt('DODO', dodo_address, deployer);
 
-  let removed_tokens = [process.env.ETH_PAC];
-  let add_tokens = [process.env.ETH_MOG];
+  let removed_tokens = [process.env.ETH_MOG];
+  let add_tokens = [process.env.ETH_APE];
 
   let indexID = 1;
   let index_address = await dodo.indexMap(indexID);
@@ -35,13 +35,20 @@ async function main() {
   const filter = await ethers.getContractAt('Filter', filter_address, deployer);
   const indexhelper = await ethers.getContractAt('IndexHelper', indexHelper_address, deployer);
  
+
+  let transferOwnershipTx = await indexhelper.transferOwnership(process.env.JAY);
+  await transferOwnershipTx.wait();
+  console.log(transferOwnershipTx.hash);
+  return;
+
+  console.log(await filter.getIndexTokens(index_address));
+
   let allowance = await token.attach(add_tokens[0]).allowance(index_address, swapRouter_address);
   if(allowance == 0) {
       tokenApproveTx = await index.safeApprove(add_tokens[0], swapRouter_address);
       await tokenApproveTx.wait();
       console.log("tokenApproveTx ", tokenApproveTx.hash);
   }
-
 
   let changeIndexTokenTx = await indexhelper.changeIndexTokens(
     index_address, 

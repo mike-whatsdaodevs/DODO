@@ -50,7 +50,7 @@ async function main() {
   console.log(setGasFeeRecipientTx.hash);
 
 
-  let setExchangeRateTx = await index.setExchangeRate(ethers.utils.parseEther("0.0000001"));
+  let setExchangeRateTx = await index.setExchangeRate(ethers.utils.parseEther("0.0001"));
   await setExchangeRateTx.wait();
   console.log(setExchangeRateTx.hash);                        
 return;

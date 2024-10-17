@@ -24,9 +24,9 @@ async function main() {
   let index1Tokens = [
     process.env.ETH_PEPE,
     process.env.ETH_FLOKI,
-    // process.env.ETH_MOG,
+    process.env.ETH_MOG,
     process.env.ETH_Neiro,
-    process.env.ETH_PAC,
+    // process.env.ETH_PAC,
   ]
 
   let indexTokens = index1Tokens;
@@ -51,6 +51,8 @@ async function main() {
 
   const index = await ethers.getContractAt('Index', index_address, deployer);
 
+  console.log(index1Tokens);
+  console.log(await filter.getIndexTokens(index_address));
 
   let allowance = await token.allowance(index_address, swapRouter_address);
   if (allowance == 0) {
@@ -58,11 +60,11 @@ async function main() {
     await tokenApproveTx.wait();
   }
 
-  let index_token_balance = await index.positionBalance(1, usdt_address);
+  let index_token_balance = await index.positionBalance(5, usdt_address);
   console.log("position balance 0",index_token_balance);
 
   /// batch deal positions
-  let positionIds = [2];
+  let positionIds = [5];
   let calldataArray = new Array();
   let positionIdsArray = new Array();
 
@@ -74,7 +76,7 @@ async function main() {
   for(let i=0; i < indexTokens.length ; i++) {
       let token_address = indexTokens[i];
       let tx;
-      if(indexTokens[i] == process.env.ETH_PAC || indexTokens[i] == process.env.ETH_Neiro) {
+      if(indexTokens[i] == process.env.ETH_MOG || indexTokens[i] == process.env.ETH_Neiro) {
         tx = await pathFinder.callStatic.bestExactInputPath(usdt_address, token_address, amount, [process.env.ETH_WETH9]);
       } else {
         tx = await pathFinder.callStatic.bestExactInputPath(usdt_address, token_address, amount, []);

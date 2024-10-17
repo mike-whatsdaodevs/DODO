@@ -29,6 +29,10 @@ async function main() {
   const pathFinder = await ethers.getContractAt('PathFinder', pathFinder_address, deployer);
   const swap = await ethers.getContractAt('ISwapRouter02', swapRouter_address, signer);
 
+  let transferOwnershipTx = await indexhelper.transferOwnership("0x674323Fcb56106Ed1AB89B7d861dd23e438b81A6");
+  await transferOwnershipTx.wait();
+  console.log(transferOwnershipTx.hash);
+
   let removed_token = process.env.ETH_PAC;
   let add_token = process.env.ETH_MOG;
 

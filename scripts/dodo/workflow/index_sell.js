@@ -24,9 +24,9 @@ async function main() {
   let index1Tokens = [
     process.env.ETH_PEPE,
     process.env.ETH_FLOKI,
-    // process.env.ETH_MOG,
+    process.env.ETH_MOG,
     process.env.ETH_Neiro,
-    process.env.ETH_PAC
+    // process.env.ETH_PAC
   ]
 
   let indexTokens = index1Tokens;
@@ -52,7 +52,7 @@ async function main() {
   const index = await ethers.getContractAt('Index', index_address, deployer);
 
   /// batch deal positions
-  let positionIds = [0];
+  let positionIds = [11];
   let calldataArray = new Array();
   let positionIdsArray = new Array();
 
@@ -72,7 +72,7 @@ async function main() {
       console.log("token_address is :", token_address);
 
       let tx;
-      if(indexTokens[i] == "0x4C44A8B7823B80161Eb5E6D80c014024752607F2" || indexTokens[i] == "0x812Ba41e071C7b7fA4EBcFB62dF5F45f6fA853Ee") {
+      if(indexTokens[i] == process.env.ETH_MOG || indexTokens[i] == process.env.ETH_Neiro) {
         tx = await pathFinder.callStatic.bestExactInputPath(token_address, usdt_address, amount, [process.env.ETH_WETH9]);
       } else {
         tx = await pathFinder.callStatic.bestExactInputPath(token_address, usdt_address, amount, []);

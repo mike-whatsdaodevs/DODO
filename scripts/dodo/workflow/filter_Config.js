@@ -12,46 +12,57 @@ async function main() {
   const [deployer] = await ethers.getSigners()
 
   console.log('deployer:' + deployer.address)
+
   const network = (await ethers.provider.getNetwork()).chainId;
   console.log(network);
 
-  let indexTokens = [
-  ];
+  let allowedTokens;
+  let filter_address;
 
-  let allowedTokens = [
-    // process.env.ETH_WETH9
-    // process.env.ETH_WBTC,
-    // process.env.ETH_UNI,
-    // process.env.ETH_MKR,
-    // process.env.ETH_LINK,
-    // process.env.ETH_PEPE,
-    // process.env.ETH_FLOKI,
-    // process.env.ETH_MNT,
-    // process.env.ETH_MOG,
-    // process.env.ETH_AAVE,
-    // process.env.ETH_FRAX,
-    // process.env.ETH_Neiro,
-    // process.env.ETH_EIGEN,
-    // process.env.ETH_MEGA,
-    // process.env.ETH_wTAO,
-    // process.env.ETH_PAC,
-    // process.env.ETH_LDO,
-    // process.env.ETH_WLD,
-    // process.env.ETH_ENA,
-    // process.env.ETH_ENS,
-    // process.env.ETH_APE,
-  ];
+  if (network == 1) {
+    allowedTokens = [
+      // process.env.ETH_WETH9
+      // process.env.ETH_WBTC,
+      // process.env.ETH_UNI,
+      // process.env.ETH_MKR,
+      // process.env.ETH_LINK,
+      // process.env.ETH_PEPE,
+      // process.env.ETH_FLOKI,
+      // process.env.ETH_MNT,
+      // process.env.ETH_MOG,
+      // process.env.ETH_AAVE,
+      // process.env.ETH_FRAX,
+      // process.env.ETH_Neiro,
+      // process.env.ETH_EIGEN,
+      // process.env.ETH_MEGA,
+      // process.env.ETH_wTAO,
+      // process.env.ETH_PAC,
+      // process.env.ETH_LDO,
+      // process.env.ETH_WLD,
+      // process.env.ETH_ENA,
+      // process.env.ETH_ENS,
+      // process.env.ETH_APE,
+    ];
+    filter_address = process.env.ETH_FILTER_MAIN;
+  } else if(network == 10) {
+    allowedTokens = [
+      process.env.OP_USDT,
+      process.env.OP_WETH9,
+      process.env.OP_WBTC,
+      process.env.OP_LINK,
+      process.env.OP_OP,
+      process.env.OP_WLD,
+      process.env.OP_SNX,
+    ];
+    filter_address = process.env.OP_FILTER_MAIN;
+  } else {
+    console.log("network error");
+    return;
+  }
 
-  let usdt_address = process.env.ETH_USDT;
+  console.log(allowedTokens);
 
-  swapRouter_address = process.env.ETH_SWAP_ROUTER_V2;
-  dodo_address = process.env.ETH_DODO_MAIN;
-  filter_address = process.env.ETH_FILTER_MAIN;
-  indexHelper_address = process.env.ETH_INDEX_HELPER_MAIN;
-
-  const dodo = await ethers.getContractAt('DODO', dodo_address, deployer);
   const filter = await ethers.getContractAt('Filter', filter_address, deployer);
-  const token = await ethers.getContractAt('@openzeppelin/contracts/token/ERC20/IERC20.sol:IERC20', usdt_address, deployer);
  
   // let addIndexTokensTx = await filter.addIndexTokens(index_address, indexTokens);
   // await addIndexTokensTx.wait();

@@ -46,7 +46,11 @@ async function main() {
 
   const index = await ethers.getContractAt('Index', index_address, deployer);
 
-  let target = dodo_address;
+  let target = indexHelper_address;//process.env.JAY;
+
+  let isManager = await filter.indexManagers(index_address, target);
+  console.log(isManager);
+  return;
 
   let manageIndexManagerTx = await filter.manageIndexManager(index_address, target, true);
   await manageIndexManagerTx.wait();
