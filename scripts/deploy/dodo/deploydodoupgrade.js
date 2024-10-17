@@ -21,13 +21,27 @@ async function main() {
   const network = (await ethers.provider.getNetwork()).chainId;
   console.log(network);
 
+  let indexSingleton_address;
+  let filter_address;
+
+  if (network == 1) {
+    indexSingleton_address = process.env.ETH_INDEX_MAIN;
+    filter_address = process.env.ETH_FILTER_MAIN;
+  } else if(network == 10) {
+    indexSingleton_address = process.env.OP_INDEX_MAIN;
+    filter_address = process.env.OP_FILTER_MAIN;
+  } else {
+    console.log("network error");
+    return;
+  }
+
+  console.log(indexSingleton_address);
+  console.log(filter_address);
+
   const DODO = await hre.ethers.getContractFactory('DODO')
   const dodo = await DODO.deploy()
   await dodo.deployed()
   console.log('dodo deployed to:', dodo.address);
-
-  let indexSingleton_address = process.env.ETH_INDEX_HELPER_MAIN;
-  let filter_address = process.env.ETH_FILTER_MAIN;
 
   const initialize_data = await dodo.populateTransaction.initialize(
     deployer.address, 

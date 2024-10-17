@@ -20,11 +20,19 @@ async function main() {
   let my_address = signer.address;
   console.log('my_address is:', my_address)
 
-  let chainID = (await ethers.provider.getNetwork()).chainId;
-  if (chainID == 31337n) {
-    await network.provider.send("hardhat_setBalance", [signer.address, "0x1000000000000000000000000"]);
+  const network = (await ethers.provider.getNetwork()).chainId;
+  console.log(network);
+
+  let quoterv2_address;
+
+  if (network == 1) {
+    quoterv2_address  = process.env.ETH_QUOTER_V2;
+  } else if(network == 10) {
+    quoterv2_address  = process.env.OP_QUOTER_V2;
+  } else {
+    console.log("network error");
+    return;
   }
-  let quoterv2_address = process.env.ETH_QUOTER_V2;
 
   console.log(await provider.getBalance(signer.address));
 

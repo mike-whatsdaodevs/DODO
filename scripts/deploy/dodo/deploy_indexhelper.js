@@ -20,10 +20,20 @@ async function main() {
   let my_address = signer.address;
   console.log('my_address is:', my_address)
 
-  // let weth9_address = process.env.WETH9;
-  // let usdc_address = process.env.USDC;
+  const network = (await ethers.provider.getNetwork()).chainId;
+  console.log(network);
 
-  let filter_address = process.env.ETH_FILTER_MAIN;
+  let filter_address;
+
+  if (network == 1) {
+    filter_address  = process.env.ETH_FILTER_MAIN;
+  } else if(network == 10) {
+    filter_address  = process.env.OP_FILTER_MAIN;
+  } else {
+    console.log("network error");
+    return;
+  }
+
 
   const IndexHelper = await hre.ethers.getContractFactory('IndexHelper')
   const indexHelper = await IndexHelper.deploy(filter_address);
