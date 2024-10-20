@@ -11,7 +11,7 @@ async function main() {
 
   const [deployer] = await ethers.getSigners()
   console.log('deployer:' + deployer.address)
-  
+
   const network = (await ethers.provider.getNetwork()).chainId;
   console.log(network);
 
@@ -43,31 +43,18 @@ async function main() {
   }
 
   const dodo = await ethers.getContractAt('DODO', dodo_address, deployer);
-  const filter = await ethers.getContractAt('Filter', filter_address, deployer);
-  const token = await ethers.getContractAt('@openzeppelin/contracts/token/ERC20/IERC20.sol:IERC20', usdt_address, deployer);
-  const swap = await ethers.getContractAt('ISwapRouter02', swapRouter_address, deployer);
-  const pathFinder = await ethers.getContractAt('PathFinder', pathFinder_address, deployer);
+  const indexHelper = await ethers.getContractAt('IndexHelper', indexHelper_address, deployer);
 
   let indexID = process.env.INDEXID;
-
   let index_address = await dodo.indexMap(indexID);
   console.log(index_address);
 
-  const index = await ethers.getContractAt('Index', index_address, deployer);
-
-  indexTokens = await filter.getIndexTokens(index_address);
-  console.log(indexTokens);
-
-  /// batch deal positions
   let positionIds = [0];
 
-  console.log(await index.positionStatus(positionIds[0]));
+  let batchWithdrawTx = await indexHelper.batchWithdraw(index_address, positionIds);
+  await batchWithdrawTx.wait();
+  console.log(batchWithdrawTx.hash);
 
-  for(let i = 0; i < indexTokens.length; i ++) {
-    let positionsBalance0 = await index.positionBalance(positionIds[0], indexTokens[i]);
-    console.log(positionsBalance0);
-  }
-  
 }
 
 main()

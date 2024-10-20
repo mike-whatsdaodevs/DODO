@@ -46,7 +46,7 @@ contract Index is IIndex, IndexGas, OwnableUpgradeable, UUPSUpgradeable, Pausabl
     /// index id
     uint256 public id;
 
-    bool public isDynamic;
+    bool public override isDynamic;
 
     //// position id
     uint256 public override positionId;
@@ -740,25 +740,22 @@ contract Index is IIndex, IndexGas, OwnableUpgradeable, UUPSUpgradeable, Pausabl
     /**
      * @dev withdraw position token
      * @param positionId : position id
-     * @param recipient: address
      * Requirements
      * - position id is exist
      * - currentStatus large than REQUEST_LIQUIDATION
      * - position owner id transaction caller
      */
-    function withdraw(uint256 positionId, address recipient) external onlyOwner returns (uint256 amount) {
+    function withdraw(uint256 positionId) external onlyOperator returns (uint256 amount) {
         (PositionSet.Position memory position, bool isExist) = getPositionById(positionId);
         if(! isExist) {
             revert();
         }
 
+        address recipient = position.owner;
+
         Enum.PositionStatus currentStatus = positionStatus[positionId];
         /// must large REQUEST_LIQUIDATION
         if(Enum.PositionStatus.SOLD != currentStatus) {
-            revert();
-        }
-
-        if(position.owner != tx.origin) {
             revert();
         }
 
@@ -769,7 +766,7 @@ contract Index is IIndex, IndexGas, OwnableUpgradeable, UUPSUpgradeable, Pausabl
             positionGasUsed = staticGasUsed;
         }
 
-        uint256 gasfee = gasExchageUnderlying(positionGasUsed);
+        uint256 gasfee = gasExchageUnderlying(positionGasUsed * basefee);
         
         amount = positionBalance[positionId][underlyingToken];
 
@@ -787,6 +784,10 @@ contract Index is IIndex, IndexGas, OwnableUpgradeable, UUPSUpgradeable, Pausabl
         positionStatus[positionId] = Enum.PositionStatus.WITHDRAWN;
 
         emit Withdraw(positionId, tx.origin, amount, block.timestamp);
+    }
+
+    function updateGasFeeRecipient(address recipient) external onlyOwner {
+        setGasFeeRecipient(recipient);
     }
 
     /// force withdraw token balance

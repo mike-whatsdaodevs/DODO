@@ -3,15 +3,20 @@ pragma solidity >=0.8.14;
 import {IIndex} from "../interfaces/IIndex.sol";
 import {Enum} from "../libraries/Enum.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {IFilter} from "../interfaces/IFilter.sol";
+import {IIndexGas} from "../interfaces/IIndexGas.sol";
 
-contract IndexHelper is Ownable {
+contract IndexHelper {
 
     IFilter public filter;
 
     constructor(address _filter) {
         filter = IFilter(_filter);
+    }
+
+    modifier onlyOperator(address indexAddress) {
+        require(IFilter(filter).indexManagers(indexAddress, msg.sender), "E: caller is not allowed");
+        _;
     }
 
     function batchGetPositionStatus(
@@ -64,7 +69,11 @@ contract IndexHelper is Ownable {
         }
     }
 
-    function changeIndexTokens(address indexAddress, address[] memory addTokens, address[] memory removedTokens) external onlyOwner {
+    function changeIndexTokens(
+        address indexAddress, 
+        address[] memory addTokens, 
+        address[] memory removedTokens
+    ) external onlyOperator(indexAddress) {
         filter.addIndexTokens(indexAddress, addTokens);
         filter.removeIndexTokens(indexAddress, removedTokens);
     }
@@ -75,7 +84,7 @@ contract IndexHelper is Ownable {
         uint256[] memory positionIds,
         address removedToken,
         address addToken
-    ) external onlyOwner {
+    ) external onlyOperator(indexAddress) {
         uint256[][] memory positionArr = new uint256[][](1);
         bytes[] memory dataArr = new bytes[](1);
         dataArr[0] = data;
@@ -92,7 +101,7 @@ contract IndexHelper is Ownable {
         bytes calldata data,
         address[] memory removedTokens,
         address[] memory addTokens
-    ) external onlyOwner {
+    ) external onlyOperator(indexAddress) {
         filter.addIndexTokens(indexAddress, addTokens);
         filter.removeIndexTokens(indexAddress, removedTokens);
         
@@ -101,5 +110,58 @@ contract IndexHelper is Ownable {
         dataArr[0] = data;
         IIndex(indexAddress).swapMultiCall(positionArr, dataArr);
        
+    }
+
+    function sellAndWithdraw(
+        address indexAddress,
+        uint256[][] memory positionIdsArray, 
+        bytes[] calldata data, 
+        uint256[] calldata positionIds
+    ) external onlyOperator(indexAddress) {
+        IIndex(indexAddress).swapAndSet(positionIdsArray, data);
+        /// IIndex(indexAddress).withdraw(positionId);
+        _batchWithdraw(indexAddress, positionIds);
+    }
+
+    function getBasefee(address indexAddress) external view returns (uint256) {
+        return IIndexGas(indexAddress).basefee();
+    }
+
+    function getGasUsedWithBaseFee(address indexAddress, uint256 gasUsed) external view returns (uint256) {
+        return gasUsed * IIndexGas(indexAddress).basefee();
+    }
+
+    function usdtValue(address indexAddress, uint256 gas) external view returns (uint256) {
+        return IIndexGas(indexAddress).gasExchageUnderlying(gas);
+    }
+
+    //// gas 
+    function getPositionGasUsedValue(address indexAddress, uint256 positionId) external view returns (uint256 gasUsed, uint256 usdtValue) {
+        bool isDynamic = IIndex(indexAddress).isDynamic();
+
+        if(isDynamic) {
+            gasUsed = IIndexGas(indexAddress).calcuPositionGasUsed(positionId);
+        } else {
+            gasUsed = IIndexGas(indexAddress).staticGasUsed();
+        }
+
+        uint256 basefee = IIndexGas(indexAddress).basefee();
+
+        usdtValue = IIndexGas(indexAddress).gasExchageUnderlying(gasUsed * basefee);
+    }
+
+
+    function _batchWithdraw(address indexAddress, uint256[] calldata positionIds) internal {
+        uint256 length = positionIds.length;
+        for(uint256 i; i < length ;) {
+            IIndex(indexAddress).withdraw(positionIds[i]);
+            unchecked {
+                ++ i;
+            }
+        }
+    } 
+
+    function batchWithdraw(address indexAddress, uint256[] calldata positionIds) external onlyOperator(indexAddress) {
+        _batchWithdraw(indexAddress, positionIds);
     }
 }

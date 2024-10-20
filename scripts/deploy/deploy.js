@@ -17,7 +17,7 @@ async function main() {
   // 0x4BE6339E1480761e650D2F2Eb27a702dD458654A
   let provider = ethers.provider
   const [deployer] = await ethers.getSigners()
-  let my_address = signer.address;
+  let my_address = deployer.address;
   console.log('my_address is:', my_address)
 
   const network = (await ethers.provider.getNetwork()).chainId;
@@ -72,7 +72,7 @@ async function main() {
   const dodo_initialize_data = await dodo.populateTransaction.initialize(
     ownerAddress, 
     index.address, 
-    filter.address
+    filterProxy.address
   );
   console.log("dodo_initialize_data data is",dodo_initialize_data)
 
@@ -83,7 +83,7 @@ async function main() {
 
   /// index helper
   const IndexHelper = await hre.ethers.getContractFactory('IndexHelper')
-  const indexHelper = await IndexHelper.deploy(filter.address);
+  const indexHelper = await IndexHelper.deploy(filterProxy.address);
   await indexHelper.deployed()
   console.log('indexHelper deployed to:', indexHelper.address)
 

@@ -12,36 +12,27 @@ async function main() {
   const [deployer] = await ethers.getSigners()
 
   console.log('deployer:' + deployer.address)
-
-  const network = (await ethers.provider.getNetwork()).chainId;
+   const network = (await ethers.provider.getNetwork()).chainId;
   console.log(network);
 
-  let dodo_address;
+  let indexHelper_address;
 
   if (network == 1) {
-    dodo_address = process.env.ETH_DODO_MAIN;
+    indexHelper_address = process.env.ETH_INDEX_HELPER_MAIN;
   } else if(network == 10) {
-    dodo_address = process.env.OP_DODO_MAIN;
+    indexHelper_address = process.env.OP_INDEX_HELPER_MAIN;
   } else {
     console.log("network error");
     return;
   }
 
-  const dodo = await ethers.getContractAt('DODO', dodo_address, deployer);
+  const indexHelper = await ethers.getContractAt('IndexHelper', indexHelper_address, deployer);
 
-  /// true 为动态index
-  /// false为静态index
-  let isDynamicIndex = true;
-  let createIndexTx = await dodo.createIndex("DYNAMIC", isDynamicIndex);
+  let tx = await indexHelper.transferOwnership(process.env.JAY);
+  await tx.wait();
+  console.log(tx.hash);
 
-  await createIndexTx.wait();
 
-  console.log(createIndexTx.hash);
-
-  console.log(await dodo.id());
-
-  let index_address = await dodo.indexMap(1);
-  console.log(index_address);
 
 }
 

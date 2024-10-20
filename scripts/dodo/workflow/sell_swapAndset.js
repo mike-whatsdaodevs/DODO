@@ -10,34 +10,37 @@ async function main() {
   console.log('NetWorks Name is ', (await ethers.provider.getNetwork()).name)
 
   const [deployer] = await ethers.getSigners()
-
   console.log('deployer:' + deployer.address)
+  
   const network = (await ethers.provider.getNetwork()).chainId;
   console.log(network);
 
-  let index0Tokens = [
-    process.env.ETH_WETH9,
-    process.env.ETH_WBTC,
-    process.env.ETH_UNI,
-  ];
+  let indexTokens;
+  let filter_address;
+  let dodo_address;
+  let indexHelper_address;
+  let pathFinder_address;
+  let usdt_address;
+  let swapRouter_address;
 
-  let index1Tokens = [
-    process.env.ETH_PEPE,
-    process.env.ETH_FLOKI,
-    process.env.ETH_MOG,
-    process.env.ETH_Neiro,
-    // process.env.ETH_PAC
-  ]
-
-  let indexTokens = index1Tokens;
-
-  let usdt_address = process.env.ETH_USDT;
-
-  let swapRouter_address = process.env.ETH_SWAP_ROUTER_V2;
-  let dodo_address = process.env.ETH_DODO_MAIN;
-  let filter_address = process.env.ETH_FILTER_MAIN;
-  let indexHelper_address = process.env.ETH_INDEX_HELPER_MAIN;
-  let pathFinder_address = process.env.ETH_PATH_FINDER_MAIN;
+  if (network == 1) {
+    filter_address = process.env.ETH_FILTER_MAIN;
+    dodo_address = process.env.ETH_DODO_MAIN;
+    indexHelper_address = process.env.ETH_INDEX_HELPER_MAIN;
+    pathFinder_address = process.env.ETH_PATH_FINDER_MAIN;
+    usdt_address = process.env.ETH_USDT;
+    swapRouter_address = process.env.ETH_SWAP_ROUTER_V2;
+  } else if(network == 10) {
+    filter_address = process.env.OP_FILTER_MAIN;
+    dodo_address = process.env.OP_DODO_MAIN;
+    indexHelper_address = process.env.OP_INDEX_HELPER_MAIN;
+    pathFinder_address = process.env.OP_PATH_FINDER_MAIN;
+    usdt_address = process.env.OP_USDT;
+    swapRouter_address = process.env.OP_SWAP_ROUTER_V2;
+  } else {
+    console.log("network error");
+    return;
+  }
 
   const dodo = await ethers.getContractAt('DODO', dodo_address, deployer);
   const filter = await ethers.getContractAt('Filter', filter_address, deployer);
@@ -45,16 +48,16 @@ async function main() {
   const swap = await ethers.getContractAt('ISwapRouter02', swapRouter_address, deployer);
   const pathFinder = await ethers.getContractAt('PathFinder', pathFinder_address, deployer);
 
-  let indexID = 1;
+  let indexID = process.env.INDEXID;
   let index_address = await dodo.indexMap(indexID);
   console.log(index_address);
 
   const index = await ethers.getContractAt('Index', index_address, deployer);
 
-  console.log(await filter.getIndexTokens(index_address));
+  indexTokens = await filter.getIndexTokens(index_address);
 
   /// batch deal positions
-  let positionIds = [11];
+  let positionIds = [0];
   let calldataArray = new Array();
   let positionIdsArray = new Array();
 

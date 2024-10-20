@@ -181,27 +181,27 @@ contract DODO is
         );
     }
 
-    /**
-     * @dev withdraw position fund
-     * @param indexId: index id 
-     * @param positionId position id
-     * 
-     * Requirements 
-     *  - positionId is exists
-     *  - caller is position owner
-     *  - position status is sold / liquidatd
-     */
-    function withdrawPosition(uint256 indexId, uint256 positionId) external {
-        address indexAddress = indexList[indexId];
-        bool isPositionOwner = IIndex(indexAddress).checkPositionOwner(positionId, msg.sender);
+    // /**
+    //  * @dev withdraw position fund
+    //  * @param indexId: index id 
+    //  * @param positionId position id
+    //  * 
+    //  * Requirements 
+    //  *  - positionId is exists
+    //  *  - caller is position owner
+    //  *  - position status is sold / liquidatd
+    //  */
+    // function withdrawPosition(uint256 indexId, uint256 positionId) external {
+    //     address indexAddress = indexList[indexId];
+    //     bool isPositionOwner = IIndex(indexAddress).checkPositionOwner(positionId, msg.sender);
 
-        if(! isPositionOwner) {
-            return;
-        }
+    //     if(! isPositionOwner) {
+    //         return;
+    //     }
 
-        uint256 amount = IIndex(indexAddress).withdraw(positionId, msg.sender);
-        emit Withdraw(indexId, indexAddress, msg.sender, amount, block.timestamp);
-    }
+    //     uint256 amount = IIndex(indexAddress).withdraw(positionId, msg.sender);
+    //     emit Withdraw(indexId, indexAddress, msg.sender, amount, block.timestamp);
+    // }
 
     function changeFilter(address newFilter) external onlyOwner {
         filter = newFilter;
@@ -219,6 +219,10 @@ contract DODO is
 
     function upgradeIndexImplement(address indexProxy, address indexImp, bytes calldata data) external onlyOwner {
         UUPSUpgradeable(indexProxy).upgradeToAndCall(indexImp, data);
+    }
+
+    function changeFeeTo(address newFeeTo) external onlyOwner {
+        feeTo = newFeeTo;
     }
 
      /// uups interface

@@ -77,6 +77,8 @@ interface IIndex {
 
     function feeRate() external view returns (uint256);
 
+    function isDynamic() external view returns (bool);
+
     function positionBalance(uint256 positionId, address token) external view returns (uint256);
 
     function positionStatus(uint256 positionId) external view returns(Enum.PositionStatus); 
@@ -94,7 +96,7 @@ interface IIndex {
         address ownerAddress
     ) external view returns (bool);
 
-    function withdraw(uint256 positionId, address recipient) external returns (uint256 amount);
+    function withdraw(uint256 positionId) external returns (uint256 amount);
 
     function changePositionStatus(
         uint256 positionId, 
@@ -102,6 +104,8 @@ interface IIndex {
     ) external;
 
     function swapMultiCall(uint256[][] memory positionIdsArray, bytes[] calldata data) external payable;
+
+    function swapAndSet(uint256[][] memory positionIdsArray, bytes[] calldata data) external payable;
 
     function setPositionsSwithBalance(
         address tokenBefore, 

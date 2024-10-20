@@ -2,8 +2,9 @@
 pragma solidity >=0.8.14;
 
 import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import {IIndexGas} from "../interfaces/IIndexGas.sol";
 
-contract IndexGas {
+contract IndexGas is IIndexGas {
 
     using SafeMath for uint256;
 
@@ -12,9 +13,10 @@ contract IndexGas {
     uint256 public gasUsed;
     uint256 public lastGasUsed;
     uint256 public averageGasUsed;
-    uint256 public staticGasUsed;
-    uint256 public exchangeRate;
+    uint256 public override staticGasUsed;
+    uint256 public exchangePrice;
     address public gasFeeRecipient;
+    uint256 public override basefee;
 
     struct GasUsedAverage {
         uint256 created;
@@ -41,23 +43,28 @@ contract IndexGas {
         positionsGasUsedAverage[positionId].closed = averageGasUsed;
     }
 
-    function setExchangeRate(uint256 newExchangeRate) external {
-        exchangeRate = newExchangeRate;
+    function setExchangePrice(uint256 newExchangePrice) external {
+        exchangePrice = newExchangePrice;
     }
 
     function setStaticGasUsed(uint256 staticGas) external {
         staticGasUsed = staticGas;
     }
 
-    function gasExchageUnderlying(uint256 _gasUsed) internal view returns (uint256) {
-        return (_gasUsed * exchangeRate).div(1E18) ;
+    /// ((used * 2300) / 1E18) * 1E6 ;
+    function gasExchageUnderlying(uint256 _gasUsed) public view override returns (uint256) {
+        return (_gasUsed * exchangePrice).mul(1E6).div(1E18) ;
     }
 
-    function setGasFeeRecipient(address recipient) external {
+    function setGasFeeRecipient(address recipient) internal {
         gasFeeRecipient = recipient;
     }
 
-    function calcuPositionGasUsed(uint256 positionId) public returns (uint256) {
+    function setBaseFee(uint256 newBaseFee) external {
+        basefee = newBaseFee;
+    }
+
+    function calcuPositionGasUsed(uint256 positionId) public view override returns (uint256) {
         GasUsedAverage memory average = positionsGasUsedAverage[positionId];
         return average.closed - average.created;
     }

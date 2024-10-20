@@ -19,6 +19,8 @@ async function main() {
   let filter_address;
   let dodo_address;
   let indexHelper_address;
+  let usdt_address;
+  let swapRouter_address;
 
   if (network == 1) {
     allowedTokens = [
@@ -47,15 +49,28 @@ async function main() {
     filter_address = process.env.ETH_FILTER_MAIN;
     dodo_address = process.env.ETH_DODO_MAIN;
     indexHelper_address = process.env.ETH_INDEX_HELPER_MAIN;
+    usdt_address = process.env.ETH_USDT;
+    swapRouter_address = process.env.ETH_SWAP_ROUTER_V2;
   } else if(network == 10) {
+    // indexTokens = [
+    //   process.env.OP_WETH9,
+    //   process.env.OP_WBTC,
+    //   process.env.OP_OP,
+    // ];
+
     indexTokens = [
-      process.env.OP_WETH9,
       process.env.OP_WBTC,
       process.env.OP_OP,
+      process.env.OP_WETH9,
+      process.env.OP_LINK,
+      process.env.OP_WLD,
+      process.env.OP_SNX
     ];
     filter_address = process.env.OP_FILTER_MAIN;
     dodo_address = process.env.OP_DODO_MAIN;
     indexHelper_address = process.env.OP_INDEX_HELPER_MAIN;
+    usdt_address = process.env.OP_USDT;
+    swapRouter_address = process.env.OP_SWAP_ROUTER_V2;
   } else {
     console.log("network error");
     return;
@@ -64,18 +79,25 @@ async function main() {
   const dodo = await ethers.getContractAt('DODO', dodo_address, deployer);
   const filter = await ethers.getContractAt('Filter', filter_address, deployer);
 
-  let indexID = 0;
+  let indexID = process.env.INDEXID;
+
   let index_address = await dodo.indexMap(indexID);
   console.log(index_address);
 
   const index = await ethers.getContractAt('Index', index_address, deployer);
+  const token = await ethers.getContractAt('@openzeppelin/contracts/token/ERC20/IERC20.sol:IERC20', usdt_address, deployer);
 
   let target = indexHelper_address;//process.env.JAY;
   let managers = [
     indexHelper_address,
     process.env.JAY,
-    deployer.address
+    process.env.OP_INDEX_HELPER_MAIN_JAY,
+    deployer.address,
+    dodo_address
   ]
+
+  // console.log(await index.filter());
+  // console.log(await filter.indexManagers(index_address, dodo_address));return;
 
   for(let i = 0; i < managers.length; i ++) {
       let isManager = await filter.indexManagers(index_address, managers[i]);
@@ -86,10 +108,31 @@ async function main() {
           console.log(manageIndexManagerTx.hash);
       }
   }
-  let addIndexTokensTx = await filter.addIndexTokens(index_address, indexTokens);
-  await addIndexTokensTx.wait();
-  console.log(addIndexTokensTx.hash);
-  return;
+
+  let insertedIndexTokens = await filter.getIndexTokens(index_address);
+  if(insertedIndexTokens.length == 0) {
+    let addIndexTokensTx = await filter.addIndexTokens(index_address, indexTokens);
+    await addIndexTokensTx.wait();
+    console.log(addIndexTokensTx.hash);
+  }
+  
+
+  let allowance = await token.allowance(index_address, swapRouter_address);
+  console.log(usdt_address, "  ", allowance);
+  if (allowance == 0) {
+    let tokenApproveTx = await index.safeApprove(usdt_address, swapRouter_address);
+    await tokenApproveTx.wait();
+  }
+
+  for(let i = 0; i < indexTokens.length; i ++) {
+    let allowance = await token.attach(indexTokens[i]).allowance(index_address, swapRouter_address);
+    console.log(indexTokens[i], "  ", allowance);
+    if (allowance == 0) {
+      let tokenApproveTx = await index.safeApprove(indexTokens[i], swapRouter_address);
+      await tokenApproveTx.wait();
+    }
+  }
+
 
 
 }

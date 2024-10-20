@@ -47,6 +47,7 @@ async function main() {
   const token = await ethers.getContractAt('@openzeppelin/contracts/token/ERC20/IERC20.sol:IERC20', usdt_address, deployer);
   const swap = await ethers.getContractAt('ISwapRouter02', swapRouter_address, deployer);
   const pathFinder = await ethers.getContractAt('PathFinder', pathFinder_address, deployer);
+  const indexHelper = await ethers.getContractAt('IndexHelper', indexHelper_address, deployer);
 
   let indexID = process.env.INDEXID;
 
@@ -56,18 +57,70 @@ async function main() {
   const index = await ethers.getContractAt('Index', index_address, deployer);
 
   indexTokens = await filter.getIndexTokens(index_address);
-  console.log(indexTokens);
 
   /// batch deal positions
-  let positionIds = [0];
+  let positionIds = [5];
+  let calldataArray = new Array();
+  let positionIdsArray = new Array();
 
-  console.log(await index.positionStatus(positionIds[0]));
+  for(let i=0; i < indexTokens.length ; i++) {
+      let positionsBalance = await index.getPositionsBalance(indexTokens[i], positionIds);
+      let amount = positionsBalance.tokenInBalance;
+      console.log("token balance is:", amount);
 
-  for(let i = 0; i < indexTokens.length; i ++) {
-    let positionsBalance0 = await index.positionBalance(positionIds[0], indexTokens[i]);
-    console.log(positionsBalance0);
+      // let hash = await index.hashPositionIds(positionIds, usdt_address, indexTokens[i]);
+      // let positionIdsHashData = await index.positionIdsHashList(hash);
+      // console.log("position data is", positionIdsHashData);
+
+      // continue;
+
+      let token_address = indexTokens[i];
+
+      console.log("token_address is :", token_address);
+
+      let tx;
+      if(indexTokens[i] == process.env.ETH_MOG || indexTokens[i] == process.env.ETH_Neiro) {
+        tx = await pathFinder.callStatic.bestExactInputPath(token_address, usdt_address, amount, [process.env.ETH_WETH9]);
+      } else {
+        tx = await pathFinder.callStatic.bestExactInputPath(token_address, usdt_address, amount, []);
+      }
+      /// let tx = await pathFinder.callStatic.exactInputPath(token_address, usdt_address, amount);
+      // let res = await tx.wait();
+      console.log(tx);
+
+      if(tx.expectedAmount == 0) {
+        console.log("skip address is:", token_address);
+        return;
+      }
+      let params = {
+        path: tx.path,
+        recipient: index_address,
+        amountIn: amount,
+        amountOutMinimum: 0
+      }
+      console.log(params);
+
+      /// construct calldata
+      let txcalldata = await swap.populateTransaction.exactInput(
+          params
+      );
+      calldataArray.push(txcalldata.data);
+      positionIdsArray.push(positionIds);
   }
-  
+  console.log(calldataArray);
+  console.log(positionIdsArray);
+
+
+  let tx = await indexHelper.sellAndWithdraw(
+    index_address,
+    positionIdsArray,
+    calldataArray,
+    positionIds
+  );
+  await tx.wait();
+  console.log(tx.hash);
+  return;
+
 }
 
 main()

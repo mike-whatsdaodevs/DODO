@@ -64,10 +64,6 @@ async function main() {
 
   const filter = await ethers.getContractAt('Filter', filter_address, deployer);
  
-  // let addIndexTokensTx = await filter.addIndexTokens(index_address, indexTokens);
-  // await addIndexTokensTx.wait();
-  // console.log(addIndexTokensTx.hash);
-
   let len = allowedTokens.length;
   for(let i = 0; i < len; i ++) {
      let manageAllowedTokenTx = await filter.manageAllowedToken(allowedTokens[i], true);
@@ -75,14 +71,6 @@ async function main() {
      console.log(manageAllowedTokenTx.hash);
   }
 
-  // for(let i=0; i< allowedTokens.length; i++) {
-  //     let allowance = await token.attach(allowedTokens[i]).allowance(index_address, swapRouter_address);
-  //     if(allowance == 0) {
-  //         tokenApproveTx = await index.safeApprove(allowedTokens[i], swapRouter_address);
-  //         await tokenApproveTx.wait();
-  //         console.log("i is ", i, allowedTokens[i]);
-  //     }
-  // }
   return;
 
 }
