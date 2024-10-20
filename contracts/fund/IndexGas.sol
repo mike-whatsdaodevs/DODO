@@ -66,6 +66,9 @@ contract IndexGas is IIndexGas {
 
     function calcuPositionGasUsed(uint256 positionId) public view override returns (uint256) {
         GasUsedAverage memory average = positionsGasUsedAverage[positionId];
+        if(average.created >= average.closed) {
+            return 0;
+        }
         return average.closed - average.created;
     }
 
