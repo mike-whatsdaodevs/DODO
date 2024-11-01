@@ -76,26 +76,44 @@ async function main() {
   // console.log(manageFeeRateTx.hash)
   // return;
 
-  let setGasFeeRecipientJson = await index.populateTransaction.updateGasFeeRecipient(deployer.address);
-  console.log(setGasFeeRecipientJson);
+  // let setGasFeeRecipientJson = await index.populateTransaction.updateGasFeeRecipient(deployer.address);
+  // console.log(setGasFeeRecipientJson);
+  // let callTx1 = await dodo.managerIndex(indexID, setGasFeeRecipientJson.data);
+  // await callTx1.wait();
+  // console.log(callTx1.hash)
 
-  let callTx = await dodo.managerIndex(indexID, setGasFeeRecipientJson.data);
-  await callTx.wait();
-  console.log(callTx.hash)
+  // let updateGasBasefeeJson = await index.populateTransaction.updateGasBasefee(ethers.utils.parseUnits("5", 9));
+  // console.log(updateGasBasefeeJson);
+  // let callTx2 = await dodo.managerIndex(indexID, updateGasBasefeeJson.data);
+  // await callTx2.wait();
+  // console.log(callTx2.hash);
 
 
-  let setExchangeRateTx = await index.setExchangePrice(2650);
-  await setExchangeRateTx.wait();
-  console.log(setExchangeRateTx.hash);                        
+  // let updateGasExchangePriceJson = await index.populateTransaction.updateGasExchangePrice(2650);
+  // console.log(updateGasExchangePriceJson);
+  // let callTx3 = await dodo.managerIndex(indexID, updateGasExchangePriceJson.data);
+  // await callTx3.wait();
+  // console.log(callTx3.hash)
 
-  /// 3000000
-  let setStaticGasUsedTx = await index.setStaticGasUsed(1500000);
-  await setStaticGasUsedTx.wait();
-  console.log(setStaticGasUsedTx.hash);
+  // let updateGasStaticGasUsedJson = await index.populateTransaction.updateGasStaticGasUsed(1500000);
+  // console.log(updateGasStaticGasUsedJson);
+  // let callTx4 = await dodo.managerIndex(indexID, updateGasStaticGasUsedJson.data);
+  // await callTx4.wait();
+  // console.log(callTx4.hash)
 
-  let setBaseFeeTx = await index.setBaseFee(ethers.utils.parseUnits("1", 6));
-  await setBaseFeeTx.wait();
-  console.log(setBaseFeeTx.hash); 
+
+  // let setExchangeRateTx = await index.setExchangePrice(2650);
+  // await setExchangeRateTx.wait();
+  // console.log(setExchangeRateTx.hash);                        
+
+  // /// 3000000
+  // let setStaticGasUsedTx = await index.setStaticGasUsed(1500000);
+  // await setStaticGasUsedTx.wait();
+  // console.log(setStaticGasUsedTx.hash);
+
+  // let setBaseFeeTx = await index.setBaseFee(ethers.utils.parseUnits("1", 6));
+  // await setBaseFeeTx.wait();
+  // console.log(setBaseFeeTx.hash); 
 
 
 
