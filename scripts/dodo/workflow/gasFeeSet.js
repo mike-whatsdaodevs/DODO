@@ -63,7 +63,18 @@ async function main() {
   let staticGasUsed = await index.staticGasUsed();
   console.log("staticGasUsed used :", staticGasUsed);
 
+  let feeRate = await index.feeRate();
+  console.log("feeRate :", feeRate);
+
   /// set
+
+  // let manageFeeRateJson = await index.populateTransaction.manageFeeRate(100);
+  // console.log(manageFeeRateJson);
+
+  // let manageFeeRateTx = await dodo.managerIndex(indexID, manageFeeRateJson.data);
+  // await manageFeeRateTx.wait();
+  // console.log(manageFeeRateTx.hash)
+  // return;
 
   let setGasFeeRecipientJson = await index.populateTransaction.updateGasFeeRecipient(deployer.address);
   console.log(setGasFeeRecipientJson);

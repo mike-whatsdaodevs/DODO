@@ -58,17 +58,26 @@ async function main() {
   const index = await ethers.getContractAt('Index', index_address, deployer);
 
   /// batch deal positions
-  let positionIds = [0];
+  let positionIds = [12];
 
   console.log(await index.positionStatus(positionIds[0]));
 
   let isDynamic = await index.isDynamic();
   console.log("isDynamic: ", isDynamic);
 
+  let positionsGasUsedAverage = await index.positionsGasUsedAverage(positionIds[0]);
+  console.log(positionsGasUsedAverage);
+
+  let calcuPositionGasUsed = await index.calcuPositionGasUsed(positionIds[0]);
+  console.log(calcuPositionGasUsed);
+
+  let averageGasUsed = await index.averageGasUsed();
+  console.log("averageGasUsed: ",averageGasUsed);
+
   let gasUsed;
   if(isDynamic) {
       let gasObj = await index.positionsGasUsedAverage(positionIds[0]);
-      gasUsed = gasObj.closed - gasObj.created;
+      gasUsed = gasObj.closed > gasObj.created ? gasObj.closed - gasObj.created : 0 ;
   } else {
       gasUsed = await index.staticGasUsed();
   }
@@ -86,6 +95,12 @@ async function main() {
   let usetValue = await index.gasExchageUnderlying(gasUsed * basefee);
   console.log("usetValue: ", usetValue);
 
+  let realtimeGasUsed = averageGasUsed - positionsGasUsedAverage.created;
+  console.log("realtimeGasUsed: ",positionsGasUsedAverage);
+
+  let ontimeGasUsedValue = await indexHelper.ontimeGasUsedValue(index_address, positionIds[0]);
+  console.log("ontimeGasUsedValue :", ontimeGasUsedValue);
+
 
   // let gasUsedWithBaseFee = await indexHelper.getGasUsedWithBaseFee(gasUsed);
   // console.log("gasUsedWithBaseFee: ", gasUsedWithBaseFee);
@@ -95,6 +110,8 @@ async function main() {
 
   let positionsBalance0 = await index.positionBalance(positionIds[0], usdt_address);
   console.log(positionsBalance0);
+
+
   
 }
 

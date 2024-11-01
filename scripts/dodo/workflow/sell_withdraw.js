@@ -59,7 +59,7 @@ async function main() {
   indexTokens = await filter.getIndexTokens(index_address);
 
   /// batch deal positions
-  let positionIds = [5];
+  let positionIds = [0];
   let calldataArray = new Array();
   let positionIdsArray = new Array();
 
@@ -80,13 +80,16 @@ async function main() {
 
       let tx;
       if(indexTokens[i] == process.env.ETH_MOG || indexTokens[i] == process.env.ETH_Neiro) {
-        tx = await pathFinder.callStatic.bestExactInputPath(token_address, usdt_address, amount, [process.env.ETH_WETH9]);
+        tx = await pathFinder.callStatic.bestExactInputPath(token_address, usdt_address, amount, [process.env.OP_WETH9]);
       } else {
-        tx = await pathFinder.callStatic.bestExactInputPath(token_address, usdt_address, amount, []);
+        tx = await pathFinder.callStatic.bestExactInputPath(token_address, usdt_address, amount, [process.env.OP_WETH9]);
       }
       /// let tx = await pathFinder.callStatic.exactInputPath(token_address, usdt_address, amount);
       // let res = await tx.wait();
       console.log(tx);
+      let min = tx.expectedAmount.mul(ethers.BigNumber.from("9")).div(ethers.BigNumber.from("10"));
+      console.log("tx.expectedAmount :" , tx.expectedAmount);
+      console.log("min :", min);
 
       if(tx.expectedAmount == 0) {
         console.log("skip address is:", token_address);

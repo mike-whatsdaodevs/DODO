@@ -28,9 +28,12 @@ async function main() {
 
   const indexHelper = await ethers.getContractAt('IndexHelper', indexHelper_address, deployer);
 
-  let tx = await indexHelper.transferOwnership(process.env.JAY);
-  await tx.wait();
-  console.log(tx.hash);
+  let gasPrice = await indexHelper.getTxGP();
+  console.log(gasPrice);
+
+  // let tx = await indexHelper.transferOwnership(process.env.JAY);
+  // await tx.wait();
+  // console.log(tx.hash);
 
 
 

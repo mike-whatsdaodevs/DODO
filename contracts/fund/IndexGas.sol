@@ -12,16 +12,12 @@ contract IndexGas is IIndexGas {
     /// gas
     uint256 public gasUsed;
     uint256 public lastGasUsed;
-    uint256 public averageGasUsed;
+    uint256 public override averageGasUsed;
     uint256 public override staticGasUsed;
     uint256 public exchangePrice;
     address public gasFeeRecipient;
     uint256 public override basefee;
 
-    struct GasUsedAverage {
-        uint256 created;
-        uint256 closed;
-    }
     mapping(uint256 => GasUsedAverage) public positionsGasUsedAverage;
 
     function calcuAverageGasUsed(uint256 activePosition) internal returns (uint256) {
@@ -43,11 +39,11 @@ contract IndexGas is IIndexGas {
         positionsGasUsedAverage[positionId].closed = averageGasUsed;
     }
 
-    function setExchangePrice(uint256 newExchangePrice) external {
+    function setExchangePrice(uint256 newExchangePrice) internal {
         exchangePrice = newExchangePrice;
     }
 
-    function setStaticGasUsed(uint256 staticGas) external {
+    function setStaticGasUsed(uint256 staticGas) internal {
         staticGasUsed = staticGas;
     }
 
@@ -60,7 +56,7 @@ contract IndexGas is IIndexGas {
         gasFeeRecipient = recipient;
     }
 
-    function setBaseFee(uint256 newBaseFee) external {
+    function setBaseFee(uint256 newBaseFee) internal {
         basefee = newBaseFee;
     }
 
@@ -77,6 +73,10 @@ contract IndexGas is IIndexGas {
         assembly ("memory-safe") {
             tstore(lockFlag, 1)
         }
+    }
+
+    function getGasUsedAverage(uint256 positionId) external view returns (GasUsedAverage memory) {
+        return positionsGasUsedAverage[positionId];
     }
 
     function isLocked() internal view returns (bool locked) {

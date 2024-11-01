@@ -57,14 +57,19 @@ async function main() {
     //   process.env.OP_WBTC,
     //   process.env.OP_OP,
     // ];
-
+// process.env.OP_PIKA,
     indexTokens = [
-      process.env.OP_WBTC,
-      process.env.OP_OP,
       process.env.OP_WETH9,
+      process.env.OP_WBTC,
       process.env.OP_LINK,
-      process.env.OP_WLD,
-      process.env.OP_SNX
+      process.env.OP_OP,
+      // process.env.OP_WLD,
+      // process.env.OP_SNX,
+      // process.env.OP_PERP,
+      // process.env.OP_THALES,
+      // process.env.OP_wstETH,
+      process.env.OP_USDC,
+      process.env.OP_DAI,
     ];
     filter_address = process.env.OP_FILTER_MAIN;
     dodo_address = process.env.OP_DODO_MAIN;
@@ -87,15 +92,20 @@ async function main() {
   const index = await ethers.getContractAt('Index', index_address, deployer);
   const token = await ethers.getContractAt('@openzeppelin/contracts/token/ERC20/IERC20.sol:IERC20', usdt_address, deployer);
 
+
+  
+
   let target = indexHelper_address;//process.env.JAY;
   let managers = [
     indexHelper_address,
     process.env.JAY,
-    process.env.OP_INDEX_HELPER_MAIN_JAY,
     deployer.address,
     dodo_address
   ]
 
+  // let removeIndexTokensTx = await filter.removeIndexTokens(index_address, [process.env.OP_NBL]);
+  // await removeIndexTokensTx.wait();
+  // console.log(removeIndexTokensTx.hash);return;
   // console.log(await index.filter());
   // console.log(await filter.indexManagers(index_address, dodo_address));return;
 
@@ -110,12 +120,13 @@ async function main() {
   }
 
   let insertedIndexTokens = await filter.getIndexTokens(index_address);
+  console.log(insertedIndexTokens);
+  console.log(indexTokens);
   if(insertedIndexTokens.length == 0) {
     let addIndexTokensTx = await filter.addIndexTokens(index_address, indexTokens);
     await addIndexTokensTx.wait();
     console.log(addIndexTokensTx.hash);
   }
-  
 
   let allowance = await token.allowance(index_address, swapRouter_address);
   console.log(usdt_address, "  ", allowance);

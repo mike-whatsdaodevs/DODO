@@ -44,24 +44,23 @@ async function main() {
 
   const dodo = await ethers.getContractAt('DODO', dodo_address, deployer);
 
-  let indexID = 0;
-  let positionId = 0;
+  let indexID = process.env.INDEXID;
+  let positionId = 1;
   let index_address = await dodo.indexMap(indexID);
   console.log(index_address);
   const usdtToken = await ethers.getContractAt('@openzeppelin/contracts/token/ERC20/IERC20.sol:IERC20', usdt_address, deployer);
   const index = await ethers.getContractAt('Index', index_address, deployer);
 
   let gasUsed = await index.gasUsed();
-  console.log(gasUsed);
+  console.log("gasUsed: ", gasUsed);
   let lastGasUsed = await index.lastGasUsed();
-  console.log(lastGasUsed);
-  ///  
+  console.log("lastGasUsed: ", lastGasUsed);
 
   let positionsGasUsedAverage = await index.positionsGasUsedAverage(positionId);
-  console.log(positionsGasUsedAverage);
+  console.log("positionsGasUsedAverage:", positionsGasUsedAverage);
 
 
-  let withdrawPositionTx = await index.withdraw(positionId, {gasLimit: 200000});
+  let withdrawPositionTx = await index.withdraw(positionId);
   await withdrawPositionTx.wait();
   // function withdrawPosition(uint256 indexId, uint256 positionId) external {
   console.log(withdrawPositionTx.hash);

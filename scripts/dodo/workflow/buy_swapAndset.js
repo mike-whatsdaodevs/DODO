@@ -64,9 +64,8 @@ async function main() {
     let tokenApproveTx = await index.safeApprove(usdt_address, swapRouter_address);
     await tokenApproveTx.wait();
   }
-
   /// batch deal positions
-  let positionIds = [5];
+  let positionIds = [0];
   let calldataArray = new Array();
   let positionIdsArray = new Array();
 
@@ -76,28 +75,32 @@ async function main() {
   let positionsBalance = await index.getPositionsBalance(usdt_address, positionIds);
   console.log("positionsBalance is", positionsBalance);
   let amount = Math.floor(positionsBalance.tokenInBalance.div(indexTokens.length));
+  //let amount = ethers.utils.parseUnits("2", 6);
   console.log("amount is", amount);
 
   for(let i=0; i < indexTokens.length ; i++) {
       let token_address = indexTokens[i];
+      console.log(token_address);
       let tx;
-      if(indexTokens[i] == process.env.ETH_MOG || indexTokens[i] == process.env.ETH_Neiro) {
-        tx = await pathFinder.callStatic.bestExactInputPath(usdt_address, token_address, amount, [process.env.ETH_WETH9]);
+      if(indexTokens[i] == process.env.OP_NEKOCOIN) {
+        tx = await pathFinder.callStatic.bestExactInputPath(usdt_address, token_address, amount, [process.env.OP_OP]);
       } else {
-        tx = await pathFinder.callStatic.bestExactInputPath(usdt_address, token_address, amount, []);
+        tx = await pathFinder.callStatic.bestExactInputPath(usdt_address, token_address, amount, [process.env.OP_WETH9]);
       }
       // let res = await tx.wait();
-      console.log(tx);
-
       if(tx.expectedAmount == 0) {
         console.log("skip address is:", token_address);
         return;
       }
+
+      let min = tx.expectedAmount.mul(ethers.BigNumber.from("9")).div(ethers.BigNumber.from("10"));
+      console.log("tx.expectedAmount :" , tx.expectedAmount);
+      console.log("min :", min);
       let params = {
         path: tx.path,
         recipient: index_address,
         amountIn: amount,
-        amountOutMinimum: 0
+        amountOutMinimum: min
       }
       console.log(params);
 

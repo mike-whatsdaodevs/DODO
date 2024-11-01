@@ -40,7 +40,7 @@ async function main() {
   /// console.log(await dodo.indexSingleton());return;
 
   let indexID = process.env.INDEXID;
-  
+
   let index_address = await dodo.indexMap(indexID);
   console.log(index_address);
   const usdtToken = await ethers.getContractAt('@openzeppelin/contracts/token/ERC20/IERC20.sol:IERC20', usdt_address, deployer);
@@ -54,23 +54,17 @@ async function main() {
       console.log(approveTx.hash);
   } 
 
-  // let indexDepisitTx = await index.createPosition(
-  //   deployer.address,
-  //   ethers.utils.parseUnits("2", 6),
-  //   10000,
-  //   100,
-  //   10000
-  // );
-  // await indexDepisitTx.wait();
-  // console.log(indexDepisitTx.hash);
-  // return;
-  // function createPosition(
-  //       address initialOwner, 
-  //       uint256 amount,
-  //       uint128 currentIndex,
-  //       uint128 healthFactor,
-  //       uint256 expiration
-  //   )
+// let gasPrice = await provider.getGasPrice();
+//   console.log(gasPrice);
+
+//   let buyTx = await dodo.estimateGas.buy(
+//     indexID,
+//     ethers.utils.parseUnits("2", 6),
+//     10000,
+//     100,
+//     10000
+//   );
+// console.log(buyTx);
 
   let buyTx = await dodo.buy(
     indexID,

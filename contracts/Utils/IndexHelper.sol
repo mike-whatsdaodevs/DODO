@@ -127,11 +127,32 @@ contract IndexHelper {
         return IIndexGas(indexAddress).basefee();
     }
 
+    function getTxGP() external view returns (uint256) {
+        return tx.gasprice;
+    }
+
+
+    function getBlocBasefee() external view returns (uint256) {
+        return block.basefee;
+    }
+
     function getGasUsedWithBaseFee(address indexAddress, uint256 gasUsed) external view returns (uint256) {
         return gasUsed * IIndexGas(indexAddress).basefee();
     }
 
     function usdtValue(address indexAddress, uint256 gas) external view returns (uint256) {
+        return IIndexGas(indexAddress).gasExchageUnderlying(gas);
+    }
+
+    function ontimeGasUsedValue(address indexAddress, uint256 positionId) external view returns (uint256) {
+        IIndexGas.GasUsedAverage memory pGasUsed = IIndexGas(indexAddress).getGasUsedAverage(positionId);
+        uint256 averageGasUsed = IIndexGas(indexAddress).averageGasUsed();
+        if(averageGasUsed <= pGasUsed.created) {
+            return 0;
+        }
+
+        uint256 gasUsed = averageGasUsed - pGasUsed.created;
+        uint256 gas = gasUsed * IIndexGas(indexAddress).basefee();
         return IIndexGas(indexAddress).gasExchageUnderlying(gas);
     }
 

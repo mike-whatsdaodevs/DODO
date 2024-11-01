@@ -88,7 +88,7 @@ contract Index is IIndex, IndexGas, OwnableUpgradeable, UUPSUpgradeable, Pausabl
         id = indexId;
         isDynamic = isDynamicIndex;
         name = indexName;
-        feeRate = 10;
+        feeRate = 100;
         filter = _filter;
         THIS = address(this);
         emit CreatedIndex(id, THIS, feeRate, name, block.timestamp);
@@ -765,29 +765,48 @@ contract Index is IIndex, IndexGas, OwnableUpgradeable, UUPSUpgradeable, Pausabl
         } else {
             positionGasUsed = staticGasUsed;
         }
-
-        uint256 gasfee = gasExchageUnderlying(positionGasUsed * basefee);
         
         amount = positionBalance[positionId][underlyingToken];
-
-        if(gasfee != 0) {
+       
+        uint256 gasfee = gasExchageUnderlying(positionGasUsed * basefee);        
+        uint256 platformFee = amount.mul(50).div(Constants.DENOMINATOR);
+        platformFee = platformFee.add(gasfee);
+        
+        if(platformFee != 0) {
 
             //// gas fee exceed amount
-            if(gasfee >= amount) {
-                gasfee = amount;
+            if(platformFee > amount) {
+                platformFee = amount;
             }
-            underlyingToken.safeTransfer(gasFeeRecipient, gasfee);
+            underlyingToken.safeTransfer(gasFeeRecipient, platformFee);
         }
-        underlyingToken.safeTransfer(recipient, amount.sub(gasfee));
-        
+        amount = amount.sub(platformFee);
+        if(amount > 0) {
+            underlyingToken.safeTransfer(recipient, amount.sub(platformFee));
+        }
+
         positionBalance[positionId][underlyingToken] = 0;
         positionStatus[positionId] = Enum.PositionStatus.WITHDRAWN;
 
         emit Withdraw(positionId, tx.origin, amount, block.timestamp);
     }
 
+
+    //// gas set
     function updateGasFeeRecipient(address recipient) external onlyOwner {
         setGasFeeRecipient(recipient);
+    }
+
+    function updateGasBasefee(uint256 newBaseFee) external onlyOwner {
+        setBaseFee(newBaseFee);
+    }
+
+    function updateGasExchangePrice(uint256 newExchangePrice) external onlyOwner {
+        setExchangePrice(newExchangePrice);
+    }
+
+    function updateGasStaticGasUsed(uint256 staticGas) external onlyOwner {
+        setStaticGasUsed(staticGas);
     }
 
     /// force withdraw token balance

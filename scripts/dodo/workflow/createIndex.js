@@ -32,15 +32,17 @@ async function main() {
   /// true 为动态index
   /// false为静态index
   let isDynamicIndex = true;
-  let createIndexTx = await dodo.createIndex("DYNAMIC", isDynamicIndex);
+  let createIndexTx = await dodo.createIndex("DYNAMIC_4", isDynamicIndex);
 
   await createIndexTx.wait();
 
   console.log(createIndexTx.hash);
 
-  console.log(await dodo.id());
 
-  let index_address = await dodo.indexMap(1);
+  let id = await dodo.id();
+  console.log("current id: ", id);
+
+  let index_address = await dodo.indexMap(id - 1);
   console.log(index_address);
 
 }

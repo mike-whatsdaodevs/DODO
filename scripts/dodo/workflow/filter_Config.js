@@ -53,6 +53,15 @@ async function main() {
       process.env.OP_OP,
       process.env.OP_WLD,
       process.env.OP_SNX,
+      process.env.OP_PIKA,
+      process.env.OP_NEKOCOIN,
+      process.env.OP_PERP,
+      process.env.OP_THALES,
+      process.env.OP_NBL,
+      process.env.OP_wstETH,
+      process.env.OP_USDC_E,
+      process.env.OP_USDC,
+      process.env.OP_DAI,
     ];
     filter_address = process.env.OP_FILTER_MAIN;
   } else {

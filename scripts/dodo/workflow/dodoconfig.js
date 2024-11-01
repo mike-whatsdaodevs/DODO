@@ -10,17 +10,24 @@ async function main() {
   console.log('NetWorks Name is ', (await ethers.provider.getNetwork()).name)
 
   const [deployer] = await ethers.getSigners()
-
   console.log('deployer:' + deployer.address)
+ 
   const network = (await ethers.provider.getNetwork()).chainId;
   console.log(network);
 
-  let swapRouter_address = process.env.ETH_SWAP_ROUTER_V2;
-  let dodo_address = process.env.ETH_DODO_MAIN;
-  let filter_address = process.env.ETH_FILTER_MAIN;
-  let indexHelper_address = process.env.ETH_INDEX_HELPER_MAIN;
+  let dodo_address;
+  let index_template_address;
 
-  let index_template_address = process.env.ETH_INDEX_MAIN;
+  if (network == 1) {
+    dodo_address = process.env.ETH_DODO_MAIN;
+    index_template_address = process.env.ETH_INDEX_MAIN;
+  } else if(network == 10) {
+    dodo_address = process.env.OP_DODO_MAIN;
+    index_template_address = process.env.OP_INDEX_MAIN;
+  } else {
+    console.log("network error");
+    return;
+  }
 
   const dodo = await ethers.getContractAt('DODO', dodo_address, signer);
 

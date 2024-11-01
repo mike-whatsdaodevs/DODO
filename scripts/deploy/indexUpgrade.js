@@ -35,7 +35,8 @@ async function main() {
   await changeSingletonTx.wait();
   console.log(changeSingletonTx.hash);
 
-  let indexID = 0;
+  let indexID = process.env.INDEXID;
+  
   let index0_address = await dodo.indexMap(indexID);
   console.log(index0_address);
 

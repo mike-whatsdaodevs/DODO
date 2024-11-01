@@ -59,7 +59,10 @@ async function main() {
   console.log(indexTokens);
 
   /// batch deal positions
-  let positionIds = [0];
+  let positionIds = [1];
+
+  let positionsGasUsedAverage = await index.positionsGasUsedAverage(positionIds[0]);
+  console.log("positionsGasUsedAverage:", positionsGasUsedAverage);
 
   console.log(await index.positionStatus(positionIds[0]));
 
